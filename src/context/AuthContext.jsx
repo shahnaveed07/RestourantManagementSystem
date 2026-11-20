@@ -5,6 +5,7 @@ const DEFAULT_CONFIG = {
   restaurantName: 'Linden & Rye',
   demoMode: true,
   taxRate: 0.08,
+  tables: [],
   demoTables: [],
 };
 
@@ -62,6 +63,14 @@ export function AuthProvider({ children }) {
     return res.user;
   }, []);
 
+  const signup = useCallback(async (name, email, password) => {
+    const res = await api.signup(name, email, password);
+    setStoredToken(res.accessToken);
+    setToken(res.accessToken);
+    setUser(res.user);
+    return res.user;
+  }, []);
+
   const demoLogin = useCallback(async (role) => {
     const res = await api.demoLogin(role);
     setStoredToken(res.accessToken);
@@ -83,7 +92,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, token, config, loading, login, demoLogin, logout, refreshConfig }}
+      value={{ user, token, config, loading, login, signup, demoLogin, logout, refreshConfig }}
     >
       {children}
     </AuthContext.Provider>

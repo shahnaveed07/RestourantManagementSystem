@@ -15,6 +15,21 @@ export async function seedDatabase(forceReset = false) {
 
   const existingUsers = await repo.listUsers();
   if (!forceReset && existingUsers.length > 0) {
+    // Ensure demo customer account exists even when upgrading an existing local store
+    const hasDemoCustomer = existingUsers.some((u) => u.email.toLowerCase() === 'customer@demo.com');
+    if (!hasDemoCustomer) {
+      const customerHash = await bcrypt.hash('Customer@123', 10);
+      await repo.createUser({
+        name: 'Alex Rivera',
+        email: 'customer@demo.com',
+        passwordHash: customerHash,
+        role: 'customer',
+        isActive: true,
+        lastLoginAt: null,
+        isDemo: true,
+      });
+    }
+
     const tables = await repo.listTables();
     const cats = await repo.listCategories();
     const items = await repo.listMenuItems();
@@ -25,6 +40,7 @@ export async function seedDatabase(forceReset = false) {
         { role: 'manager', email: 'manager@demo.com', password: 'Manager@123' },
         { role: 'waiter', email: 'waiter@demo.com', password: 'Waiter@123' },
         { role: 'kitchen', email: 'kitchen@demo.com', password: 'Kitchen@123' },
+        { role: 'customer', email: 'customer@demo.com', password: 'Customer@123' },
       ],
       tables: tables.map((t) => ({
         number: t.number,
@@ -40,12 +56,13 @@ export async function seedDatabase(forceReset = false) {
 
   await repo.wipeAll();
 
-  // 1. Seed Demo Staff Accounts
+  // 1. Seed Demo Accounts (Staff + Customer)
   const demoAccounts = [
     { name: 'Elena Vance', email: 'admin@demo.com', password: 'Admin@123', role: 'admin' },
     { name: 'Marcus Chen', email: 'manager@demo.com', password: 'Manager@123', role: 'manager' },
     { name: 'Sofia Morales', email: 'waiter@demo.com', password: 'Waiter@123', role: 'waiter' },
     { name: 'Devon Brooks', email: 'kitchen@demo.com', password: 'Kitchen@123', role: 'kitchen' },
+    { name: 'Alex Rivera', email: 'customer@demo.com', password: 'Customer@123', role: 'customer' },
   ];
 
   const createdUsers = [];

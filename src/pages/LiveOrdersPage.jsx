@@ -5,7 +5,7 @@ import { Clock, Search, XCircle, ArrowRight } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { api } from '../api/client';
 import { useSocket } from '../context/SocketContext';
-import { formatCurrency, formatElapsed } from '../utils/format';
+import { formatCurrency, formatElapsed, formatOrderLocation } from '../utils/format';
 
 const COLUMNS = [
   {
@@ -186,10 +186,15 @@ export function LiveOrdersPage() {
                           <div className="flex items-start justify-between gap-2">
                             <div>
                               <h3 className="text-sm font-bold text-slate-900">
-                                Table {order.tableNumber}
+                                {formatOrderLocation(order)}
                               </h3>
                               <p className="text-[11px] text-slate-500 font-mono">
-                                {order.orderNumber} · {order.source === 'guest_qr' ? 'QR' : 'Staff'}
+                                {order.orderNumber} ·{' '}
+                                {order.source === 'guest_qr'
+                                  ? 'QR'
+                                  : order.source === 'customer_web'
+                                    ? 'Online'
+                                    : 'Staff'}
                               </p>
                             </div>
                             <div className="text-right">

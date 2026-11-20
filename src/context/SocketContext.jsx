@@ -21,7 +21,7 @@ export function SocketProvider({ children }) {
   soundEnabledRef.current = soundEnabled;
 
   const refreshBadges = useCallback(async () => {
-    if (!user) {
+    if (!user || user.role === 'customer') {
       setPendingOrdersCount(0);
       setOpenCallsCount(0);
       return;
@@ -39,7 +39,7 @@ export function SocketProvider({ children }) {
   }, [user]);
 
   useEffect(() => {
-    if (!user) {
+    if (!user || user.role === 'customer') {
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;

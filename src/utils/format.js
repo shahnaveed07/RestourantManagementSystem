@@ -39,6 +39,7 @@ export const ROLE_LABELS = {
   manager: 'Manager',
   waiter: 'Waiter',
   kitchen: 'Kitchen',
+  customer: 'Customer',
 };
 
 export const ROLE_HOME_ROUTE = {
@@ -46,7 +47,16 @@ export const ROLE_HOME_ROUTE = {
   manager: '/dashboard',
   waiter: '/waiter',
   kitchen: '/kitchen',
+  customer: '/',
 };
+
+export function formatOrderLocation(order) {
+  if (!order) return '';
+  if (order.tableNumber && order.tableNumber > 0) {
+    return `Table ${order.tableNumber}`;
+  }
+  return order.tableName || 'Counter Pickup';
+}
 
 export const ORDER_STATUS_LABEL = {
   pending: 'Pending',

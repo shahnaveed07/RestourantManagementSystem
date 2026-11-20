@@ -19,6 +19,7 @@ import {
   CALL_TYPE_LABEL,
   formatCurrency,
   formatElapsed,
+  formatOrderLocation,
   getElapsedMinutes,
   ORDER_STATUS_LABEL,
   TABLE_STATUS_LABEL,
@@ -99,7 +100,7 @@ export function WaiterPage() {
   const handleMarkServed = async (order) => {
     try {
       await api.updateOrderStatus(order.id, 'served');
-      toast.success(`Marked ${order.orderNumber} (Table ${order.tableNumber}) as Served`);
+      toast.success(`Marked ${order.orderNumber} (${formatOrderLocation(order)}) as Served`);
       fetchAll();
     } catch (err) {
       toast.error(err.message);
@@ -287,7 +288,7 @@ export function WaiterPage() {
                       <div>
                         <div className="flex items-center gap-2 text-sm">
                           <span className="font-mono font-bold text-slate-900">
-                            Table {order.tableNumber}
+                            {formatOrderLocation(order)}
                           </span>
                           <span className="text-slate-400">·</span>
                           <span className="font-mono text-xs text-slate-500">{order.orderNumber}</span>
@@ -324,7 +325,7 @@ export function WaiterPage() {
                     <div key={order.id} className="p-4 flex items-center justify-between gap-3 text-xs">
                       <div className="min-w-0">
                         <p className="font-semibold text-slate-900">
-                          Table {order.tableNumber} · <span className="font-mono">{order.orderNumber}</span>
+                          {formatOrderLocation(order)} · <span className="font-mono">{order.orderNumber}</span>
                         </p>
                         <p className="text-slate-600 truncate mt-0.5">
                           {order.items.map((i) => `${i.qty}× ${i.name}`).join(', ')}

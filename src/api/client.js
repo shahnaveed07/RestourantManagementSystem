@@ -58,6 +58,7 @@ export const api = {
 
   // Auth
   login: (email, password) => unwrap(http.post('/auth/login', { email, password })),
+  signup: (name, email, password) => unwrap(http.post('/auth/signup', { name, email, password })),
   demoLogin: (role) => unwrap(http.post('/auth/demo-login', { role })),
   logout: () => unwrap(http.post('/auth/logout')),
   me: () => unwrap(http.get('/auth/me')),
@@ -96,6 +97,7 @@ export const api = {
 
   // Orders
   listOrders: (params) => unwrap(http.get('/orders', { params })),
+  createOrder: (payload) => unwrap(http.post('/orders', payload)),
   createStaffOrder: (payload) => unwrap(http.post('/orders', payload)),
   updateOrderStatus: (id, status) => unwrap(http.patch(`/orders/${id}/status`, { status })),
   updateOrderItemStatus: (id, itemIndex, status) =>

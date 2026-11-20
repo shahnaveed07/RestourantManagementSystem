@@ -228,7 +228,7 @@ export function ReportsPage() {
                   {summary.salesByTable.map((t) => (
                     <tr key={t.tableNumber}>
                       <td className="py-2.5 px-4 font-medium text-slate-900">
-                        Table {t.tableNumber}{' '}
+                        {t.tableNumber > 0 ? `Table ${t.tableNumber}` : 'Counter Pickup'}{' '}
                         <span className="text-xs text-slate-500 font-normal">· {t.tableName}</span>
                       </td>
                       <td className="py-2.5 px-4 text-right font-mono tabular-nums text-slate-600">

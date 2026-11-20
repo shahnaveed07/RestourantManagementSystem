@@ -18,6 +18,7 @@ import { useSocket } from '../context/SocketContext';
 import {
   formatCurrency,
   formatElapsed,
+  formatOrderLocation,
   getElapsedMinutes,
   CALL_TYPE_LABEL,
   ORDER_STATUS_LABEL,
@@ -270,13 +271,17 @@ export function DashboardPage() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 text-sm">
                           <span className="font-mono font-bold text-slate-900">
-                            Table {order.tableNumber}
+                            {formatOrderLocation(order)}
                           </span>
                           <span className="text-slate-400">·</span>
                           <span className="font-mono text-xs text-slate-500">{order.orderNumber}</span>
                           <span className="text-slate-400">·</span>
                           <span className="text-xs text-slate-500">
-                            {order.source === 'guest_qr' ? 'QR Guest' : 'Staff'}
+                            {order.source === 'guest_qr'
+                              ? 'QR Guest'
+                              : order.source === 'customer_web'
+                                ? 'Online'
+                                : 'Staff'}
                           </span>
                         </div>
                         <p className="text-xs text-slate-600 truncate mt-0.5">

@@ -146,6 +146,7 @@ export const ROLE_PERMISSIONS = {
   manager: ['dashboard', 'orders', 'calls', 'tables', 'menu', 'kitchen', 'waiter', 'billing', 'reports'],
   waiter: ['waiter', 'orders', 'calls', 'tables', 'billing'],
   kitchen: ['kitchen'],
+  customer: ['menu', 'my-orders'],
 };
 
 export function canRoleAccess(role, permission) {

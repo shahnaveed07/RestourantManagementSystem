@@ -19,8 +19,10 @@ import {
   ChevronUp,
 } from 'lucide-react';
 import { api } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import { DishImage } from '../components/DishImage';
 import { BrandLogo } from '../components/BrandLogo';
+import { AuthModal } from '../components/AuthModal';
 import {
   formatCurrency,
   ORDER_STATUS_LABEL,
@@ -45,6 +47,7 @@ function getOrCreateGuestSession(tableToken) {
 
 export function GuestMenuPage() {
   const { qrToken = '' } = useParams();
+  const { user, config } = useAuth();
   const [sessionId] = useState(() => getOrCreateGuestSession(qrToken));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -59,13 +62,29 @@ export function GuestMenuPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [search, setSearch] = useState('');
   const [vegOnly, setVegOnly] = useState(false);
-  const [cart, setCart] = useState({});
+  const [cart, setCart] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`passline_qr_cart_${qrToken}`);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
   const [cartOpen, setCartOpen] = useState(false);
   const [callDrawerOpen, setCallDrawerOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [customCallMsg, setCustomCallMsg] = useState('');
   const [placingOrder, setPlacingOrder] = useState(false);
   const [sendingCall, setSendingCall] = useState(false);
   const [socketLive, setSocketLive] = useState(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(`passline_qr_cart_${qrToken}`, JSON.stringify(cart));
+    } catch {
+      // ignore storage errors
+    }
+  }, [cart, qrToken]);
 
   const loadData = useCallback(async () => {
     try {
@@ -211,16 +230,26 @@ export function GuestMenuPage() {
 
   const handlePlaceOrder = async () => {
     if (cartEntries.length === 0) return;
+
+    // Require login at checkout unless app is in demo guest mode
+    if (!config.demoMode && !user) {
+      setAuthModalOpen(true);
+      return;
+    }
+
     setPlacingOrder(true);
     try {
-      const created = await api.placeGuestOrder(qrToken, {
-        sessionId,
-        items: cartEntries.map((e) => ({
-          menuItemId: e.item.id,
-          qty: e.qty,
-          notes: e.notes.trim() || undefined,
-        })),
-      });
+      const itemsPayload = cartEntries.map((e) => ({
+        menuItemId: e.item.id,
+        qty: e.qty,
+        notes: e.notes.trim() || undefined,
+      }));
+      const created = user
+        ? await api.createOrder({ qrToken, items: itemsPayload })
+        : await api.placeGuestOrder(qrToken, {
+            sessionId,
+            items: itemsPayload,
+          });
       setOrders((prev) => (prev.some((o) => o.id === created.id) ? prev : [created, ...prev]));
       setCart({});
       setCartOpen(false);
@@ -452,12 +481,20 @@ export function GuestMenuPage() {
                   {table.section} · Orders are added to your open table tab automatically
                 </p>
               </div>
-              <Link
-                to="/login"
-                className="text-xs text-slate-500 hover:text-slate-900 underline underline-offset-2"
-              >
-                Staff Portal
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link
+                  to="/"
+                  className="text-xs text-slate-500 hover:text-slate-900 underline underline-offset-2"
+                >
+                  Full Storefront
+                </Link>
+                <Link
+                  to="/login"
+                  className="text-xs text-slate-500 hover:text-slate-900 underline underline-offset-2"
+                >
+                  Staff Portal
+                </Link>
+              </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
@@ -901,6 +938,17 @@ export function GuestMenuPage() {
           </div>
         </div>
       )}
+
+      <AuthModal
+        open={authModalOpen}
+        initialMode="login"
+        subtitle={`Sign in to place your order for Table ${table.number}`}
+        onClose={() => setAuthModalOpen(false)}
+        onSuccess={() => {
+          setAuthModalOpen(false);
+          setCartOpen(true);
+        }}
+      />
     </div>
   );
 }

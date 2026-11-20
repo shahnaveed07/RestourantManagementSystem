@@ -4,7 +4,7 @@ import { Clock, Check, Flame, CheckCheck } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { api } from '../api/client';
 import { useSocket } from '../context/SocketContext';
-import { formatElapsed } from '../utils/format';
+import { formatElapsed, formatOrderLocation } from '../utils/format';
 
 export function KitchenPage() {
   const { socket, syncVersion } = useSocket();
@@ -73,7 +73,7 @@ export function KitchenPage() {
           : prev.filter((o) => o.id !== orderId)
       );
       if (updated.status === 'ready') {
-        toast.success(`${updated.orderNumber} (Table ${updated.tableNumber}) is READY for pickup`);
+        toast.success(`${updated.orderNumber} (${formatOrderLocation(updated)}) is READY for pickup`);
       }
     } catch (err) {
       toast.error(err.message);
@@ -145,12 +145,17 @@ export function KitchenPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h2 className="text-lg font-bold text-white font-mono">
-                        Table {order.tableNumber}
+                        {formatOrderLocation(order)}
                       </h2>
                       <span className="text-xs font-mono text-slate-300">{order.orderNumber}</span>
                     </div>
                     <p className="text-xs text-slate-400 capitalize">
-                      {order.status} · {order.source === 'guest_qr' ? 'QR Order' : 'Staff Order'}
+                      {order.status} ·{' '}
+                      {order.source === 'guest_qr'
+                        ? 'QR Order'
+                        : order.source === 'customer_web'
+                          ? 'Online Order'
+                          : 'Staff Order'}
                     </p>
                   </div>
 

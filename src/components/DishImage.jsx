@@ -22,6 +22,7 @@ export function DishImage({ src, alt, className = 'w-full h-40' }) {
     <img
       src={src}
       alt={alt}
+      loading="lazy"
       referrerPolicy="no-referrer"
       onError={() => setFailed(true)}
       className={`${className} object-cover bg-slate-100`}

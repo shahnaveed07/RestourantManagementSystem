@@ -123,13 +123,14 @@ router.get('/health', (_req, res) => {
 router.get(
   '/config',
   asyncHandler(async (_req, res) => {
-    const tables = env.demoMode ? await repo.listTables() : [];
+    const tables = await repo.listTables();
     sendOk(res, {
       restaurantName: env.restaurantName,
       demoMode: env.demoMode,
       taxRate: env.taxRate,
+      tables: tables.map((t) => ({ id: t.id, number: t.number, name: t.name, section: t.section })),
       demoTables: env.demoMode
-        ? tables.slice(0, 6).map((t) => ({ number: t.number, name: t.name, qrToken: t.qrToken }))
+        ? tables.slice(0, 6).map((t) => ({ id: t.id, number: t.number, name: t.name, qrToken: t.qrToken }))
         : [],
     });
   })
@@ -142,6 +143,61 @@ const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(4),
 });
+
+const signupSchema = z.object({
+  name: z.string().min(2).max(80),
+  email: z.string().email(),
+  password: z.string().min(6).max(64),
+});
+
+router.post(
+  '/auth/signup',
+  loginLimiter,
+  asyncHandler(async (req, res) => {
+    const parsed = signupSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return sendErr(res, 'Please enter a valid name, email, and password (6+ characters).', 400);
+    }
+
+    const existing = await repo.findUserByEmail(parsed.data.email);
+    if (existing) {
+      return sendErr(res, 'An account with this email already exists. Please sign in instead.', 409);
+    }
+
+    const passwordHash = await bcrypt.hash(parsed.data.password, 10);
+    const created = await repo.createUser({
+      name: sanitizeText(parsed.data.name),
+      email: parsed.data.email.toLowerCase().trim(),
+      passwordHash,
+      role: 'customer',
+      isActive: true,
+      lastLoginAt: new Date().toISOString(),
+      isDemo: false,
+    });
+
+    const accessToken = signAccessToken(created);
+    const refreshToken = signRefreshToken(created);
+    setAuthCookies(res, accessToken, refreshToken);
+
+    await logAudit(req, 'CUSTOMER_SIGNUP', 'User', created.id, `New customer account ${created.email}`);
+
+    return sendOk(
+      res,
+      {
+        accessToken,
+        user: {
+          id: created.id,
+          name: created.name,
+          email: created.email,
+          role: created.role,
+          isDemo: created.isDemo,
+        },
+      },
+      'Account created.',
+      201
+    );
+  })
+);
 
 router.post(
   '/auth/login',
@@ -187,7 +243,7 @@ router.post(
     if (!env.demoMode) {
       return sendErr(res, 'Demo login is disabled when DEMO_MODE is false.', 403);
     }
-    const schema = z.object({ role: z.enum(['admin', 'manager', 'waiter', 'kitchen']) });
+    const schema = z.object({ role: z.enum(['admin', 'manager', 'waiter', 'kitchen', 'customer']) });
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) {
       return sendErr(res, 'Invalid demo role requested.', 400);
@@ -198,6 +254,7 @@ router.post(
       manager: 'manager@demo.com',
       waiter: 'waiter@demo.com',
       kitchen: 'kitchen@demo.com',
+      customer: 'customer@demo.com',
     };
     const user = await repo.findUserByEmail(emailMap[parsed.data.role]);
     if (!user || !user.isActive) {
@@ -370,6 +427,11 @@ const guestOrderSchema = z.object({
 router.post(
   '/guest/table/:qrToken/orders',
   guestOrderLimiter,
+  (req, res, next) => {
+    // Allow unauthenticated QR ordering only when in demo guest mode; otherwise require JWT login
+    if (env.demoMode) return next();
+    return authenticate(req, res, next);
+  },
   asyncHandler(async (req, res) => {
     const qrToken = String(req.params.qrToken || '').trim();
     const parsed = guestOrderSchema.safeParse(req.body);
@@ -645,7 +707,6 @@ router.get(
 // ==========================================
 router.get(
   '/menu',
-  authenticate,
   asyncHandler(async (_req, res) => {
     const [categories, items] = await Promise.all([repo.listCategories(), repo.listMenuItems(false)]);
     return sendOk(res, { categories, items });
@@ -863,12 +924,20 @@ router.get(
     const statuses = statusParam ? statusParam.split(',').filter(Boolean) : undefined;
 
     const orders = await repo.listOrders({ tableId, statuses });
+    if (req.user.role === 'customer') {
+      return sendOk(
+        res,
+        orders.filter((o) => o.customerId === req.user.userId)
+      );
+    }
     return sendOk(res, orders);
   })
 );
 
-const staffOrderSchema = z.object({
-  tableId: z.string().min(1),
+const createOrderSchema = z.object({
+  tableId: z.string().min(1).optional().nullable(),
+  qrToken: z.string().min(1).optional().nullable(),
+  orderType: z.enum(['dine_in', 'pickup']).optional(),
   items: z
     .array(
       z.object({
@@ -883,13 +952,21 @@ const staffOrderSchema = z.object({
 router.post(
   '/orders',
   authenticate,
-  requireRole('admin', 'manager', 'waiter'),
+  requireRole('admin', 'manager', 'waiter', 'customer'),
   asyncHandler(async (req, res) => {
-    const parsed = staffOrderSchema.safeParse(req.body);
-    if (!parsed.success) return sendErr(res, 'Select a table and at least one item.', 400);
+    const parsed = createOrderSchema.safeParse(req.body);
+    if (!parsed.success) return sendErr(res, 'Select at least one valid menu item.', 400);
 
-    const table = await repo.findTableById(parsed.data.tableId);
-    if (!table) return sendErr(res, 'Table not found.', 404);
+    let table = null;
+    if (parsed.data.qrToken) {
+      table = await repo.findTableByQrToken(String(parsed.data.qrToken).trim());
+      if (!table) return sendErr(res, 'Invalid table QR token.', 404);
+    } else if (parsed.data.tableId && parsed.data.tableId !== 'pickup') {
+      table = await repo.findTableById(parsed.data.tableId);
+      if (!table) return sendErr(res, 'Table not found.', 404);
+    } else if (req.user.role !== 'customer' && parsed.data.orderType !== 'pickup') {
+      return sendErr(res, 'Please select a table or pickup order.', 400);
+    }
 
     const allMenu = await repo.listMenuItems(true);
     const menuMap = new Map(allMenu.map((m) => [m.id, m]));
@@ -903,13 +980,16 @@ router.post(
 
     const nowIso = new Date().toISOString();
     const orderNumber = await repo.nextOrderNumber();
-    const sessionId = table.currentSessionId || `staff-sess-${table.number}-${Date.now()}`;
+    const isStaff = ['admin', 'manager', 'waiter'].includes(req.user.role);
+    const sessionId = table
+      ? table.currentSessionId || `sess-t${table.number}-${Date.now()}`
+      : `web-sess-${req.user.userId}-${Date.now()}`;
 
     const order = await repo.createOrder({
       orderNumber,
-      tableId: table.id,
-      tableNumber: table.number,
-      tableName: table.name,
+      tableId: table ? table.id : 'pickup',
+      tableNumber: table ? table.number : 0,
+      tableName: table ? table.name : 'Counter Pickup',
       sessionId,
       items: totals.items,
       subtotal: totals.subtotal,
@@ -917,9 +997,12 @@ router.post(
       discount: 0,
       total: totals.total,
       status: 'pending',
-      source: 'staff',
-      waiterId: req.user.userId,
-      waiterName: req.user.name,
+      source: parsed.data.qrToken ? 'guest_qr' : isStaff ? 'staff' : 'customer_web',
+      orderType: table ? 'dine_in' : 'pickup',
+      customerId: req.user.role === 'customer' ? req.user.userId : null,
+      customerName: req.user.role === 'customer' ? req.user.name : null,
+      waiterId: isStaff ? req.user.userId : null,
+      waiterName: isStaff ? req.user.name : null,
       statusTimestamps: {
         pending: nowIso,
         accepted: null,
@@ -933,16 +1016,25 @@ router.post(
       updatedAt: nowIso,
     });
 
-    const updatedTable = await repo.updateTable(table.id, {
-      status: 'occupied',
-      currentSessionId: sessionId,
-    });
+    let updatedTable = null;
+    if (table) {
+      updatedTable = await repo.updateTable(table.id, {
+        status: 'occupied',
+        currentSessionId: sessionId,
+      });
+    }
 
-    await logAudit(req, 'CREATE_ORDER', 'Order', order.id, `Manual order ${order.orderNumber} for Table #${table.number}`);
+    await logAudit(
+      req,
+      'CREATE_ORDER',
+      'Order',
+      order.id,
+      `${isStaff ? 'Manual' : 'Customer'} order ${order.orderNumber} for ${table ? `Table #${table.number}` : 'Counter Pickup'}`
+    );
     socketEmitter.orderCreated(order);
     if (updatedTable) socketEmitter.tableStatusChanged(updatedTable);
 
-    return sendOk(res, order, 'Order created.', 201);
+    return sendOk(res, order, 'Order placed successfully.', 201);
   })
 );
 
@@ -1428,7 +1520,9 @@ router.get(
   asyncHandler(async (_req, res) => {
     const [users, auditLogs] = await Promise.all([repo.listUsers(), repo.listAuditLogs(40)]);
     return sendOk(res, {
-      users: users.map(({ passwordHash: _pw, ...safe }) => safe),
+      users: users
+        .filter((u) => u.role !== 'customer')
+        .map(({ passwordHash: _pw, ...safe }) => safe),
       auditLogs,
     });
   })
