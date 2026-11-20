@@ -511,12 +511,16 @@ export function GuestMenuPage() {
       {/* Compact Sticky Top Bar */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-xs border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 h-14 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
+          <Link
+            to="/"
+            aria-label="Go to home"
+            className="flex items-center gap-2.5 min-w-0 min-h-[44px] px-1 -ml-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 hover:opacity-90 transition-opacity"
+          >
             <BrandLogo size="sm" />
             <span className="text-base font-bold text-slate-900 truncate block">
               {restaurantName}
             </span>
-          </div>
+          </Link>
 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <span className="text-xs font-mono font-semibold text-slate-700 whitespace-nowrap">

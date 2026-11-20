@@ -135,13 +135,17 @@ export function LoginPage({ initialMode = 'login' }) {
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/35 to-slate-950/20 flex flex-col justify-between p-12 text-white">
-            <div className="flex items-center gap-3">
+            <Link
+              to="/"
+              aria-label="Go to home"
+              className="inline-flex items-center gap-3 self-start rounded-lg p-1 -m-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 hover:opacity-90 transition-opacity"
+            >
               <BrandLogo size="lg" />
               <div>
                 <span className="text-base font-bold tracking-tight text-white block">Passline</span>
                 <span className="text-xs text-teal-300">Restaurant Operations</span>
               </div>
-            </div>
+            </Link>
             <div className="max-w-md">
               <h1 className="text-4xl font-bold tracking-tight leading-tight">
                 {config.restaurantName}
@@ -174,7 +178,13 @@ export function LoginPage({ initialMode = 'login' }) {
             </div>
 
             <div className="mb-5 flex items-center gap-3.5">
-              <BrandLogo size="lg" className="lg:hidden" />
+              <Link
+                to="/"
+                aria-label="Go to home"
+                className="lg:hidden rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 shrink-0"
+              >
+                <BrandLogo size="lg" />
+              </Link>
               <div>
                 <span className="text-xs font-semibold text-teal-700 lg:hidden block mb-0.5">
                   Passline · {config.restaurantName}

@@ -13,7 +13,13 @@ export function UnauthorizedPage() {
     <div className="min-h-dvh bg-slate-50 flex items-center justify-center p-4 sm:p-6">
       <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 text-center shadow-sm">
         <div className="flex justify-center mb-3">
-          <BrandLogo size="lg" />
+          <Link
+            to="/"
+            aria-label="Go to home"
+            className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600"
+          >
+            <BrandLogo size="lg" />
+          </Link>
         </div>
         <div className="mx-auto w-11 h-11 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 mb-3">
           <ShieldAlert className="w-5 h-5" />

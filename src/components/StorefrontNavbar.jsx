@@ -47,8 +47,9 @@ export function StorefrontNavbar({ onOpenAuth, onOpenMyOrders }) {
         {/* Zone 1: Brand Wordmark */}
         <Link
           to="/"
-          className="flex items-center gap-2 sm:gap-2.5 min-w-0 shrink-0"
-          aria-label={`${config.restaurantName} Home`}
+          onClick={() => setMobileMenuOpen(false)}
+          className="flex items-center gap-2 sm:gap-2.5 min-w-0 min-h-[44px] px-1 -ml-1 rounded-lg shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2"
+          aria-label="Go to home"
         >
           <BrandLogo size="sm" />
           <span className="text-base sm:text-lg font-bold tracking-tight text-slate-900 whitespace-nowrap">

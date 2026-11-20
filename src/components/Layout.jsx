@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   ClipboardList,
@@ -97,7 +97,12 @@ export function Layout({ title, subtitle, actions, darkMode = false, children })
       }`}
     >
       <div className="px-4 py-4 border-b border-inherit flex items-center justify-between gap-2">
-        <div className="flex items-center gap-3 min-w-0">
+        <Link
+          to="/"
+          onClick={() => setMobileOpen(false)}
+          aria-label="Go to home"
+          className="flex items-center gap-3 min-w-0 min-h-[44px] rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 hover:opacity-90 transition-opacity"
+        >
           <BrandLogo size="md" />
           <div className="min-w-0">
             <span className="text-sm font-bold tracking-tight block truncate">{config.restaurantName}</span>
@@ -105,7 +110,7 @@ export function Layout({ title, subtitle, actions, darkMode = false, children })
               Passline Operations
             </span>
           </div>
-        </div>
+        </Link>
         <button
           type="button"
           onClick={() => setMobileOpen(false)}
@@ -238,7 +243,7 @@ export function Layout({ title, subtitle, actions, darkMode = false, children })
               : 'bg-white/95 border-slate-200 backdrop-blur-xs'
           }`}
         >
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <button
               type="button"
               onClick={() => setMobileOpen(true)}
@@ -249,6 +254,14 @@ export function Layout({ title, subtitle, actions, darkMode = false, children })
             >
               <MenuIcon className="w-5 h-5" />
             </button>
+            <Link
+              to="/"
+              onClick={() => setMobileOpen(false)}
+              aria-label="Go to home"
+              className="lg:hidden min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 shrink-0"
+            >
+              <BrandLogo size="sm" />
+            </Link>
             <div className="min-w-0">
               <h1 className="text-base sm:text-lg font-bold tracking-tight truncate">{title}</h1>
               {subtitle && (
