@@ -1,0 +1,6 @@
+{
+  "name": "Passline — Restaurant Management System",
+  "description": "Full-stack restaurant operations platform with real-time Socket.IO orders and service calls, QR-code guest menus, role-based dashboards, kitchen display, and billing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
