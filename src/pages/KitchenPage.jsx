@@ -82,12 +82,17 @@ export function KitchenPage() {
     }
   };
 
-  const handleBumpOrderReady = async (order) => {
+  const handleAdvanceTicket = async (order, nextStatus) => {
     setBusyKey(order.id);
     try {
-      await api.updateOrderStatus(order.id, 'ready');
-      setOrders((prev) => prev.filter((o) => o.id !== order.id));
-      toast.success(`Bumped ${order.orderNumber} to Ready`);
+      const updated = await api.updateOrderStatus(order.id, nextStatus);
+      if (nextStatus === 'ready') {
+        setOrders((prev) => prev.filter((o) => o.id !== order.id));
+        toast.success(`Bumped ${order.orderNumber} to Ready`);
+      } else {
+        setOrders((prev) => prev.map((o) => (o.id === order.id ? updated : o)));
+        toast.success(`${order.orderNumber} moved to ${nextStatus}`);
+      }
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -246,15 +251,31 @@ export function KitchenPage() {
 
                 {/* Ticket Footer */}
                 <div className="px-5 py-3 bg-slate-950/60 border-t border-slate-800">
-                  <button
-                    type="button"
-                    disabled={busyKey === order.id}
-                    onClick={() => handleBumpOrderReady(order)}
-                    className="w-full min-h-[48px] py-2.5 px-4 rounded-lg bg-teal-600 text-white text-xs font-bold hover:bg-teal-500 inline-flex items-center justify-center gap-2 transition-colors"
-                  >
-                    <CheckCheck className="w-4 h-4" />
-                    All Items Ready — Bump Ticket
-                  </button>
+                  {(() => {
+                    const nextStatus =
+                      order.status === 'pending'
+                        ? 'accepted'
+                        : order.status === 'accepted'
+                          ? 'preparing'
+                          : 'ready';
+                    const btnLabel =
+                      order.status === 'pending'
+                        ? 'Accept Ticket'
+                        : order.status === 'accepted'
+                          ? 'Start Preparing'
+                          : 'All Items Ready — Bump Ticket';
+                    return (
+                      <button
+                        type="button"
+                        disabled={busyKey === order.id}
+                        onClick={() => handleAdvanceTicket(order, nextStatus)}
+                        className="w-full min-h-[48px] py-2.5 px-4 rounded-lg bg-teal-600 text-white text-xs font-bold hover:bg-teal-500 disabled:opacity-60 inline-flex items-center justify-center gap-2 transition-colors"
+                      >
+                        <CheckCheck className="w-4 h-4" />
+                        {btnLabel}
+                      </button>
+                    );
+                  })()}
                 </div>
               </article>
             );

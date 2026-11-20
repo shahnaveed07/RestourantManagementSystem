@@ -83,8 +83,9 @@ export function Layout({ title, subtitle, actions, darkMode = false, children })
   });
 
   const handleLogout = async () => {
+    navigate('/login', { replace: true, state: null });
+    await new Promise((resolve) => setTimeout(resolve, 25));
     await logout();
-    navigate('/login');
   };
 
   const sidebarContent = (

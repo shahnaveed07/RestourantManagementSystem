@@ -26,6 +26,7 @@ export function TablesPage() {
   const { user, config } = useAuth();
   const { socket, syncVersion } = useSocket();
   const canManage = user?.role === 'admin' || user?.role === 'manager';
+  const isAdmin = user?.role === 'admin';
 
   const [tables, setTables] = useState([]);
   const [sectionFilter, setSectionFilter] = useState('all');
@@ -42,6 +43,8 @@ export function TablesPage() {
   const [newName, setNewName] = useState('');
   const [newCapacity, setNewCapacity] = useState('4');
   const [newSection, setNewSection] = useState('Main Dining');
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState(null);
 
   const drawerRef = useModalA11y(Boolean(selectedTable), () => setSelectedTable(null));
   const createModalRef = useModalA11y(createOpen, () => setCreateOpen(false));
@@ -115,12 +118,14 @@ export function TablesPage() {
 
   const handleCreateTable = async (e) => {
     e.preventDefault();
+    setCreateError(null);
     const num = Number(newNumber);
     const cap = Number(newCapacity);
     if (!Number.isInteger(num) || num < 1 || !newName.trim()) {
-      toast.error('Enter a valid table number and name.');
+      setCreateError('Enter a valid table number and name.');
       return;
     }
+    setCreating(true);
     try {
       const created = await api.createTable({
         number: num,
@@ -134,7 +139,9 @@ export function TablesPage() {
       setNewName('');
       toast.success(`Created Table ${created.number}`);
     } catch (err) {
-      toast.error(err.message);
+      setCreateError(err.message);
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -151,18 +158,23 @@ export function TablesPage() {
       subtitle="Manage dining room status, inspect active table tabs, and generate printable QR codes"
       actions={
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setSheetOpen(true)}
-            className="min-h-[44px] px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1.5 whitespace-nowrap"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            All QR Sheet
-          </button>
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => setSheetOpen(true)}
+              className="min-h-[44px] px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1.5 whitespace-nowrap"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              All QR Sheet
+            </button>
+          )}
           {canManage && (
             <button
               type="button"
-              onClick={() => setCreateOpen(true)}
+              onClick={() => {
+                setCreateError(null);
+                setCreateOpen(true);
+              }}
               className="min-h-[44px] px-3.5 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 inline-flex items-center gap-1.5 whitespace-nowrap"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -436,6 +448,15 @@ export function TablesPage() {
               </h2>
             </div>
 
+            {createError && (
+              <div
+                role="alert"
+                className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs font-medium text-red-700"
+              >
+                {createError}
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label htmlFor="tbl-num" className="block text-xs font-medium text-slate-700 mb-1">
@@ -508,9 +529,10 @@ export function TablesPage() {
               </button>
               <button
                 type="submit"
-                className="min-h-[44px] px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800"
+                disabled={creating}
+                className="min-h-[44px] px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 disabled:opacity-60"
               >
-                Create Table & QR
+                {creating ? 'Creating...' : 'Create Table & QR'}
               </button>
             </div>
           </form>
@@ -521,7 +543,7 @@ export function TablesPage() {
         <QrModal
           table={qrTable}
           restaurantName={config.restaurantName}
-          canRotate={canManage}
+          canRotate={isAdmin}
           onRotate={handleRotateQr}
           onClose={() => setQrTable(null)}
         />

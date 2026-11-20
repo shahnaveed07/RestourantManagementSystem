@@ -81,10 +81,10 @@ export function computeConsolidatedBill(
 }
 
 export const ORDER_TRANSITIONS = {
-  pending: ['accepted', 'preparing', 'ready', 'cancelled'],
-  accepted: ['preparing', 'ready', 'cancelled'],
-  preparing: ['ready', 'served', 'cancelled'],
-  ready: ['served', 'paid'],
+  pending: ['accepted', 'cancelled'],
+  accepted: ['preparing', 'cancelled'],
+  preparing: ['ready'],
+  ready: ['served'],
   served: ['paid'],
   paid: [],
   cancelled: [],

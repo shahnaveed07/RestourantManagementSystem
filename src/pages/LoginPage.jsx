@@ -67,7 +67,11 @@ export function LoginPage({ initialMode = 'login' }) {
     setStaffError(null);
   }, [initialMode]);
 
-  const redirectTarget = searchParams.get('redirect') || location.state?.from || null;
+  const rawRedirect = searchParams.get('redirect') || location.state?.from || null;
+  const redirectTarget =
+    typeof rawRedirect === 'string' && rawRedirect.startsWith('/') && !rawRedirect.startsWith('//')
+      ? rawRedirect
+      : null;
 
   const navigateAfterAuth = (signedInUser) => {
     if (redirectTarget) {

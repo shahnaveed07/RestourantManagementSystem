@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import { Download, Filter } from 'lucide-react';
 import { Layout } from '../components/Layout';
-import { api, getStoredToken } from '../api/client';
+import { api } from '../api/client';
 import { formatCurrency, formatDateTime } from '../utils/format';
 import { useMediaQuery } from '../utils/useMediaQuery';
 
@@ -43,16 +43,11 @@ export function ReportsPage() {
 
   const handleExportCsv = async () => {
     try {
-      const params = new URLSearchParams();
-      if (fromDate) params.set('from', new Date(`${fromDate}T00:00:00`).toISOString());
-      if (toDate) params.set('to', new Date(`${toDate}T23:59:59`).toISOString());
-      const token = getStoredToken();
-      const res = await fetch(`/api/reports/export?${params.toString()}`, {
-        credentials: 'include',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      if (!res.ok) throw new Error('Failed to export CSV');
-      const blob = await res.blob();
+      const params = {};
+      if (fromDate) params.from = new Date(`${fromDate}T00:00:00`).toISOString();
+      if (toDate) params.to = new Date(`${toDate}T23:59:59`).toISOString();
+      const res = await api.exportReportsCsv(params);
+      const blob = res.data;
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -61,7 +56,7 @@ export function ReportsPage() {
       URL.revokeObjectURL(url);
       toast.success('CSV report downloaded');
     } catch (err) {
-      toast.error(err.message);
+      toast.error(err.message || 'Failed to export CSV');
     }
   };
 

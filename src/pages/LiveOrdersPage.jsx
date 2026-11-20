@@ -10,24 +10,18 @@ import { formatCurrency, formatElapsed, formatOrderLocation } from '../utils/for
 const COLUMNS = [
   {
     key: 'pending',
-    label: 'Pending',
+    label: 'Pending / Accepted',
     statuses: ['pending', 'accepted'],
-    nextStatus: 'preparing',
-    nextLabel: 'Start Preparing',
   },
   {
     key: 'preparing',
     label: 'Preparing',
     statuses: ['preparing'],
-    nextStatus: 'ready',
-    nextLabel: 'Mark Ready',
   },
   {
     key: 'ready',
     label: 'Ready for Pickup',
     statuses: ['ready'],
-    nextStatus: 'served',
-    nextLabel: 'Mark Served',
   },
   {
     key: 'served',
@@ -35,6 +29,14 @@ const COLUMNS = [
     statuses: ['served'],
   },
 ];
+
+function getNextOrderAction(status) {
+  if (status === 'pending') return { nextStatus: 'accepted', nextLabel: 'Accept Order' };
+  if (status === 'accepted') return { nextStatus: 'preparing', nextLabel: 'Start Preparing' };
+  if (status === 'preparing') return { nextStatus: 'ready', nextLabel: 'Mark Ready' };
+  if (status === 'ready') return { nextStatus: 'served', nextLabel: 'Mark Served' };
+  return null;
+}
 
 export function LiveOrdersPage() {
   const { socket, syncVersion } = useSocket();
@@ -283,26 +285,32 @@ export function LiveOrdersPage() {
                           </ul>
 
                           <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
-                            {col.nextStatus ? (
-                              <button
-                                type="button"
-                                disabled={busyId === order.id}
-                                onClick={() => handleAdvance(order.id, col.nextStatus)}
-                                className="flex-1 min-h-[44px] py-2 px-3 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 disabled:opacity-60 transition-colors"
-                              >
-                                {col.nextLabel}
-                              </button>
-                            ) : (
-                              <Link
-                                to={`/billing?tableId=${order.tableId}`}
-                                className="flex-1 min-h-[44px] py-2 px-3 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 inline-flex items-center justify-center gap-1"
-                              >
-                                Settle Bill
-                                <ArrowRight className="w-3.5 h-3.5" />
-                              </Link>
-                            )}
+                            {(() => {
+                              const action = getNextOrderAction(order.status);
+                              if (action) {
+                                return (
+                                  <button
+                                    type="button"
+                                    disabled={busyId === order.id}
+                                    onClick={() => handleAdvance(order.id, action.nextStatus)}
+                                    className="flex-1 min-h-[44px] py-2 px-3 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 disabled:opacity-60 transition-colors"
+                                  >
+                                    {action.nextLabel}
+                                  </button>
+                                );
+                              }
+                              return (
+                                <Link
+                                  to={`/billing?tableId=${order.tableId}`}
+                                  className="flex-1 min-h-[44px] py-2 px-3 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 inline-flex items-center justify-center gap-1"
+                                >
+                                  Settle Bill
+                                  <ArrowRight className="w-3.5 h-3.5" />
+                                </Link>
+                              );
+                            })()}
 
-                            {(col.key === 'pending' || col.key === 'preparing') && (
+                            {(order.status === 'pending' || order.status === 'accepted') && (
                               <button
                                 type="button"
                                 disabled={busyId === order.id}

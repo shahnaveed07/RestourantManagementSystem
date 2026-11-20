@@ -99,19 +99,24 @@ export function HomePage() {
       reconnection: true,
     });
 
-    s.on('menu:itemAvailabilityChanged', (updatedItem) => {
+    const onAvailabilityChanged = (updatedItem) => {
       setMenuItems((prev) => {
         const next = prev.map((m) => (m.id === updatedItem.id ? updatedItem : m));
         syncMenuAvailability(next);
         return next;
       });
-    });
+    };
 
-    s.on('menu:updated', () => {
+    const onMenuUpdated = () => {
       loadMenu();
-    });
+    };
+
+    s.on('menu:itemAvailabilityChanged', onAvailabilityChanged);
+    s.on('menu:updated', onMenuUpdated);
 
     return () => {
+      s.off('menu:itemAvailabilityChanged', onAvailabilityChanged);
+      s.off('menu:updated', onMenuUpdated);
       s.disconnect();
     };
   }, [loadMenu, syncMenuAvailability]);

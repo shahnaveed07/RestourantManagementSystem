@@ -19,6 +19,33 @@ function parseCookieHeader(cookieHeader) {
   return result;
 }
 
+const STAFF_ROLES = new Set(['admin', 'manager', 'waiter', 'kitchen']);
+
+async function authenticateStaffSocket(socket, token) {
+  if (!token || typeof token !== 'string') return false;
+  try {
+    const decoded = jwt.verify(token, env.jwtSecret);
+    const user = await repo.findUserById(decoded.userId);
+    if (!user || !user.isActive || !STAFF_ROLES.has(user.role)) {
+      return false;
+    }
+    socket.join('restaurant:main');
+    socket.join(`role:${user.role}`);
+    if (user.role === 'admin') {
+      socket.join('role:manager');
+      socket.join('role:waiter');
+      socket.join('role:kitchen');
+    } else if (user.role === 'manager') {
+      socket.join('role:waiter');
+      socket.join('role:kitchen');
+    }
+    socket.emit('socket:ready', { scope: 'staff', role: user.role });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function initSocketServer(httpServer) {
   ioInstance = new SocketIOServer(httpServer, {
     cors: {
@@ -31,6 +58,11 @@ export function initSocketServer(httpServer) {
   ioInstance.on('connection', async (socket) => {
     const auth = socket.handshake.auth || {};
 
+    // Public storefront or QR guest menu room
+    if (auth.mode === 'guest' || auth.qrToken) {
+      socket.join('guests:menu');
+    }
+
     // Guest room join (validated strictly against table qrToken)
     if (auth.qrToken) {
       const table = await repo.findTableByQrToken(auth.qrToken);
@@ -41,49 +73,27 @@ export function initSocketServer(httpServer) {
       }
     }
 
-    // Staff room join (validated via JWT from auth handshake or httpOnly cookie)
+    // Staff room join (validated via JWT + active staff DB check)
     const cookies = parseCookieHeader(socket.handshake.headers.cookie);
     const jwtToken = auth.token || cookies.passline_access;
     if (jwtToken) {
-      try {
-        const decoded = jwt.verify(jwtToken, env.jwtSecret);
-        socket.join('restaurant:main');
-        socket.join(`role:${decoded.role}`);
-        if (decoded.role === 'admin') {
-          socket.join('role:manager');
-          socket.join('role:waiter');
-          socket.join('role:kitchen');
-        } else if (decoded.role === 'manager') {
-          socket.join('role:waiter');
-          socket.join('role:kitchen');
-        }
-        socket.emit('socket:ready', { scope: 'staff', role: decoded.role });
-      } catch {
-        // Invalid or expired staff token; stays unauthenticated
-      }
+      await authenticateStaffSocket(socket, jwtToken);
     }
 
-    // Allow dynamic room joining if a user logs in after socket connects
-    socket.on('staff:authenticate', (token) => {
-      try {
-        const decoded = jwt.verify(token, env.jwtSecret);
-        socket.join('restaurant:main');
-        socket.join(`role:${decoded.role}`);
-        if (decoded.role === 'admin' || decoded.role === 'manager') {
-          socket.join('role:manager');
-          socket.join('role:waiter');
-          socket.join('role:kitchen');
-        }
-        socket.emit('socket:ready', { scope: 'staff', role: decoded.role });
-      } catch {
-        // ignore invalid token
-      }
+    // Allow dynamic room joining if a staff user logs in after socket connects
+    socket.on('staff:authenticate', async (token) => {
+      await authenticateStaffSocket(socket, token);
     });
 
     socket.on('guest:joinTable', async (qrToken) => {
       if (!qrToken) return;
       const table = await repo.findTableByQrToken(qrToken);
       if (table) {
+        for (const room of socket.rooms) {
+          if (room.startsWith('table:') && room !== `table:${table.id}`) {
+            socket.leave(room);
+          }
+        }
         socket.join(`table:${table.id}`);
         socket.join('guests:menu');
         socket.emit('socket:ready', { scope: 'guest', tableId: table.id });

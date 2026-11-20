@@ -36,8 +36,14 @@ export function DashboardPage() {
 
   const fetchAll = useCallback(async () => {
     try {
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+      const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
       const [rep, orders, calls] = await Promise.all([
-        api.getReportsSummary(),
+        api.getReportsSummary({
+          from: startOfDay.toISOString(),
+          to: endOfDay.toISOString(),
+        }),
         api.listOrders({ status: 'pending,accepted,preparing,ready,served' }),
         api.listCalls({ status: 'open,acknowledged' }),
       ]);

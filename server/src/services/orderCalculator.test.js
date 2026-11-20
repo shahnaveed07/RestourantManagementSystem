@@ -90,7 +90,16 @@ test('computeConsolidatedBill calculates percentage and flat discounts accuratel
 });
 
 test('order status transitions and item-derived status work accurately', () => {
-  assert.equal(canTransitionOrderStatus('pending', 'preparing'), true);
+  assert.equal(canTransitionOrderStatus('pending', 'accepted'), true);
+  assert.equal(canTransitionOrderStatus('pending', 'preparing'), false);
+  assert.equal(canTransitionOrderStatus('pending', 'cancelled'), true);
+  assert.equal(canTransitionOrderStatus('accepted', 'preparing'), true);
+  assert.equal(canTransitionOrderStatus('accepted', 'cancelled'), true);
+  assert.equal(canTransitionOrderStatus('preparing', 'ready'), true);
+  assert.equal(canTransitionOrderStatus('preparing', 'cancelled'), false);
+  assert.equal(canTransitionOrderStatus('ready', 'served'), true);
+  assert.equal(canTransitionOrderStatus('ready', 'paid'), false);
+  assert.equal(canTransitionOrderStatus('served', 'paid'), true);
   assert.equal(canTransitionOrderStatus('paid', 'pending'), false);
   assert.equal(deriveOrderStatusFromItems('pending', ['preparing', 'pending']), 'preparing');
   assert.equal(deriveOrderStatusFromItems('preparing', ['ready', 'ready']), 'ready');

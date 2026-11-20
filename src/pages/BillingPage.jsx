@@ -75,14 +75,19 @@ export function BillingPage() {
   const computedTax = Math.round(taxable * taxRate * 100) / 100;
   const computedTotal = Math.round((taxable + computedTax) * 100) / 100;
 
+  const hasUnservedOrders = Boolean(
+    activeTab?.orders.some((o) => o.status !== 'served' && o.status !== 'paid')
+  );
+
   const handleSettle = async () => {
-    if (!activeTab || activeTab.orders.length === 0) return;
+    if (!activeTab || activeTab.orders.length === 0 || hasUnservedOrders) return;
     setProcessing(true);
     try {
       const res = await api.recordPayment(activeTab.table.id, {
         method,
         discountPercent: pct,
         flatDiscount: flat,
+        amount: computedTotal,
         nextTableStatus,
       });
       setLastReceipt({
@@ -371,6 +376,15 @@ export function BillingPage() {
                 </div>
               </div>
 
+              {hasUnservedOrders && (
+                <div
+                  role="alert"
+                  className="p-3.5 rounded-lg bg-amber-50 border border-amber-200 text-xs font-medium text-amber-900 no-print"
+                >
+                  All open orders on this table must be marked <strong>Served</strong> before settling and closing the table.
+                </div>
+              )}
+
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 no-print">
                 <div className="flex flex-wrap items-center gap-2.5 text-xs text-slate-600">
                   <span>After payment, set table to:</span>
@@ -387,7 +401,7 @@ export function BillingPage() {
 
                 <button
                   type="button"
-                  disabled={processing || activeTab.orders.length === 0}
+                  disabled={processing || activeTab.orders.length === 0 || hasUnservedOrders}
                   onClick={handleSettle}
                   className="min-h-[48px] w-full sm:w-auto px-6 py-2.5 rounded-lg bg-teal-700 text-white text-sm font-semibold hover:bg-teal-800 disabled:opacity-50"
                 >

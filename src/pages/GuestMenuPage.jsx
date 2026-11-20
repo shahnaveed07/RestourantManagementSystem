@@ -24,6 +24,7 @@ import { DishImage } from '../components/DishImage';
 import { BrandLogo } from '../components/BrandLogo';
 import { AuthModal } from '../components/AuthModal';
 import { useModalA11y } from '../utils/useModalA11y';
+import { roundCurrency } from '../utils/cart';
 import {
   formatCurrency,
   ORDER_STATUS_LABEL,
@@ -46,10 +47,37 @@ function getOrCreateGuestSession(tableToken) {
   }
 }
 
+function loadQrCart(tableToken) {
+  try {
+    const saved = localStorage.getItem(`passline_qr_cart_${tableToken}`);
+    return saved ? JSON.parse(saved) : {};
+  } catch {
+    return {};
+  }
+}
+
+function clearOtherQrCarts(activeToken) {
+  try {
+    const prefix = 'passline_qr_cart_';
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(prefix) && k !== `${prefix}${activeToken}`) {
+        keysToRemove.push(k);
+      }
+    }
+    for (const k of keysToRemove) {
+      localStorage.removeItem(k);
+    }
+  } catch {
+    // ignore storage errors
+  }
+}
+
 export function GuestMenuPage() {
   const { qrToken = '' } = useParams();
   const { user, config } = useAuth();
-  const [sessionId] = useState(() => getOrCreateGuestSession(qrToken));
+  const [sessionId, setSessionId] = useState(() => getOrCreateGuestSession(qrToken));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [restaurantName, setRestaurantName] = useState('Linden & Rye');
@@ -64,12 +92,8 @@ export function GuestMenuPage() {
   const [search, setSearch] = useState('');
   const [vegOnly, setVegOnly] = useState(false);
   const [cart, setCart] = useState(() => {
-    try {
-      const saved = localStorage.getItem(`passline_qr_cart_${qrToken}`);
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {};
-    }
+    clearOtherQrCarts(qrToken);
+    return loadQrCart(qrToken);
   });
   const [cartOpen, setCartOpen] = useState(false);
   const [callDrawerOpen, setCallDrawerOpen] = useState(false);
@@ -80,9 +104,25 @@ export function GuestMenuPage() {
   const [socketLive, setSocketLive] = useState(false);
   const mobileCartRef = useRef(null);
   const callModalRef = useRef(null);
+  const prevQrTokenRef = useRef(qrToken);
 
   useModalA11y(cartOpen, () => setCartOpen(false), mobileCartRef);
   useModalA11y(callDrawerOpen, () => setCallDrawerOpen(false), callModalRef);
+
+  useEffect(() => {
+    if (prevQrTokenRef.current !== qrToken) {
+      prevQrTokenRef.current = qrToken;
+      clearOtherQrCarts(qrToken);
+      setSessionId(getOrCreateGuestSession(qrToken));
+      setCart(loadQrCart(qrToken));
+      setCartOpen(false);
+      setTable(null);
+      setOrders([]);
+      setCalls([]);
+      setError(null);
+      setLoading(true);
+    }
+  }, [qrToken]);
 
   useEffect(() => {
     try {
@@ -122,21 +162,21 @@ export function GuestMenuPage() {
       reconnection: true,
     });
 
-    s.on('connect', () => {
+    const onConnect = () => {
       setSocketLive(true);
       s.emit('guest:joinTable', qrToken);
       loadData();
-    });
+    };
 
-    s.on('disconnect', () => {
+    const onDisconnect = () => {
       setSocketLive(false);
-    });
+    };
 
-    s.on('order:created', (order) => {
+    const onOrderCreated = (order) => {
       setOrders((prev) => (prev.some((o) => o.id === order.id) ? prev : [order, ...prev]));
-    });
+    };
 
-    s.on('order:updated', (order) => {
+    const onOrderUpdated = (order) => {
       setOrders((prev) => {
         if (order.status === 'paid' || order.status === 'cancelled') {
           return prev.filter((o) => o.id !== order.id);
@@ -147,26 +187,26 @@ export function GuestMenuPage() {
       toast(`Order ${order.orderNumber} is now ${ORDER_STATUS_LABEL[order.status]}`, {
         id: `guest-ord-${order.id}-${order.status}`,
       });
-    });
+    };
 
-    s.on('order:cancelled', (order) => {
+    const onOrderCancelled = (order) => {
       setOrders((prev) => prev.filter((o) => o.id !== order.id));
-    });
+    };
 
-    s.on('call:created', (call) => {
+    const onCallCreated = (call) => {
       setCalls((prev) => (prev.some((c) => c.id === call.id) ? prev : [call, ...prev]));
-    });
+    };
 
-    s.on('call:acknowledged', (call) => {
+    const onCallAcknowledged = (call) => {
       setCalls((prev) => prev.map((c) => (c.id === call.id ? call : c)));
       toast.success(`${call.acknowledgedByName || 'A waiter'} acknowledged your request`);
-    });
+    };
 
-    s.on('call:resolved', (call) => {
+    const onCallResolved = (call) => {
       setCalls((prev) => prev.filter((c) => c.id !== call.id));
-    });
+    };
 
-    s.on('menu:itemAvailabilityChanged', (updatedItem) => {
+    const onAvailabilityChanged = (updatedItem) => {
       setMenuItems((prev) => prev.map((m) => (m.id === updatedItem.id ? updatedItem : m)));
       if (!updatedItem.isAvailable) {
         setCart((prev) => {
@@ -177,13 +217,34 @@ export function GuestMenuPage() {
           return copy;
         });
       }
-    });
+    };
 
-    s.on('menu:updated', () => {
+    const onMenuUpdated = () => {
       loadData();
-    });
+    };
+
+    s.on('connect', onConnect);
+    s.on('disconnect', onDisconnect);
+    s.on('order:created', onOrderCreated);
+    s.on('order:updated', onOrderUpdated);
+    s.on('order:cancelled', onOrderCancelled);
+    s.on('call:created', onCallCreated);
+    s.on('call:acknowledged', onCallAcknowledged);
+    s.on('call:resolved', onCallResolved);
+    s.on('menu:itemAvailabilityChanged', onAvailabilityChanged);
+    s.on('menu:updated', onMenuUpdated);
 
     return () => {
+      s.off('connect', onConnect);
+      s.off('disconnect', onDisconnect);
+      s.off('order:created', onOrderCreated);
+      s.off('order:updated', onOrderUpdated);
+      s.off('order:cancelled', onOrderCancelled);
+      s.off('call:created', onCallCreated);
+      s.off('call:acknowledged', onCallAcknowledged);
+      s.off('call:resolved', onCallResolved);
+      s.off('menu:itemAvailabilityChanged', onAvailabilityChanged);
+      s.off('menu:updated', onMenuUpdated);
       s.disconnect();
     };
   }, [qrToken, loadData]);
@@ -196,7 +257,7 @@ export function GuestMenuPage() {
         ...prev,
         [item.id]: {
           item,
-          qty: existing ? existing.qty + 1 : 1,
+          qty: Math.min(50, existing ? existing.qty + 1 : 1),
           notes: existing?.notes || '',
         },
       };
@@ -213,7 +274,7 @@ export function GuestMenuPage() {
         delete copy[itemId];
         return copy;
       }
-      return { ...prev, [itemId]: { ...existing, qty: nextQty } };
+      return { ...prev, [itemId]: { ...existing, qty: Math.min(50, nextQty) } };
     });
   };
 
@@ -221,18 +282,18 @@ export function GuestMenuPage() {
     setCart((prev) => {
       const existing = prev[itemId];
       if (!existing) return prev;
-      return { ...prev, [itemId]: { ...existing, notes } };
+      return { ...prev, [itemId]: { ...existing, notes: String(notes || '').slice(0, 200) } };
     });
   };
 
   const cartEntries = useMemo(() => Object.values(cart), [cart]);
   const cartCount = useMemo(() => cartEntries.reduce((s, e) => s + e.qty, 0), [cartEntries]);
   const cartSubtotal = useMemo(
-    () => cartEntries.reduce((s, e) => s + e.item.price * e.qty, 0),
+    () => roundCurrency(cartEntries.reduce((s, e) => s + e.item.price * e.qty, 0)),
     [cartEntries]
   );
-  const cartTax = cartSubtotal * taxRate;
-  const cartTotal = cartSubtotal + cartTax;
+  const cartTax = roundCurrency(cartSubtotal * taxRate);
+  const cartTotal = roundCurrency(cartSubtotal + cartTax);
 
   const handlePlaceOrder = async () => {
     if (cartEntries.length === 0) return;
@@ -320,16 +381,24 @@ export function GuestMenuPage() {
     return (
       <div className="min-h-dvh flex items-center justify-center bg-slate-50 p-6">
         <div className="max-w-md w-full bg-white border border-slate-200 rounded-xl p-8 text-center">
-          <h1 className="text-xl font-bold text-slate-900">Table QR Code Not Recognized</h1>
+          <h1 className="text-xl font-bold text-slate-900">Table not found or QR expired</h1>
           <p className="mt-2 text-sm text-slate-600">
             {error || 'Please scan the active QR code on your table or ask your server for assistance.'}
           </p>
-          <Link
-            to="/login"
-            className="mt-6 min-h-[44px] inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-teal-700 text-white text-sm font-medium hover:bg-teal-800"
-          >
-            Go to Staff Login
-          </Link>
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-2.5">
+            <Link
+              to="/"
+              className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-teal-700 text-white text-sm font-medium hover:bg-teal-800"
+            >
+              Back to Home
+            </Link>
+            <Link
+              to="/login"
+              className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center px-5 py-2.5 rounded-lg border border-slate-200 text-slate-700 text-sm font-medium hover:bg-slate-50"
+            >
+              Staff Login
+            </Link>
+          </div>
         </div>
       </div>
     );

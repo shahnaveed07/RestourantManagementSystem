@@ -37,6 +37,11 @@ http.interceptors.request.use((config) => {
 });
 
 let refreshPromise = null;
+let unauthorizedHandler = null;
+
+export function setUnauthorizedHandler(fn) {
+  unauthorizedHandler = typeof fn === 'function' ? fn : null;
+}
 
 http.interceptors.response.use(
   (response) => response,
@@ -68,11 +73,26 @@ http.interceptors.response.use(
         }
       } catch {
         setStoredToken(null);
+        unauthorizedHandler?.();
       }
+      setStoredToken(null);
+      unauthorizedHandler?.();
     }
     return Promise.reject(error);
   }
 );
+
+function mapAxiosErrorMessage(status, payloadMessage, fallback) {
+  if (status >= 500) {
+    return 'Something went wrong on the server. Please try again.';
+  }
+  if (payloadMessage) return payloadMessage;
+  if (status === 401) return 'Your session expired. Please sign in again.';
+  if (status === 403) return 'You are not allowed to perform this action.';
+  if (status === 404) return 'Requested resource was not found.';
+  if (status === 429) return 'Too many requests. Please try again later.';
+  return fallback || 'Request failed';
+}
 
 async function unwrap(promise) {
   try {
@@ -83,10 +103,11 @@ async function unwrap(promise) {
     return res.data.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
+      const status = err.response?.status;
       const payload = err.response?.data;
-      const msg = payload?.message || err.message;
+      const msg = mapAxiosErrorMessage(status, payload?.message, err.message);
       const wrapped = new Error(msg);
-      wrapped.status = err.response?.status;
+      wrapped.status = status;
       wrapped.data = payload?.data || null;
       wrapped.code = payload?.data?.code || null;
       throw wrapped;
@@ -167,6 +188,7 @@ export const api = {
 
   // Reports
   getReportsSummary: (params) => unwrap(http.get('/reports/summary', { params })),
+  exportReportsCsv: (params) => http.get('/reports/export', { params, responseType: 'blob' }),
 
   // Staff (Admin)
   listStaff: () => unwrap(http.get('/staff')),

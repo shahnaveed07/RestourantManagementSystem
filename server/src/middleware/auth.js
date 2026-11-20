@@ -34,8 +34,9 @@ export function setAuthCookies(res, accessToken, refreshToken) {
 }
 
 export function clearAuthCookies(res) {
-  res.clearCookie('passline_access', { sameSite: 'lax' });
-  res.clearCookie('passline_refresh', { sameSite: 'lax' });
+  const isProd = env.nodeEnv === 'production';
+  res.clearCookie('passline_access', { httpOnly: true, sameSite: 'lax', secure: isProd });
+  res.clearCookie('passline_refresh', { httpOnly: true, sameSite: 'lax', secure: isProd });
 }
 
 export function extractToken(req) {

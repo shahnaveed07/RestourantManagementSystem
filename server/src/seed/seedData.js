@@ -495,6 +495,9 @@ export async function seedDatabase(forceReset = false) {
 
   // 5. Seed Historical Paid Orders & Payments across earlier hours today
   const now = Date.now();
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 5, 0, 0);
+  const startOfTodayMs = startOfToday.getTime();
   const findItem = (namePart) =>
     menuItems.find((m) => m.name.toLowerCase().includes(namePart.toLowerCase())) || menuItems[0];
 
@@ -508,12 +511,15 @@ export async function seedDatabase(forceReset = false) {
   ];
 
   let totalSeededOrders = 0;
-  for (const tpl of pastOrderTemplates) {
+  for (let tplIdx = 0; tplIdx < pastOrderTemplates.length; tplIdx += 1) {
+    const tpl = pastOrderTemplates[tplIdx];
     const table = tables[tpl.tableIdx];
-    const createdDate = new Date(now - tpl.hoursAgo * 60 * 60 * 1000);
-    const prepDone = new Date(createdDate.getTime() + 14 * 60 * 1000);
-    const servedAt = new Date(createdDate.getTime() + 17 * 60 * 1000);
-    const paidAt = new Date(createdDate.getTime() + 45 * 60 * 1000);
+    const desiredMs = now - tpl.hoursAgo * 60 * 60 * 1000;
+    const clampedCreatedMs = Math.max(startOfTodayMs + tplIdx * 60 * 1000, Math.min(now - 60000, desiredMs));
+    const createdDate = new Date(clampedCreatedMs);
+    const prepDone = new Date(Math.min(now - 30000, clampedCreatedMs + 14 * 60 * 1000));
+    const servedAt = new Date(Math.min(now - 20000, clampedCreatedMs + 17 * 60 * 1000));
+    const paidAt = new Date(Math.min(now - 10000, clampedCreatedMs + 45 * 60 * 1000));
 
     const items = tpl.items.map((m) => ({
       menuItemId: m.id,

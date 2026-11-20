@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { api, getStoredToken, setStoredToken } from '../api/client';
+import { api, getStoredToken, setStoredToken, setUnauthorizedHandler } from '../api/client';
 
 const DEFAULT_CONFIG = {
   restaurantName: 'Linden & Rye',
@@ -29,6 +29,15 @@ export function AuthProvider({ children }) {
     } catch {
       // keep default config
     }
+  }, []);
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      setUser(null);
+      setToken(null);
+      setStoredToken(null);
+    });
+    return () => setUnauthorizedHandler(null);
   }, []);
 
   useEffect(() => {
@@ -89,14 +98,14 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
+    setStoredToken(null);
+    setToken(null);
+    setUser(null);
     try {
       await api.logout();
     } catch {
       // ignore logout network errors
     }
-    setStoredToken(null);
-    setToken(null);
-    setUser(null);
   }, []);
 
   return (

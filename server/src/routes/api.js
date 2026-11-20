@@ -986,7 +986,7 @@ router.patch(
 router.post(
   '/tables/:id/rotate-qr',
   authenticate,
-  requireRole('admin', 'manager'),
+  requireRole('admin'),
   asyncHandler(async (req, res) => {
     const table = await repo.findTableById(String(req.params.id));
     if (!table) return sendErr(res, 'Table not found.', 404);
@@ -1005,9 +1005,21 @@ router.delete(
   authenticate,
   requireRole('admin', 'manager'),
   asyncHandler(async (req, res) => {
-    const ok = await repo.deleteTable(String(req.params.id));
+    const tableId = String(req.params.id);
+    const [openOrders, activeCalls] = await Promise.all([
+      repo.listOrders({
+        tableId,
+        statuses: ['pending', 'accepted', 'preparing', 'ready', 'served'],
+      }),
+      repo.listCalls({ tableId, statuses: ['open', 'acknowledged'] }),
+    ]);
+    if (openOrders.length > 0 || activeCalls.length > 0) {
+      return sendErr(res, 'Cannot delete a table with open orders or active service calls.', 400);
+    }
+
+    const ok = await repo.deleteTable(tableId);
     if (!ok) return sendErr(res, 'Table not found.', 404);
-    await logAudit(req, 'DELETE_TABLE', 'Table', String(req.params.id), 'Deleted table');
+    await logAudit(req, 'DELETE_TABLE', 'Table', tableId, 'Deleted table');
     return sendOk(res, { deleted: true });
   })
 );
@@ -1089,7 +1101,12 @@ router.delete(
   authenticate,
   requireRole('admin', 'manager'),
   asyncHandler(async (req, res) => {
-    const ok = await repo.deleteCategory(String(req.params.id));
+    const categoryId = String(req.params.id);
+    const items = await repo.listMenuItems(false);
+    if (items.some((item) => item.categoryId === categoryId)) {
+      return sendErr(res, 'Cannot delete a category that still has menu items.', 400);
+    }
+    const ok = await repo.deleteCategory(categoryId);
     if (!ok) return sendErr(res, 'Category not found.', 404);
     socketEmitter.menuUpdated({ reason: 'category_deleted' });
     return sendOk(res, { deleted: true });
@@ -1117,6 +1134,11 @@ router.post(
     const parsed = menuItemSchema.safeParse(req.body);
     if (!parsed.success) return sendErr(res, 'Invalid dish fields. Check name, price, and category.', 400);
 
+    const categories = await repo.listCategories();
+    if (!categories.some((c) => c.id === parsed.data.categoryId)) {
+      return sendErr(res, 'Selected category does not exist.', 400);
+    }
+
     const created = await repo.createMenuItem({
       name: sanitizeText(parsed.data.name),
       description: sanitizeText(parsed.data.description),
@@ -1143,6 +1165,13 @@ router.put(
   asyncHandler(async (req, res) => {
     const parsed = menuItemSchema.partial().safeParse(req.body);
     if (!parsed.success) return sendErr(res, 'Invalid dish update.', 400);
+
+    if (parsed.data.categoryId !== undefined) {
+      const categories = await repo.listCategories();
+      if (!categories.some((c) => c.id === parsed.data.categoryId)) {
+        return sendErr(res, 'Selected category does not exist.', 400);
+      }
+    }
 
     const patch = { ...parsed.data };
     if (typeof patch.name === 'string') patch.name = sanitizeText(patch.name);
@@ -1366,6 +1395,7 @@ router.post(
 router.patch(
   '/orders/:id/status',
   authenticate,
+  requireRole('admin', 'manager', 'waiter', 'kitchen'),
   asyncHandler(async (req, res) => {
     const schema = z.object({
       status: z.enum(['pending', 'accepted', 'preparing', 'ready', 'served', 'paid', 'cancelled']),
@@ -1383,7 +1413,7 @@ router.patch(
 
     const role = req.user.role;
     if (role === 'kitchen' && !['accepted', 'preparing', 'ready'].includes(nextStatus)) {
-      return sendErr(res, 'Kitchen staff can only move orders to preparing or ready.', 403);
+      return sendErr(res, 'Kitchen staff can only move orders to accepted, preparing, or ready.', 403);
     }
     if (role === 'waiter' && !['accepted', 'preparing', 'ready', 'served', 'cancelled'].includes(nextStatus)) {
       return sendErr(res, 'Waiter cannot directly set this status.', 403);
@@ -1439,6 +1469,9 @@ router.patch(
 
     const order = await repo.findOrderById(String(req.params.id));
     if (!order) return sendErr(res, 'Order not found.', 404);
+    if (['served', 'paid', 'cancelled'].includes(order.status)) {
+      return sendErr(res, 'Cannot update items on a served, paid, or cancelled order.', 400);
+    }
 
     const idx = Number(req.params.itemIndex);
     if (!Number.isInteger(idx) || idx < 0 || idx >= order.items.length) {
@@ -1453,14 +1486,21 @@ router.patch(
       updatedItems.map((i) => i.status)
     );
     const nowIso = new Date().toISOString();
+    const nextTimestamps = { ...order.statusTimestamps };
+    if (derivedStatus !== order.status) {
+      if ((derivedStatus === 'preparing' || derivedStatus === 'ready') && !nextTimestamps.accepted) {
+        nextTimestamps.accepted = nowIso;
+      }
+      if (derivedStatus === 'ready' && !nextTimestamps.preparing) {
+        nextTimestamps.preparing = nowIso;
+      }
+      nextTimestamps[derivedStatus] = nowIso;
+    }
 
     const updated = await repo.updateOrder(order.id, {
       items: updatedItems,
       status: derivedStatus,
-      statusTimestamps: {
-        ...order.statusTimestamps,
-        ...(derivedStatus !== order.status ? { [derivedStatus]: nowIso } : {}),
-      },
+      statusTimestamps: nextTimestamps,
       updatedAt: nowIso,
     });
 
@@ -1492,6 +1532,9 @@ router.patch(
   asyncHandler(async (req, res) => {
     const call = await repo.findCallById(String(req.params.id));
     if (!call) return sendErr(res, 'Service call not found.', 404);
+    if (call.status !== 'open') {
+      return sendErr(res, 'Only open service calls can be acknowledged.', 400);
+    }
 
     const updated = await repo.updateCall(call.id, {
       status: 'acknowledged',
@@ -1513,6 +1556,9 @@ router.patch(
   asyncHandler(async (req, res) => {
     const call = await repo.findCallById(String(req.params.id));
     if (!call) return sendErr(res, 'Service call not found.', 404);
+    if (call.status === 'resolved') {
+      return sendErr(res, 'Service call is already resolved.', 400);
+    }
 
     const updated = await repo.updateCall(call.id, {
       status: 'resolved',
@@ -1567,6 +1613,7 @@ router.post(
       method: z.enum(['cash', 'card', 'upi', 'demo']),
       discountPercent: z.number().min(0).max(100).default(0),
       flatDiscount: z.number().min(0).max(10000).default(0),
+      amount: z.number().nonnegative().optional(),
       nextTableStatus: z.enum(['free', 'cleaning']).default('free'),
     });
     const parsed = schema.safeParse(req.body);
@@ -1583,12 +1630,24 @@ router.post(
       return sendErr(res, 'No open orders to settle for this table.', 400);
     }
 
+    const unservedOrders = openOrders.filter((o) => !['served', 'paid'].includes(o.status));
+    if (unservedOrders.length > 0) {
+      return sendErr(res, 'All open orders on this table must be served before settling the bill.', 400);
+    }
+
     const bill = computeConsolidatedBill(
       openOrders,
       env.taxRate,
       parsed.data.discountPercent,
       parsed.data.flatDiscount
     );
+    if (
+      parsed.data.amount !== undefined &&
+      Math.abs(roundCurrency(parsed.data.amount) - bill.total) > 0.01
+    ) {
+      return sendErr(res, `Payment amount must match the bill total ($${bill.total.toFixed(2)}).`, 400);
+    }
+
     const nowIso = new Date().toISOString();
 
     const payment = await repo.createPayment({
@@ -2177,7 +2236,7 @@ router.use((err, _req, res, _next) => {
   res.status(500).json({
     success: false,
     data: null,
-    message: err.message || 'Internal server error.',
+    message: 'Internal server error. Please try again.',
   });
 });
 

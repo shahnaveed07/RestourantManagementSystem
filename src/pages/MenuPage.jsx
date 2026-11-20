@@ -49,6 +49,14 @@ export function MenuPage() {
   const [bulkMode, setBulkMode] = useState('percent');
   const [bulkAmount, setBulkAmount] = useState('5');
 
+  const [savingItem, setSavingItem] = useState(false);
+  const [savingCat, setSavingCat] = useState(false);
+  const [savingBulk, setSavingBulk] = useState(false);
+  const [busyItemId, setBusyItemId] = useState(null);
+  const [itemError, setItemError] = useState(null);
+  const [catError, setCatError] = useState(null);
+  const [bulkError, setBulkError] = useState(null);
+
   const itemModalRef = useModalA11y(itemModalOpen, () => setItemModalOpen(false));
   const catModalRef = useModalA11y(catModalOpen, () => setCatModalOpen(false));
   const bulkModalRef = useModalA11y(bulkModalOpen, () => setBulkModalOpen(false));
@@ -85,6 +93,7 @@ export function MenuPage() {
 
   const openCreateItem = () => {
     setEditingItem(null);
+    setItemError(null);
     setFormState({
       name: '',
       description: '',
@@ -102,6 +111,7 @@ export function MenuPage() {
 
   const openEditItem = (item) => {
     setEditingItem(item);
+    setItemError(null);
     setFormState({
       name: item.name,
       description: item.description,
@@ -135,9 +145,10 @@ export function MenuPage() {
 
   const handleSaveItem = async (e) => {
     e.preventDefault();
+    setItemError(null);
     const priceNum = Number(formState.price);
     if (!formState.name.trim() || !Number.isFinite(priceNum) || priceNum <= 0 || !formState.categoryId) {
-      toast.error('Please enter a valid dish name, price, and category.');
+      setItemError('Please enter a valid dish name, price, and category.');
       return;
     }
     const payload = {
@@ -156,6 +167,7 @@ export function MenuPage() {
       isAvailable: formState.isAvailable,
     };
 
+    setSavingItem(true);
     try {
       if (editingItem) {
         const updated = await api.updateMenuItem(editingItem.id, payload);
@@ -168,11 +180,14 @@ export function MenuPage() {
       }
       setItemModalOpen(false);
     } catch (err) {
-      toast.error(err.message);
+      setItemError(err.message);
+    } finally {
+      setSavingItem(false);
     }
   };
 
   const handleToggleAvailability = async (item) => {
+    setBusyItemId(item.id);
     try {
       const updated = await api.toggleMenuItemAvailability(item.id, !item.isAvailable);
       setItems((prev) => prev.map((m) => (m.id === item.id ? updated : m)));
@@ -181,22 +196,32 @@ export function MenuPage() {
       );
     } catch (err) {
       toast.error(err.message);
+    } finally {
+      setBusyItemId(null);
     }
   };
 
   const handleDeleteItem = async (item) => {
+    setBusyItemId(item.id);
     try {
       await api.deleteMenuItem(item.id);
       setItems((prev) => prev.filter((m) => m.id !== item.id));
       toast.success(`Removed "${item.name}"`);
     } catch (err) {
       toast.error(err.message);
+    } finally {
+      setBusyItemId(null);
     }
   };
 
   const handleCreateCategory = async (e) => {
     e.preventDefault();
-    if (!catName.trim()) return;
+    setCatError(null);
+    if (!catName.trim()) {
+      setCatError('Please enter a category name.');
+      return;
+    }
+    setSavingCat(true);
     try {
       const created = await api.createCategory({
         name: catName.trim(),
@@ -207,17 +232,21 @@ export function MenuPage() {
       setCatModalOpen(false);
       toast.success(`Created category "${created.name}"`);
     } catch (err) {
-      toast.error(err.message);
+      setCatError(err.message);
+    } finally {
+      setSavingCat(false);
     }
   };
 
   const handleBulkPrice = async (e) => {
     e.preventDefault();
+    setBulkError(null);
     const amount = Number(bulkAmount);
     if (!Number.isFinite(amount) || amount === 0) {
-      toast.error('Enter a non-zero price adjustment.');
+      setBulkError('Enter a non-zero price adjustment.');
       return;
     }
+    setSavingBulk(true);
     try {
       const res = await api.bulkPriceUpdate({
         categoryId: bulkCat || undefined,
@@ -228,7 +257,9 @@ export function MenuPage() {
       setBulkModalOpen(false);
       fetchMenu();
     } catch (err) {
-      toast.error(err.message);
+      setBulkError(err.message);
+    } finally {
+      setSavingBulk(false);
     }
   };
 
@@ -250,7 +281,10 @@ export function MenuPage() {
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            onClick={() => setBulkModalOpen(true)}
+            onClick={() => {
+              setBulkError(null);
+              setBulkModalOpen(true);
+            }}
             className="min-h-[44px] px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1.5 whitespace-nowrap"
           >
             <Percent className="w-3.5 h-3.5" />
@@ -258,7 +292,10 @@ export function MenuPage() {
           </button>
           <button
             type="button"
-            onClick={() => setCatModalOpen(true)}
+            onClick={() => {
+              setCatError(null);
+              setCatModalOpen(true);
+            }}
             className="min-h-[44px] px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1.5 whitespace-nowrap"
           >
             <FolderPlus className="w-3.5 h-3.5" />
@@ -354,9 +391,10 @@ export function MenuPage() {
                 <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
                   <button
                     type="button"
+                    disabled={busyItemId === item.id}
                     onClick={() => handleToggleAvailability(item)}
                     aria-label={`Toggle availability for ${item.name}`}
-                    className={`min-h-[44px] px-3 py-2 rounded-lg text-xs font-semibold border transition-colors whitespace-nowrap ${
+                    className={`min-h-[44px] px-3 py-2 rounded-lg text-xs font-semibold border transition-colors whitespace-nowrap disabled:opacity-60 ${
                       item.isAvailable
                         ? 'bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100'
                         : 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'
@@ -375,9 +413,10 @@ export function MenuPage() {
                     </button>
                     <button
                       type="button"
+                      disabled={busyItemId === item.id}
                       onClick={() => handleDeleteItem(item)}
                       aria-label={`Delete ${item.name}`}
-                      className="min-w-[44px] min-h-[44px] p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-700 inline-flex items-center justify-center"
+                      className="min-w-[44px] min-h-[44px] p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-700 disabled:opacity-60 inline-flex items-center justify-center"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -448,9 +487,10 @@ export function MenuPage() {
                     <td className="py-3 px-4">
                       <button
                         type="button"
+                        disabled={busyItemId === item.id}
                         onClick={() => handleToggleAvailability(item)}
                         aria-label={`Toggle availability for ${item.name}`}
-                        className={`min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors whitespace-nowrap ${
+                        className={`min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors whitespace-nowrap disabled:opacity-60 ${
                           item.isAvailable
                             ? 'bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100'
                             : 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'
@@ -471,9 +511,10 @@ export function MenuPage() {
                         </button>
                         <button
                           type="button"
+                          disabled={busyItemId === item.id}
                           onClick={() => handleDeleteItem(item)}
                           aria-label={`Delete ${item.name}`}
-                          className="min-w-[44px] min-h-[44px] p-2 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-700 inline-flex items-center justify-center"
+                          className="min-w-[44px] min-h-[44px] p-2 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-700 disabled:opacity-60 inline-flex items-center justify-center"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -516,6 +557,15 @@ export function MenuPage() {
                 {editingItem ? 'Edit Dish' : 'Add Menu Dish'}
               </h2>
             </div>
+
+            {itemError && (
+              <div
+                role="alert"
+                className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs font-medium text-red-700"
+              >
+                {itemError}
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="sm:col-span-2">
@@ -685,9 +735,10 @@ export function MenuPage() {
               </button>
               <button
                 type="submit"
-                className="min-h-[44px] px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800"
+                disabled={savingItem}
+                className="min-h-[44px] px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 disabled:opacity-60"
               >
-                {editingItem ? 'Save Changes' : 'Create Dish'}
+                {savingItem ? 'Saving...' : editingItem ? 'Save Changes' : 'Create Dish'}
               </button>
             </div>
           </form>
@@ -721,6 +772,14 @@ export function MenuPage() {
               </button>
               <h2 id="cat-modal-title" className="text-base font-bold text-slate-900">New Menu Category</h2>
             </div>
+            {catError && (
+              <div
+                role="alert"
+                className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs font-medium text-red-700"
+              >
+                {catError}
+              </div>
+            )}
             <div>
               <label htmlFor="cat-name" className="block text-xs font-medium text-slate-700 mb-1">
                 Category Name
@@ -756,9 +815,10 @@ export function MenuPage() {
               </button>
               <button
                 type="submit"
-                className="min-h-[44px] px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold"
+                disabled={savingCat}
+                className="min-h-[44px] px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold disabled:opacity-60"
               >
-                Add Category
+                {savingCat ? 'Adding...' : 'Add Category'}
               </button>
             </div>
           </form>
@@ -792,6 +852,14 @@ export function MenuPage() {
               </button>
               <h2 id="bulk-modal-title" className="text-base font-bold text-slate-900">Bulk Price Adjustment</h2>
             </div>
+            {bulkError && (
+              <div
+                role="alert"
+                className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs font-medium text-red-700"
+              >
+                {bulkError}
+              </div>
+            )}
             <div>
               <label htmlFor="bulk-cat" className="block text-xs font-medium text-slate-700 mb-1">
                 Target Category
@@ -849,9 +917,10 @@ export function MenuPage() {
               </button>
               <button
                 type="submit"
-                className="min-h-[44px] px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold"
+                disabled={savingBulk}
+                className="min-h-[44px] px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold disabled:opacity-60"
               >
-                Apply Prices
+                {savingBulk ? 'Applying...' : 'Apply Prices'}
               </button>
             </div>
           </form>
