@@ -7,6 +7,7 @@ import { QrModal, QrSheetModal } from '../components/QrModal';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
+import { useModalA11y } from '../utils/useModalA11y';
 import {
   formatCurrency,
   formatDateTime,
@@ -41,6 +42,9 @@ export function TablesPage() {
   const [newName, setNewName] = useState('');
   const [newCapacity, setNewCapacity] = useState('4');
   const [newSection, setNewSection] = useState('Main Dining');
+
+  const drawerRef = useModalA11y(Boolean(selectedTable), () => setSelectedTable(null));
+  const createModalRef = useModalA11y(createOpen, () => setCreateOpen(false));
 
   const fetchTables = useCallback(async () => {
     try {
@@ -146,11 +150,11 @@ export function TablesPage() {
       title="Tables Floor & QR Codes"
       subtitle="Manage dining room status, inspect active table tabs, and generate printable QR codes"
       actions={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => setSheetOpen(true)}
-            className="px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1.5 whitespace-nowrap"
+            className="min-h-[44px] px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1.5 whitespace-nowrap"
           >
             <Printer className="w-3.5 h-3.5" />
             All QR Sheet
@@ -159,7 +163,7 @@ export function TablesPage() {
             <button
               type="button"
               onClick={() => setCreateOpen(true)}
-              className="px-3.5 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 inline-flex items-center gap-1.5 whitespace-nowrap"
+              className="min-h-[44px] px-3.5 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 inline-flex items-center gap-1.5 whitespace-nowrap"
             >
               <Plus className="w-3.5 h-3.5" />
               Add Table
@@ -169,12 +173,12 @@ export function TablesPage() {
       }
     >
       {/* Filter Toolbar */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-1.5">
+      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
           <button
             type="button"
             onClick={() => setSectionFilter('all')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+            className={`min-h-[44px] px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
               sectionFilter === 'all'
                 ? 'bg-slate-900 text-white'
                 : 'bg-white border border-slate-200 text-slate-600 hover:text-slate-900'
@@ -187,7 +191,7 @@ export function TablesPage() {
               key={sec}
               type="button"
               onClick={() => setSectionFilter(sec)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+              className={`min-h-[44px] px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
                 sectionFilter === sec
                   ? 'bg-slate-900 text-white'
                   : 'bg-white border border-slate-200 text-slate-600 hover:text-slate-900'
@@ -198,13 +202,13 @@ export function TablesPage() {
           ))}
         </div>
 
-        <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg border border-slate-200">
+        <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg border border-slate-200 overflow-x-auto no-scrollbar">
           {['all', 'free', 'occupied', 'reserved', 'cleaning'].map((st) => (
             <button
               key={st}
               type="button"
               onClick={() => setStatusFilter(st)}
-              className={`px-2.5 py-1 text-xs font-medium rounded-md capitalize transition-colors ${
+              className={`min-h-[38px] px-2.5 py-1.5 text-xs font-medium rounded-md capitalize whitespace-nowrap transition-colors ${
                 statusFilter === st ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
               }`}
             >
@@ -216,74 +220,74 @@ export function TablesPage() {
 
       {/* Floor Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {Array.from({ length: 8 }).map((_, i) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+          {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="h-44 rounded-xl bg-white border border-slate-200 animate-pulse" />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
           {visibleTables.map((t) => {
             const st = STATUS_STYLE[t.status];
             return (
               <article
                 key={t.id}
-                className={`border rounded-xl p-5 flex flex-col justify-between gap-4 transition-colors ${st.card}`}
+                className={`border rounded-xl p-3.5 sm:p-4 flex flex-col justify-between gap-3 transition-colors ${st.card}`}
               >
                 <div>
-                  <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start justify-between gap-1.5">
                     <button
                       type="button"
                       onClick={() => openTableDrawer(t)}
-                      className="text-left group"
+                      className="text-left group min-w-0"
                     >
-                      <h2 className="text-base font-bold text-slate-900 group-hover:text-teal-800">
+                      <h2 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-teal-800">
                         Table {t.number}
                       </h2>
-                      <p className="text-xs text-slate-600 mt-0.5">{t.name}</p>
+                      <p className="text-xs text-slate-600 mt-0.5 truncate">{t.name}</p>
                     </button>
-                    <span className={`text-xs font-bold ${st.label}`}>
+                    <span className={`text-[11px] font-bold shrink-0 ${st.label}`}>
                       {TABLE_STATUS_LABEL[t.status]}
                     </span>
                   </div>
 
-                  <div className="mt-3 text-xs text-slate-500 flex items-center gap-2">
-                    <span>{t.section}</span>
+                  <div className="mt-2.5 text-xs text-slate-500 flex flex-wrap items-center gap-x-1.5">
+                    <span className="truncate">{t.section}</span>
                     <span aria-hidden="true">·</span>
                     <span>{t.capacity} seats</span>
                   </div>
 
                   {(t.openOrderCount || 0) > 0 || (t.openCallCount || 0) > 0 ? (
-                    <div className="mt-3 pt-3 border-t border-slate-200/80 flex items-center justify-between text-xs">
-                      <span className="text-slate-700 font-medium tabular-nums">
-                        {t.openOrderCount || 0} open order{(t.openOrderCount || 0) === 1 ? '' : 's'}
+                    <div className="mt-2.5 pt-2.5 border-t border-slate-200/80 flex items-center justify-between gap-1 text-xs">
+                      <span className="text-slate-700 font-medium tabular-nums truncate">
+                        {t.openOrderCount || 0} ord
                         {(t.openCallCount || 0) > 0 && (
                           <span className="text-red-700 font-bold"> · {t.openCallCount} call</span>
                         )}
                       </span>
-                      <span className="font-mono font-semibold text-slate-900 tabular-nums">
+                      <span className="font-mono font-semibold text-slate-900 tabular-nums shrink-0">
                         {formatCurrency(t.openTotal || 0)}
                       </span>
                     </div>
                   ) : null}
                 </div>
 
-                <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-200/70">
+                <div className="flex flex-wrap items-center justify-between gap-1.5 pt-2.5 border-t border-slate-200/70">
                   <button
                     type="button"
                     onClick={() => openTableDrawer(t)}
-                    className="text-xs font-semibold text-slate-700 hover:text-slate-950"
+                    className="min-h-[44px] px-1.5 text-xs font-semibold text-slate-700 hover:text-slate-950 inline-flex items-center"
                   >
-                    Details & Status
+                    Details
                   </button>
                   <button
                     type="button"
                     onClick={() => setQrTable(t)}
                     aria-label={`Generate QR for Table ${t.number}`}
-                    className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-teal-800 hover:border-teal-600 inline-flex items-center gap-1.5"
+                    className="min-h-[44px] px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-teal-800 hover:border-teal-600 inline-flex items-center gap-1"
                   >
                     <QrCode className="w-3.5 h-3.5" />
-                    QR Code
+                    QR
                   </button>
                 </div>
               </article>
@@ -299,14 +303,20 @@ export function TablesPage() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="table-drawer-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedTable(null);
+          }}
         >
-          <div className="w-full max-w-lg bg-white h-full overflow-y-auto p-6 shadow-2xl space-y-6">
+          <div
+            ref={drawerRef}
+            className="w-full sm:max-w-lg bg-white h-dvh overflow-y-auto p-5 sm:p-6 shadow-2xl space-y-6"
+          >
             <div className="flex items-start justify-between gap-3 pb-4 border-b border-slate-200">
-              <div>
+              <div className="min-w-0">
                 <h2 id="table-drawer-title" className="text-lg font-bold text-slate-900">
                   Table {selectedTable.number} — {selectedTable.name}
                 </h2>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 break-words">
                   {selectedTable.section} · {selectedTable.capacity} seats · Token:{' '}
                   <span className="font-mono">{selectedTable.qrToken}</span>
                 </p>
@@ -315,21 +325,21 @@ export function TablesPage() {
                 type="button"
                 onClick={() => setSelectedTable(null)}
                 aria-label="Close table details"
-                className="p-2 rounded-lg text-slate-500 hover:bg-slate-100"
+                className="min-w-[44px] min-h-[44px] p-2 rounded-lg text-slate-500 hover:bg-slate-100 inline-flex items-center justify-center shrink-0"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             <div>
               <p className="text-xs font-semibold text-slate-700 mb-2">Update Table Status</p>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {['free', 'occupied', 'reserved', 'cleaning'].map((status) => (
                   <button
                     key={status}
                     type="button"
                     onClick={() => handleStatusChange(selectedTable.id, status)}
-                    className={`py-2 px-2 rounded-lg border text-xs font-semibold capitalize transition-colors ${
+                    className={`min-h-[44px] py-2 px-2 rounded-lg border text-xs font-semibold capitalize transition-colors ${
                       selectedTable.status === status
                         ? 'bg-teal-700 border-teal-700 text-white'
                         : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
@@ -345,21 +355,21 @@ export function TablesPage() {
               <button
                 type="button"
                 onClick={() => setQrTable(selectedTable)}
-                className="px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-800 hover:bg-slate-50 inline-flex items-center gap-1.5"
+                className="min-h-[44px] px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-800 hover:bg-slate-50 inline-flex items-center gap-1.5"
               >
                 <QrCode className="w-3.5 h-3.5" />
                 View / Download QR
               </button>
               <Link
                 to={`/t/${selectedTable.qrToken}`}
-                className="px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-teal-800 hover:bg-teal-50 inline-flex items-center gap-1.5"
+                className="min-h-[44px] px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-teal-800 hover:bg-teal-50 inline-flex items-center gap-1.5"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
                 Open Guest Menu
               </Link>
               <Link
                 to={`/billing?tableId=${selectedTable.id}`}
-                className="px-3.5 py-2 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 inline-flex items-center gap-1.5"
+                className="min-h-[44px] px-3.5 py-2 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 inline-flex items-center gap-1.5"
               >
                 <Receipt className="w-3.5 h-3.5" />
                 Open Billing
@@ -399,30 +409,34 @@ export function TablesPage() {
       {/* Create Table Modal */}
       {createOpen && (
         <div
-          className="fixed inset-0 z-50 bg-slate-950/50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-slate-950/50 flex items-center justify-center sm:p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="create-table-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setCreateOpen(false);
+          }}
         >
           <form
+            ref={createModalRef}
             onSubmit={handleCreateTable}
-            className="bg-white border border-slate-200 rounded-xl w-full max-w-md p-6 space-y-4"
+            className="bg-white sm:border border-slate-200 sm:rounded-xl w-full h-dvh sm:h-auto sm:max-w-md p-6 space-y-4 overflow-y-auto"
           >
-            <div className="flex items-center justify-between">
-              <h2 id="create-table-title" className="text-base font-bold text-slate-900">
-                Add Dining Table
-              </h2>
+            <div className="flex items-center justify-between gap-2">
               <button
                 type="button"
                 onClick={() => setCreateOpen(false)}
                 aria-label="Close modal"
-                className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100"
+                className="sm:order-last min-w-[44px] min-h-[44px] p-2 rounded-lg text-slate-500 hover:bg-slate-100 inline-flex items-center justify-center"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
+              <h2 id="create-table-title" className="text-base font-bold text-slate-900">
+                Add Dining Table
+              </h2>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label htmlFor="tbl-num" className="block text-xs font-medium text-slate-700 mb-1">
                   Table Number
@@ -435,7 +449,7 @@ export function TablesPage() {
                   value={newNumber}
                   onChange={(e) => setNewNumber(e.target.value)}
                   placeholder="13"
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-slate-300 text-base sm:text-sm"
                 />
               </div>
               <div>
@@ -450,7 +464,7 @@ export function TablesPage() {
                   required
                   value={newCapacity}
                   onChange={(e) => setNewCapacity(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-slate-300 text-base sm:text-sm"
                 />
               </div>
             </div>
@@ -466,7 +480,7 @@ export function TablesPage() {
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="Table 13 — Fireside Booth"
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm"
+                className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-slate-300 text-base sm:text-sm"
               />
             </div>
 
@@ -480,21 +494,21 @@ export function TablesPage() {
                 required
                 value={newSection}
                 onChange={(e) => setNewSection(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm"
+                className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-slate-300 text-base sm:text-sm"
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setCreateOpen(false)}
-                className="px-4 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700"
+                className="min-h-[44px] px-4 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800"
+                className="min-h-[44px] px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800"
               >
                 Create Table & QR
               </button>

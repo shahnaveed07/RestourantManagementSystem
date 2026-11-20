@@ -9,22 +9,18 @@ import {
   ChefHat,
   ConciergeBell,
   UserCheck,
+  KeyRound,
+  Smartphone,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { ROLE_HOME_ROUTE } from '../utils/format';
 import { BrandLogo } from '../components/BrandLogo';
+import { CustomerAuthForm } from '../components/CustomerAuthForm';
 
 const HERO_IMAGE = '/src/assets/images/hero_dining_room_1795178823770.jpg';
 
-const DEMO_ROLES = [
-  {
-    role: 'customer',
-    title: 'Customer',
-    email: 'customer@demo.com',
-    summary: 'Browse menu, checkout & track orders',
-    icon: UserCheck,
-  },
+const STAFF_DEMO_ROLES = [
   {
     role: 'admin',
     title: 'Admin',
@@ -56,21 +52,19 @@ const DEMO_ROLES = [
 ];
 
 export function LoginPage({ initialMode = 'login' }) {
-  const { config, login, signup, demoLogin } = useAuth();
+  const { config, passwordLogin, demoLogin } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const location = useLocation();
 
-  const [mode, setMode] = useState(initialMode);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [accountType, setAccountType] = useState('customer'); // 'customer' | 'staff'
+  const [staffEmail, setStaffEmail] = useState('');
+  const [staffPassword, setStaffPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
+  const [staffError, setStaffError] = useState(null);
 
   useEffect(() => {
-    setMode(initialMode);
-    setError(null);
+    setStaffError(null);
   }, [initialMode]);
 
   const redirectTarget = searchParams.get('redirect') || location.state?.from || null;
@@ -83,60 +77,47 @@ export function LoginPage({ initialMode = 'login' }) {
     navigate(ROLE_HOME_ROUTE[signedInUser.role] || '/', { replace: true });
   };
 
-  const handleSubmit = async (e) => {
+  const handleStaffSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
+    setStaffError(null);
 
-    if (mode === 'signup') {
-      if (!name.trim() || name.trim().length < 2) {
-        setError('Please enter your full name (at least 2 characters).');
-        return;
-      }
-      if (!email.trim() || password.length < 6) {
-        setError('Please enter a valid email and a password of at least 6 characters.');
-        return;
-      }
-    } else if (!email.trim() || !password) {
-      setError('Please enter both your email and password.');
+    if (!staffEmail.trim() || !staffPassword) {
+      setStaffError('Please enter your staff email and password.');
       return;
     }
 
     setSubmitting(true);
     try {
-      const user =
-        mode === 'signup'
-          ? await signup(name.trim(), email.trim(), password)
-          : await login(email.trim(), password);
-      toast.success(
-        mode === 'signup' ? `Account created! Welcome, ${user.name}` : `Signed in as ${user.name}`
-      );
+      const user = await passwordLogin(staffEmail.trim(), staffPassword);
+      toast.success(`Signed in as ${user.name}`);
       navigateAfterAuth(user);
     } catch (err) {
-      setError(err.message);
+      setStaffError(err.message);
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDemoRole = async (role) => {
-    setError(null);
+    setStaffError(null);
     setSubmitting(true);
     try {
       const user = await demoLogin(role);
       toast.success(`Signed in as ${user.name} (${role})`);
       navigateAfterAuth(user);
     } catch (err) {
-      setError(err.message);
+      setStaffError(err.message);
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-dvh bg-slate-50 flex flex-col">
       {config.demoMode && (
         <div className="bg-amber-50 border-b border-amber-200 px-4 sm:px-6 py-2 text-center text-xs text-amber-900">
-          <strong className="font-semibold">DEMO MODE</strong> — Instant role sign-in and guest QR table menus are active.
+          <strong className="font-semibold">DEMO MODE</strong> — Instant Demo Customer login, OTP{' '}
+          <strong className="font-mono">{config.demoOtpHint || '123456'}</strong>, and guest QR table menus are active.
         </div>
       )}
 
@@ -162,12 +143,12 @@ export function LoginPage({ initialMode = 'login' }) {
                 {config.restaurantName}
               </h1>
               <p className="mt-3 text-sm text-slate-200 leading-relaxed">
-                Synchronized dining room floor, online &amp; QR ordering, live service calls, kitchen display, and table billing in one calm workspace.
+                Synchronized dining room floor, mobile &amp; email OTP checkout, QR ordering, live service calls, and kitchen display.
               </p>
               <div className="mt-6 pt-6 border-t border-white/20 flex items-center gap-6 text-xs text-slate-300">
                 <span>12 Dining Tables</span>
                 <span aria-hidden="true">·</span>
-                <span>Real-Time Socket Sync</span>
+                <span>Passwordless Customer OTP</span>
                 <span aria-hidden="true">·</span>
                 <span>Role-Based Access</span>
               </div>
@@ -176,9 +157,9 @@ export function LoginPage({ initialMode = 'login' }) {
         </div>
 
         {/* Right Sign-In & Demo Column */}
-        <div className="lg:col-span-6 flex items-center justify-center p-5 sm:p-10 lg:p-14">
+        <div className="lg:col-span-6 flex items-center justify-center p-4 sm:p-10 lg:p-14">
           <div className="w-full max-w-md">
-            <div className="mb-5">
+            <div className="mb-4">
               <Link
                 to="/"
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-700 hover:text-teal-900 min-h-[44px]"
@@ -188,139 +169,149 @@ export function LoginPage({ initialMode = 'login' }) {
               </Link>
             </div>
 
-            <div className="mb-6 flex items-center gap-3.5">
+            <div className="mb-5 flex items-center gap-3.5">
               <BrandLogo size="lg" className="lg:hidden" />
               <div>
                 <span className="text-xs font-semibold text-teal-700 lg:hidden block mb-0.5">
                   Passline · {config.restaurantName}
                 </span>
                 <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-                  {mode === 'signup' ? 'Create Customer Account' : 'Sign In'}
+                  {accountType === 'customer' ? 'Customer Sign In' : 'Staff Sign In'}
                 </h2>
                 <p className="mt-1 text-sm text-slate-600">
-                  {mode === 'signup'
-                    ? 'Create an account to complete orders and track live kitchen progress.'
-                    : 'Sign in with your account credentials or launch a demo profile below.'}
+                  {accountType === 'customer'
+                    ? 'Sign in or register using a 6-digit OTP sent to your mobile or email.'
+                    : 'Restaurant staff sign in with their work email and password.'}
                 </p>
               </div>
             </div>
 
-            {/* Login / Sign Up Switcher */}
-            <div className="grid grid-cols-2 gap-1 p-1 bg-slate-200/70 rounded-xl mb-5" role="tablist">
+            {/* Customer OTP vs Staff Password Switcher */}
+            <div className="grid grid-cols-2 gap-2 mb-5">
               <button
                 type="button"
-                role="tab"
-                aria-selected={mode === 'login'}
                 onClick={() => {
-                  setMode('login');
-                  setError(null);
+                  setAccountType('customer');
+                  setStaffError(null);
                 }}
-                className={`min-h-[44px] rounded-lg text-sm font-semibold transition-colors ${
-                  mode === 'login'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
+                className={`min-h-[44px] px-3 rounded-xl border text-xs sm:text-sm font-semibold inline-flex items-center justify-center gap-2 transition-colors ${
+                  accountType === 'customer'
+                    ? 'bg-teal-50 border-teal-600 text-teal-900'
+                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                 }`}
               >
-                Log In
+                <Smartphone className="w-4 h-4 shrink-0" />
+                Customer OTP
               </button>
               <button
                 type="button"
-                role="tab"
-                aria-selected={mode === 'signup'}
                 onClick={() => {
-                  setMode('signup');
-                  setError(null);
+                  setAccountType('staff');
+                  setStaffError(null);
                 }}
-                className={`min-h-[44px] rounded-lg text-sm font-semibold transition-colors ${
-                  mode === 'signup'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
+                className={`min-h-[44px] px-3 rounded-xl border text-xs sm:text-sm font-semibold inline-flex items-center justify-center gap-2 transition-colors ${
+                  accountType === 'staff'
+                    ? 'bg-teal-50 border-teal-600 text-teal-900'
+                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                 }`}
               >
-                Sign Up
+                <KeyRound className="w-4 h-4 shrink-0" />
+                Staff Login
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4 bg-white border border-slate-200 rounded-xl p-6">
-              {error && (
-                <div
-                  role="alert"
-                  className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 font-medium"
-                >
-                  {error}
-                </div>
-              )}
-
-              {mode === 'signup' && (
-                <div>
-                  <label htmlFor="login-name" className="block text-xs font-medium text-slate-700 mb-1.5">
-                    Full Name
-                  </label>
-                  <input
-                    id="login-name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Alex Rivera"
-                    autoComplete="name"
-                    className="w-full min-h-[44px] px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
-                  />
-                </div>
-              )}
-
-              <div>
-                <label htmlFor="login-email" className="block text-xs font-medium text-slate-700 mb-1.5">
-                  Email Address
-                </label>
-                <input
-                  id="login-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="customer@demo.com"
-                  autoComplete="email"
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
+            <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6">
+              {accountType === 'customer' ? (
+                <CustomerAuthForm
+                  initialMode={initialMode}
+                  onSuccess={navigateAfterAuth}
                 />
-              </div>
+              ) : (
+                <form onSubmit={handleStaffSubmit} className="space-y-4">
+                  {staffError && (
+                    <div
+                      role="alert"
+                      className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 font-medium"
+                    >
+                      {staffError}
+                    </div>
+                  )}
 
-              <div>
-                <label htmlFor="login-password" className="block text-xs font-medium text-slate-700 mb-1.5">
-                  Password
-                </label>
-                <input
-                  id="login-password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={mode === 'signup' ? 'At least 6 characters' : 'Enter password'}
-                  autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
-                />
-              </div>
+                  <div>
+                    <label htmlFor="staff-email" className="block text-xs font-medium text-slate-700 mb-1.5">
+                      Staff Email Address
+                    </label>
+                    <input
+                      id="staff-email"
+                      type="email"
+                      value={staffEmail}
+                      onChange={(e) => setStaffEmail(e.target.value)}
+                      placeholder="admin@demo.com"
+                      autoComplete="email"
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-base sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
+                    />
+                  </div>
 
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full min-h-[46px] py-2.5 px-4 rounded-lg bg-teal-700 text-white text-sm font-semibold hover:bg-teal-800 disabled:opacity-60 transition-colors inline-flex items-center justify-center gap-2"
-              >
-                {submitting
-                  ? 'Please wait...'
-                  : mode === 'signup'
-                    ? 'Create Account'
-                    : 'Sign In'}
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </form>
+                  <div>
+                    <label htmlFor="staff-password" className="block text-xs font-medium text-slate-700 mb-1.5">
+                      Password
+                    </label>
+                    <input
+                      id="staff-password"
+                      type="password"
+                      value={staffPassword}
+                      onChange={(e) => setStaffPassword(e.target.value)}
+                      placeholder="Enter staff password"
+                      autoComplete="current-password"
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-base sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="w-full min-h-[46px] py-2.5 px-4 rounded-lg bg-teal-700 text-white text-sm font-semibold hover:bg-teal-800 disabled:opacity-60 transition-colors inline-flex items-center justify-center gap-2"
+                  >
+                    {submitting ? 'Signing in...' : 'Sign In as Staff'}
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </form>
+              )}
+            </div>
 
             {config.demoMode && (
-              <div className="mt-7">
-                <div className="flex items-center justify-between mb-3">
+              <div className="mt-7 space-y-3">
+                <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-slate-900">One-Click Demo Access</h3>
                   <span className="text-xs text-slate-500">Seeded accounts</span>
                 </div>
 
+                <button
+                  type="button"
+                  disabled={submitting}
+                  onClick={() => handleDemoRole('customer')}
+                  className="w-full min-h-[60px] text-left p-3.5 rounded-xl border bg-teal-50/70 border-teal-200 hover:border-teal-600 hover:bg-teal-50 transition-colors group"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-semibold text-teal-950">
+                      Login as Demo Customer
+                    </span>
+                    <UserCheck className="w-4 h-4 text-teal-700 shrink-0" />
+                  </div>
+                  <p className="text-xs text-teal-800 leading-snug">
+                    9999999991 / customer@demo.com (instant sign-in, no OTP needed)
+                  </p>
+                </button>
+
+                <p className="text-xs text-slate-500 px-1">
+                  To test the new signup OTP flow, select <strong>Sign Up</strong> above with{' '}
+                  <strong className="font-mono text-slate-700">9999999992</strong> or{' '}
+                  <strong className="text-slate-700">guest@demo.com</strong> (OTP{' '}
+                  <strong className="font-mono text-slate-700">{config.demoOtpHint || '123456'}</strong>).
+                </p>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {DEMO_ROLES.map((item) => {
+                  {STAFF_DEMO_ROLES.map((item) => {
                     const Icon = item.icon;
                     return (
                       <button
@@ -328,11 +319,7 @@ export function LoginPage({ initialMode = 'login' }) {
                         type="button"
                         disabled={submitting}
                         onClick={() => handleDemoRole(item.role)}
-                        className={`min-h-[60px] text-left p-3.5 rounded-xl border transition-colors group ${
-                          item.role === 'customer'
-                            ? 'sm:col-span-2 bg-teal-50/60 border-teal-200 hover:border-teal-600 hover:bg-teal-50'
-                            : 'bg-white border-slate-200 hover:border-teal-600 hover:bg-teal-50/40'
-                        }`}
+                        className="min-h-[60px] text-left p-3.5 rounded-xl border bg-white border-slate-200 hover:border-teal-600 hover:bg-teal-50/40 transition-colors group"
                       >
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm font-semibold text-slate-900 group-hover:text-teal-800">
@@ -347,7 +334,7 @@ export function LoginPage({ initialMode = 'login' }) {
                 </div>
 
                 {config.demoTables.length > 0 && (
-                  <div className="mt-5 pt-5 border-t border-slate-200">
+                  <div className="mt-4 pt-4 border-t border-slate-200">
                     <div className="flex items-center gap-2 text-xs font-medium text-slate-700 mb-2.5">
                       <QrCode className="w-3.5 h-3.5 text-teal-700" />
                       <span>Preview Guest QR Table Menu</span>
@@ -357,7 +344,7 @@ export function LoginPage({ initialMode = 'login' }) {
                         <Link
                           key={t.qrToken}
                           to={`/t/${t.qrToken}`}
-                          className="min-h-[40px] inline-flex items-center px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:border-teal-600 hover:text-teal-800 transition-colors whitespace-nowrap"
+                          className="min-h-[44px] inline-flex items-center px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:border-teal-600 hover:text-teal-800 transition-colors whitespace-nowrap"
                         >
                           Table {t.number} Menu
                         </Link>

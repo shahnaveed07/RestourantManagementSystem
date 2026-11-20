@@ -102,7 +102,7 @@ export function KitchenPage() {
       darkMode
     >
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="h-72 rounded-xl bg-slate-900 border border-slate-800 animate-pulse" />
           ))}
@@ -115,7 +115,7 @@ export function KitchenPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-5 items-start">
           {orders.map((order) => {
             const mins = (nowMs - new Date(order.createdAt).getTime()) / 60000;
             const urgent = mins >= 15;
@@ -212,7 +212,7 @@ export function KitchenPage() {
                               type="button"
                               disabled={busyKey === itemKey}
                               onClick={() => handleItemStatus(order.id, idx, 'preparing')}
-                              className="min-h-[38px] px-3 py-1.5 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-500 inline-flex items-center gap-1 whitespace-nowrap"
+                              className="min-h-[44px] px-3 py-2 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-500 inline-flex items-center gap-1 whitespace-nowrap"
                             >
                               <Flame className="w-3.5 h-3.5" />
                               Cook
@@ -224,7 +224,7 @@ export function KitchenPage() {
                               disabled={busyKey === itemKey}
                               onClick={() => handleItemStatus(order.id, idx, 'ready')}
                               aria-label={`Mark ${item.name} done`}
-                              className={`min-h-[38px] px-3 py-1.5 rounded-lg text-xs font-semibold inline-flex items-center gap-1 whitespace-nowrap ${
+                              className={`min-h-[44px] min-w-[64px] px-3 py-2 rounded-lg text-xs font-semibold inline-flex items-center justify-center gap-1 whitespace-nowrap ${
                                 isPreparing
                                   ? 'bg-emerald-600 text-white hover:bg-emerald-500'
                                   : 'bg-slate-800 border border-slate-700 text-slate-200 hover:bg-emerald-700 hover:border-emerald-600'
@@ -234,7 +234,7 @@ export function KitchenPage() {
                               Done
                             </button>
                           ) : (
-                            <span className="text-xs font-semibold text-emerald-400 px-2">
+                            <span className="min-h-[44px] inline-flex items-center text-xs font-semibold text-emerald-400 px-2">
                               Ready
                             </span>
                           )}
@@ -250,7 +250,7 @@ export function KitchenPage() {
                     type="button"
                     disabled={busyKey === order.id}
                     onClick={() => handleBumpOrderReady(order)}
-                    className="w-full min-h-[42px] py-2 px-4 rounded-lg bg-teal-600 text-white text-xs font-bold hover:bg-teal-500 inline-flex items-center justify-center gap-2 transition-colors"
+                    className="w-full min-h-[48px] py-2.5 px-4 rounded-lg bg-teal-600 text-white text-xs font-bold hover:bg-teal-500 inline-flex items-center justify-center gap-2 transition-colors"
                   >
                     <CheckCheck className="w-4 h-4" />
                     All Items Ready — Bump Ticket

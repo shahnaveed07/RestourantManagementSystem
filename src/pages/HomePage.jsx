@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import toast from 'react-hot-toast';
@@ -21,6 +21,7 @@ import { StorefrontNavbar } from '../components/StorefrontNavbar';
 import { CartDrawer } from '../components/CartDrawer';
 import { AuthModal } from '../components/AuthModal';
 import { DishImage } from '../components/DishImage';
+import { useModalA11y } from '../utils/useModalA11y';
 import {
   formatCurrency,
   formatOrderLocation,
@@ -59,6 +60,9 @@ export function HomePage() {
   const [myOrdersOpen, setMyOrdersOpen] = useState(false);
   const [myOrders, setMyOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const myOrdersRef = useRef(null);
+
+  useModalA11y(myOrdersOpen, () => setMyOrdersOpen(false), myOrdersRef);
 
   const loadMenu = useCallback(async () => {
     try {
@@ -171,7 +175,7 @@ export function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
+    <div className="min-h-dvh bg-slate-50 text-slate-900 flex flex-col">
       <StorefrontNavbar
         onOpenAuth={(mode) => openAuthModal(mode, false)}
         onOpenMyOrders={() => setMyOrdersOpen(true)}
@@ -186,12 +190,12 @@ export function HomePage() {
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="relative bg-gradient-to-r from-slate-950/90 via-slate-950/65 to-slate-950/35">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
+          <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-10 sm:py-16 lg:py-20">
             <div className="max-w-2xl">
               <p className="text-xs sm:text-sm font-medium text-teal-300 tracking-wide mb-2">
                 Wood-Fired Kitchen &amp; Craft Drinks
               </p>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
                 {config.restaurantName}
               </h1>
               <p className="mt-3 text-sm sm:text-base text-slate-200 leading-relaxed max-w-xl">
@@ -217,20 +221,20 @@ export function HomePage() {
       {/* Main Menu Catalog */}
       <main
         id="menu-catalog"
-        className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 space-y-6"
+        className="flex-1 max-w-7xl w-full mx-auto px-4 md:px-6 lg:px-8 py-6 sm:py-8 pb-28 md:pb-24 space-y-6"
       >
         {/* Search & Category Filter Controls */}
         <div className="space-y-3">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="relative w-full sm:max-w-md">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search dishes, ingredients..."
                 aria-label="Search dishes"
-                className="w-full min-h-[44px] pl-10 pr-4 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600"
+                className="w-full min-h-[44px] pl-10 pr-4 rounded-xl border border-slate-200 bg-white text-base sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600"
               />
             </div>
 
@@ -238,7 +242,7 @@ export function HomePage() {
               type="button"
               onClick={() => setVegOnly((v) => !v)}
               aria-pressed={vegOnly}
-              className={`min-h-[44px] px-4 rounded-xl border text-xs sm:text-sm font-semibold inline-flex items-center justify-center gap-2 whitespace-nowrap transition-colors ${
+              className={`min-h-[44px] px-4 rounded-xl border text-xs sm:text-sm font-semibold inline-flex items-center justify-center gap-2 whitespace-nowrap transition-colors shrink-0 ${
                 vegOnly
                   ? 'bg-emerald-700 border-emerald-700 text-white'
                   : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
@@ -249,9 +253,9 @@ export function HomePage() {
             </button>
           </div>
 
-          {/* Category Filter Tabs */}
+          {/* Category Filter Tabs: horizontally scrollable on mobile, wrap on lg+ */}
           <div
-            className="flex items-center gap-2 overflow-x-auto pb-1"
+            className="flex flex-nowrap lg:flex-wrap items-center gap-2 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-1"
             role="tablist"
             aria-label="Menu categories"
           >
@@ -260,7 +264,7 @@ export function HomePage() {
               role="tab"
               aria-selected={selectedCategory === 'all'}
               onClick={() => setSelectedCategory('all')}
-              className={`min-h-[44px] px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap shrink-0 ${
+              className={`snap-start min-h-[44px] px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap shrink-0 ${
                 selectedCategory === 'all'
                   ? 'bg-slate-900 text-white'
                   : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
@@ -275,7 +279,7 @@ export function HomePage() {
                 role="tab"
                 aria-selected={selectedCategory === cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`min-h-[44px] px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap shrink-0 ${
+                className={`snap-start min-h-[44px] px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap shrink-0 ${
                   selectedCategory === cat.id
                     ? 'bg-slate-900 text-white'
                     : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
@@ -291,7 +295,7 @@ export function HomePage() {
         {loading ? (
           <div
             aria-label="Loading menu"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
           >
             {Array.from({ length: 8 }).map((_, idx) => (
               <div
@@ -355,8 +359,8 @@ export function HomePage() {
                   </span>
                 </div>
 
-                {/* Responsive CSS Grid: 1 col mobile, 2 tablet, 3-4 desktop */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                {/* Responsive CSS Grid: 1 col (<640), 2 cols (sm-lg), 3 cols (lg), 4 cols (xl) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                   {items.map((item) => {
                     const inCart = cart[item.id];
                     return (
@@ -364,15 +368,15 @@ export function HomePage() {
                         key={item.id}
                         className={`bg-white border rounded-xl overflow-hidden flex flex-col transition-all ${
                           item.isAvailable
-                            ? 'border-slate-200 hover:border-slate-300 hover:-translate-y-0.5'
+                            ? 'border-slate-200 hover:border-slate-300 hover-lift'
                             : 'border-slate-200 opacity-75'
                         }`}
                       >
-                        <div className="relative">
+                        <div className="relative overflow-hidden">
                           <DishImage
                             src={item.imageUrl}
                             alt={item.name}
-                            className={`w-full h-48 ${!item.isAvailable ? 'grayscale' : ''}`}
+                            className={`w-full aspect-[4/3] ${!item.isAvailable ? 'grayscale' : ''}`}
                           />
                           {!item.isAvailable && (
                             <div className="absolute inset-0 bg-slate-950/60 flex items-center justify-center">
@@ -394,7 +398,7 @@ export function HomePage() {
                               </span>
                             </div>
 
-                            <p className="mt-1.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            <p className="mt-1.5 text-xs sm:text-sm text-slate-600 leading-relaxed line-clamp-2">
                               {item.description}
                             </p>
 
@@ -492,9 +496,9 @@ export function HomePage() {
         )}
       </main>
 
-      {/* Floating Cart Button */}
+      {/* Floating Cart Button: sticky bottom bar on mobile with safe-area padding, fixed bottom-4 right-4 on desktop */}
       {cartCount > 0 && (
-        <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:bottom-6 z-30">
+        <div className="fixed bottom-0 left-0 right-0 md:bottom-4 md:right-4 md:left-auto z-30 bg-white/95 md:bg-transparent backdrop-blur-xs md:backdrop-blur-none border-t border-slate-200 md:border-t-0 px-4 pt-2.5 safe-bottom-bar md:p-0">
           <button
             type="button"
             onClick={() => setCartOpen(true)}
@@ -546,7 +550,10 @@ export function HomePage() {
           aria-modal="true"
           aria-labelledby="my-orders-title"
         >
-          <div className="bg-white w-full md:max-w-lg rounded-t-2xl md:rounded-2xl max-h-[85vh] flex flex-col border border-slate-200 shadow-2xl">
+          <div
+            ref={myOrdersRef}
+            className="bg-white w-full md:max-w-lg rounded-t-2xl md:rounded-2xl max-h-[85dvh] flex flex-col border border-slate-200 shadow-2xl safe-bottom-bar md:pb-0"
+          >
             <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
               <div>
                 <h2 id="my-orders-title" className="text-base font-bold text-slate-900">

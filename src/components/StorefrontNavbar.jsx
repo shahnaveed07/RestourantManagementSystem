@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ShoppingBag, LogOut, LayoutDashboard, ClipboardList } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -10,9 +10,25 @@ export function StorefrontNavbar({ onOpenAuth, onOpenMyOrders }) {
   const { user, config, logout } = useAuth();
   const { cartCount, total, setCartOpen } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
 
   const isStaff = user && ['admin', 'manager', 'waiter', 'kitchen'].includes(user.role);
   const firstDemoTable = config.demoTables?.[0];
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setMobileMenuOpen(false);
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [mobileMenuOpen]);
 
   const handleLogout = async () => {
     await logout();
@@ -21,6 +37,12 @@ export function StorefrontNavbar({ onOpenAuth, onOpenMyOrders }) {
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xs border-b border-slate-200">
+      {config.demoMode && (
+        <div className="bg-amber-50 border-b border-amber-200 px-3 py-1 text-center text-[11px] font-medium text-amber-900">
+          <strong>DEMO MODE</strong> · One-click Demo Customer or OTP{' '}
+          <span className="font-mono font-semibold">{config.demoOtpHint || '123456'}</span>
+        </div>
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4 lg:gap-8">
         {/* Zone 1: Brand Wordmark */}
         <Link
@@ -149,6 +171,23 @@ export function StorefrontNavbar({ onOpenAuth, onOpenMyOrders }) {
               Table QR Menu Demo
             </Link>
           )}
+          <button
+            type="button"
+            onClick={() => {
+              setMobileMenuOpen(false);
+              setCartOpen(true);
+            }}
+            className="w-full min-h-[44px] px-3 rounded-lg flex items-center justify-between text-sm font-medium text-slate-800 hover:bg-slate-50 text-left"
+          >
+            <span className="inline-flex items-center gap-2">
+              <ShoppingBag className="w-4 h-4 text-teal-700" />
+              Your Cart
+            </span>
+            <span className="font-mono text-xs font-semibold text-teal-800 tabular-nums">
+              {cartCount} item{cartCount === 1 ? '' : 's'}
+              {cartCount > 0 ? ` · ${formatCurrency(total)}` : ''}
+            </span>
+          </button>
           {user && (
             <button
               type="button"
@@ -178,7 +217,7 @@ export function StorefrontNavbar({ onOpenAuth, onOpenMyOrders }) {
               <div className="flex items-center justify-between px-3 py-1">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-slate-900 truncate">{user.name}</p>
-                  <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                  <p className="text-xs text-slate-500 truncate">{user.email || user.mobile}</p>
                 </div>
                 <button
                   type="button"

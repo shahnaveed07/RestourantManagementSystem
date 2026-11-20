@@ -4,6 +4,11 @@ import { api, getStoredToken, setStoredToken } from '../api/client';
 const DEFAULT_CONFIG = {
   restaurantName: 'Linden & Rye',
   demoMode: true,
+  demoOtpHint: '123456',
+  otpExpiryMinutes: 5,
+  captchaEnabled: false,
+  captchaProvider: 'turnstile',
+  captchaSiteKey: null,
   taxRate: 0.08,
   tables: [],
   demoTables: [],
@@ -55,16 +60,20 @@ export function AuthProvider({ children }) {
     };
   }, [refreshConfig]);
 
-  const login = useCallback(async (email, password) => {
-    const res = await api.login(email, password);
+  const requestOtp = useCallback(async (payload) => {
+    return api.requestOtp(payload);
+  }, []);
+
+  const verifyOtp = useCallback(async (payload) => {
+    const res = await api.verifyOtp(payload);
     setStoredToken(res.accessToken);
     setToken(res.accessToken);
     setUser(res.user);
     return res.user;
   }, []);
 
-  const signup = useCallback(async (name, email, password) => {
-    const res = await api.signup(name, email, password);
+  const passwordLogin = useCallback(async (email, password) => {
+    const res = await api.passwordLogin(email, password);
     setStoredToken(res.accessToken);
     setToken(res.accessToken);
     setUser(res.user);
@@ -92,7 +101,19 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, token, config, loading, login, signup, demoLogin, logout, refreshConfig }}
+      value={{
+        user,
+        token,
+        config,
+        loading,
+        requestOtp,
+        verifyOtp,
+        passwordLogin,
+        login: passwordLogin,
+        demoLogin,
+        logout,
+        refreshConfig,
+      }}
     >
       {children}
     </AuthContext.Provider>

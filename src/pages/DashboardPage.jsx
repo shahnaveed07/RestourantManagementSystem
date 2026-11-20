@@ -15,6 +15,7 @@ import { ArrowRight, RefreshCw } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { api } from '../api/client';
 import { useSocket } from '../context/SocketContext';
+import { useMediaQuery } from '../utils/useMediaQuery';
 import {
   formatCurrency,
   formatElapsed,
@@ -25,6 +26,7 @@ import {
 } from '../utils/format';
 
 export function DashboardPage() {
+  const isMd = useMediaQuery('(min-width: 768px)');
   const { socket, syncVersion } = useSocket();
   const [summary, setSummary] = useState(null);
   const [liveOrders, setLiveOrders] = useState([]);
@@ -88,7 +90,7 @@ export function DashboardPage() {
         <button
           type="button"
           onClick={fetchAll}
-          className="px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1.5 whitespace-nowrap"
+          className="min-h-[44px] px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1.5 whitespace-nowrap"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           Refresh
@@ -96,15 +98,15 @@ export function DashboardPage() {
       }
     >
       {loading || !summary ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="h-24 rounded-xl bg-white border border-slate-200 animate-pulse" />
           ))}
         </div>
       ) : (
         <div className="space-y-6">
-          {/* 5-Column KPI Strip */}
-          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* KPI Strip: 1 col mobile, 2 on sm/md, 4 on lg+ */}
+          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-white border border-slate-200 rounded-xl p-5">
               <p className="text-xs font-medium text-slate-500">Today’s Settled Sales</p>
               <p className="mt-2 text-2xl font-bold font-mono tabular-nums text-slate-900">
@@ -165,19 +167,26 @@ export function DashboardPage() {
 
           {/* Charts Row */}
           <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-7 bg-white border border-slate-200 rounded-xl p-6">
+            <div className="lg:col-span-7 bg-white border border-slate-200 rounded-xl p-4 sm:p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-sm font-bold text-slate-900">Sales by Hour</h2>
                   <p className="text-xs text-slate-500">Order revenue trajectory across today’s shift</p>
                 </div>
               </div>
-              <div className="h-64">
+              <div className="h-52 md:h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={summary.salesByHour}>
+                  <AreaChart data={summary.salesByHour} margin={{ top: 6, right: 16, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                    <XAxis dataKey="hour" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                    <XAxis
+                      dataKey="hour"
+                      interval={isMd ? 0 : 'preserveStartEnd'}
+                      tick={{ fontSize: 11, fill: '#64748b' }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
                     <YAxis
+                      width={isMd ? 48 : 38}
                       tick={{ fontSize: 11, fill: '#64748b' }}
                       axisLine={false}
                       tickLine={false}
@@ -205,14 +214,14 @@ export function DashboardPage() {
               </div>
             </div>
 
-            <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl p-6">
+            <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl p-4 sm:p-6">
               <div className="mb-4">
                 <h2 className="text-sm font-bold text-slate-900">Top Selling Dishes</h2>
                 <p className="text-xs text-slate-500">Ranked by gross revenue today</p>
               </div>
-              <div className="h-64">
+              <div className="h-52 md:h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={summary.topItems.slice(0, 6)} layout="vertical" margin={{ left: 10 }}>
+                  <BarChart data={summary.topItems.slice(0, 6)} layout="vertical" margin={{ left: isMd ? 10 : 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
                     <XAxis
                       type="number"
@@ -224,7 +233,7 @@ export function DashboardPage() {
                     <YAxis
                       type="category"
                       dataKey="name"
-                      width={130}
+                      width={isMd ? 130 : 88}
                       tick={{ fontSize: 11, fill: '#334155' }}
                       axisLine={false}
                       tickLine={false}
@@ -247,11 +256,11 @@ export function DashboardPage() {
           {/* Live Floor Pulse Row */}
           <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-7 bg-white border border-slate-200 rounded-xl overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+              <div className="px-4 sm:px-6 py-3.5 border-b border-slate-200 flex items-center justify-between gap-2">
                 <h2 className="text-sm font-bold text-slate-900">Active Orders</h2>
                 <Link
                   to="/orders"
-                  className="text-xs font-semibold text-teal-700 hover:text-teal-900 inline-flex items-center gap-1"
+                  className="min-h-[44px] px-2 text-xs font-semibold text-teal-700 hover:text-teal-900 inline-flex items-center gap-1 whitespace-nowrap"
                 >
                   Open Live Board
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -266,10 +275,10 @@ export function DashboardPage() {
                   {liveOrders.slice(0, 6).map((order) => (
                     <div
                       key={order.id}
-                      className="px-6 py-3.5 flex items-center justify-between gap-4 hover:bg-slate-50"
+                      className="px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3 hover:bg-slate-50"
                     >
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2 text-sm">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
                           <span className="font-mono font-bold text-slate-900">
                             {formatOrderLocation(order)}
                           </span>
@@ -303,11 +312,11 @@ export function DashboardPage() {
             </div>
 
             <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+              <div className="px-4 sm:px-6 py-3.5 border-b border-slate-200 flex items-center justify-between gap-2">
                 <h2 className="text-sm font-bold text-slate-900">Open Service Calls</h2>
                 <Link
                   to="/calls"
-                  className="text-xs font-semibold text-teal-700 hover:text-teal-900 inline-flex items-center gap-1"
+                  className="min-h-[44px] px-2 text-xs font-semibold text-teal-700 hover:text-teal-900 inline-flex items-center gap-1 whitespace-nowrap"
                 >
                   Manage Calls
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -324,12 +333,12 @@ export function DashboardPage() {
                     return (
                       <div
                         key={call.id}
-                        className={`px-6 py-3.5 flex items-center justify-between gap-3 ${
+                        className={`px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3 ${
                           overdue ? 'bg-red-50/70' : ''
                         }`}
                       >
                         <div className="min-w-0">
-                          <div className="flex items-center gap-2 text-sm">
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
                             <span className="font-mono font-bold text-slate-900">
                               Table {call.tableNumber}
                             </span>

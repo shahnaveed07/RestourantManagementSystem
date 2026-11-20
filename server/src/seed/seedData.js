@@ -15,19 +15,21 @@ export async function seedDatabase(forceReset = false) {
 
   const existingUsers = await repo.listUsers();
   if (!forceReset && existingUsers.length > 0) {
-    // Ensure demo customer account exists even when upgrading an existing local store
-    const hasDemoCustomer = existingUsers.some((u) => u.email.toLowerCase() === 'customer@demo.com');
-    if (!hasDemoCustomer) {
-      const customerHash = await bcrypt.hash('Customer@123', 10);
+    // Ensure demo customer account exists with mobile +919999999991 even when upgrading an existing local store
+    const demoCustomer = existingUsers.find((u) => u.email?.toLowerCase() === 'customer@demo.com');
+    if (!demoCustomer) {
       await repo.createUser({
         name: 'Alex Rivera',
         email: 'customer@demo.com',
-        passwordHash: customerHash,
+        mobile: '+919999999991',
+        passwordHash: null,
         role: 'customer',
         isActive: true,
         lastLoginAt: null,
         isDemo: true,
       });
+    } else if (!demoCustomer.mobile) {
+      await repo.updateUser(demoCustomer.id, { mobile: '+919999999991' });
     }
 
     const tables = await repo.listTables();
@@ -40,7 +42,7 @@ export async function seedDatabase(forceReset = false) {
         { role: 'manager', email: 'manager@demo.com', password: 'Manager@123' },
         { role: 'waiter', email: 'waiter@demo.com', password: 'Waiter@123' },
         { role: 'kitchen', email: 'kitchen@demo.com', password: 'Kitchen@123' },
-        { role: 'customer', email: 'customer@demo.com', password: 'Customer@123' },
+        { role: 'customer', email: 'customer@demo.com', mobile: '+919999999991' },
       ],
       tables: tables.map((t) => ({
         number: t.number,
@@ -58,19 +60,20 @@ export async function seedDatabase(forceReset = false) {
 
   // 1. Seed Demo Accounts (Staff + Customer)
   const demoAccounts = [
-    { name: 'Elena Vance', email: 'admin@demo.com', password: 'Admin@123', role: 'admin' },
-    { name: 'Marcus Chen', email: 'manager@demo.com', password: 'Manager@123', role: 'manager' },
-    { name: 'Sofia Morales', email: 'waiter@demo.com', password: 'Waiter@123', role: 'waiter' },
-    { name: 'Devon Brooks', email: 'kitchen@demo.com', password: 'Kitchen@123', role: 'kitchen' },
-    { name: 'Alex Rivera', email: 'customer@demo.com', password: 'Customer@123', role: 'customer' },
+    { name: 'Elena Vance', email: 'admin@demo.com', mobile: null, password: 'Admin@123', role: 'admin' },
+    { name: 'Marcus Chen', email: 'manager@demo.com', mobile: null, password: 'Manager@123', role: 'manager' },
+    { name: 'Sofia Morales', email: 'waiter@demo.com', mobile: null, password: 'Waiter@123', role: 'waiter' },
+    { name: 'Devon Brooks', email: 'kitchen@demo.com', mobile: null, password: 'Kitchen@123', role: 'kitchen' },
+    { name: 'Alex Rivera', email: 'customer@demo.com', mobile: '+919999999991', password: null, role: 'customer' },
   ];
 
   const createdUsers = [];
   for (const acc of demoAccounts) {
-    const passwordHash = await bcrypt.hash(acc.password, 10);
+    const passwordHash = acc.password ? await bcrypt.hash(acc.password, 10) : null;
     const user = await repo.createUser({
       name: acc.name,
       email: acc.email,
+      mobile: acc.mobile,
       passwordHash,
       role: acc.role,
       isActive: true,

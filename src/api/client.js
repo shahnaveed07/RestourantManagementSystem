@@ -36,6 +36,44 @@ http.interceptors.request.use((config) => {
   return config;
 });
 
+let refreshPromise = null;
+
+http.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error?.config;
+    const status = error?.response?.status;
+    const url = originalRequest?.url || '';
+
+    // Automatically refresh expired 15-min access token using 7-day httpOnly refresh cookie
+    if (
+      status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !url.includes('/auth/')
+    ) {
+      originalRequest._retry = true;
+      try {
+        if (!refreshPromise) {
+          refreshPromise = http.post('/auth/refresh').finally(() => {
+            refreshPromise = null;
+          });
+        }
+        const refreshRes = await refreshPromise;
+        const nextToken = refreshRes.data?.data?.accessToken;
+        if (nextToken) {
+          setStoredToken(nextToken);
+          originalRequest.headers.Authorization = `Bearer ${nextToken}`;
+          return http(originalRequest);
+        }
+      } catch {
+        setStoredToken(null);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 async function unwrap(promise) {
   try {
     const res = await promise;
@@ -45,8 +83,13 @@ async function unwrap(promise) {
     return res.data.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
-      const msg = err.response?.data?.message || err.message;
-      throw new Error(msg);
+      const payload = err.response?.data;
+      const msg = payload?.message || err.message;
+      const wrapped = new Error(msg);
+      wrapped.status = err.response?.status;
+      wrapped.data = payload?.data || null;
+      wrapped.code = payload?.data?.code || null;
+      throw wrapped;
     }
     throw err;
   }
@@ -56,10 +99,20 @@ export const api = {
   // Public config
   getConfig: () => unwrap(http.get('/config')),
 
-  // Auth
-  login: (email, password) => unwrap(http.post('/auth/login', { email, password })),
-  signup: (name, email, password) => unwrap(http.post('/auth/signup', { name, email, password })),
+  // Customer OTP Auth
+  requestOtp: (payload) => unwrap(http.post('/auth/otp/request', payload)),
+  verifyOtp: (payload) => unwrap(http.post('/auth/otp/verify', payload)),
+
+  // Staff Password Auth
+  passwordLogin: (email, password) =>
+    unwrap(http.post('/auth/password/login', { email, password })),
+  login: (email, password) =>
+    unwrap(http.post('/auth/password/login', { email, password })),
+
+  // Shared Auth
+  setPassword: (password) => unwrap(http.post('/auth/set-password', { password })),
   demoLogin: (role) => unwrap(http.post('/auth/demo-login', { role })),
+  refreshSession: () => unwrap(http.post('/auth/refresh')),
   logout: () => unwrap(http.post('/auth/logout')),
   me: () => unwrap(http.get('/auth/me')),
   getSession: () => unwrap(http.get('/auth/session')),

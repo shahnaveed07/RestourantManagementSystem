@@ -12,6 +12,7 @@ import {
   ServiceCallModel,
   PaymentModel,
   AuditLogModel,
+  OtpChallengeModel,
 } from '../models/index.js';
 
 const DATA_DIR = path.resolve(process.cwd(), '.data');
@@ -31,6 +32,7 @@ function emptyStore() {
     calls: [],
     payments: [],
     auditLogs: [],
+    otpChallenges: [],
     orderSeq: 1000,
   };
 }
@@ -135,6 +137,7 @@ class Repository {
         ServiceCallModel.deleteMany({}),
         PaymentModel.deleteMany({}),
         AuditLogModel.deleteMany({}),
+        OtpChallengeModel.deleteMany({}),
       ]);
       return;
     }
@@ -152,12 +155,30 @@ class Repository {
   }
 
   async findUserByEmail(email) {
+    if (!email) return null;
     const clean = email.toLowerCase().trim();
     if (this.useMongo) {
       const row = await UserModel.findOne({ email: clean }).lean();
       return row ? normalizeDoc(row) : null;
     }
-    return this.store.users.find((u) => u.email.toLowerCase() === clean) || null;
+    return this.store.users.find((u) => u.email && u.email.toLowerCase() === clean) || null;
+  }
+
+  async findUserByMobile(mobile) {
+    if (!mobile) return null;
+    const clean = String(mobile).trim();
+    if (this.useMongo) {
+      const row = await UserModel.findOne({ mobile: clean }).lean();
+      return row ? normalizeDoc(row) : null;
+    }
+    return this.store.users.find((u) => u.mobile && u.mobile === clean) || null;
+  }
+
+  async findUserByIdentifier(channel, identifier) {
+    if (channel === 'mobile') {
+      return this.findUserByMobile(identifier);
+    }
+    return this.findUserByEmail(identifier);
   }
 
   async findUserById(id) {
@@ -170,12 +191,17 @@ class Repository {
 
   async createUser(data) {
     if (this.useMongo) {
-      const doc = await UserModel.create(data);
+      const doc = await UserModel.create({
+        ...data,
+        email: data.email ? data.email.toLowerCase().trim() : null,
+        mobile: data.mobile ? String(data.mobile).trim() : null,
+      });
       return normalizeDoc(doc.toObject());
     }
     const created = {
       ...data,
-      email: data.email.toLowerCase().trim(),
+      email: data.email ? data.email.toLowerCase().trim() : null,
+      mobile: data.mobile ? String(data.mobile).trim() : null,
       id: createObjectId(),
       createdAt: new Date().toISOString(),
     };
@@ -544,6 +570,92 @@ class Repository {
     }
     this.persistLocalStore();
     return created;
+  }
+
+  // ---- OTP CHALLENGES ----
+  async findLatestOtpChallenge(identifier) {
+    if (this.useMongo) {
+      const row = await OtpChallengeModel.findOne({ identifier }).sort({ createdAt: -1 }).lean();
+      return row ? normalizeDoc(row) : null;
+    }
+    const matches = (this.store.otpChallenges || [])
+      .filter((c) => c.identifier === identifier)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return matches[0] || null;
+  }
+
+  async findActiveOtpChallenge(identifier) {
+    if (this.useMongo) {
+      const row = await OtpChallengeModel.findOne({
+        identifier,
+        invalidated: false,
+        consumedAt: null,
+      })
+        .sort({ createdAt: -1 })
+        .lean();
+      return row ? normalizeDoc(row) : null;
+    }
+    const matches = (this.store.otpChallenges || [])
+      .filter((c) => c.identifier === identifier && !c.invalidated && !c.consumedAt)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return matches[0] || null;
+  }
+
+  async invalidateActiveOtps(identifier) {
+    if (this.useMongo) {
+      await OtpChallengeModel.updateMany(
+        { identifier, invalidated: false, consumedAt: null },
+        { invalidated: true }
+      );
+      return;
+    }
+    if (!Array.isArray(this.store.otpChallenges)) this.store.otpChallenges = [];
+    let changed = false;
+    for (const c of this.store.otpChallenges) {
+      if (c.identifier === identifier && !c.invalidated && !c.consumedAt) {
+        c.invalidated = true;
+        changed = true;
+      }
+    }
+    if (changed) this.persistLocalStore();
+  }
+
+  async createOtpChallenge(data) {
+    if (this.useMongo) {
+      const doc = await OtpChallengeModel.create(data);
+      return normalizeDoc(doc.toObject());
+    }
+    if (!Array.isArray(this.store.otpChallenges)) this.store.otpChallenges = [];
+    const nowIso = new Date().toISOString();
+    const created = {
+      ...data,
+      id: createObjectId(),
+      createdAt: data.createdAt || nowIso,
+      updatedAt: nowIso,
+    };
+    this.store.otpChallenges.unshift(created);
+    if (this.store.otpChallenges.length > 500) {
+      this.store.otpChallenges = this.store.otpChallenges.slice(0, 500);
+    }
+    this.persistLocalStore();
+    return created;
+  }
+
+  async updateOtpChallenge(id, patch) {
+    if (this.useMongo) {
+      const doc = await OtpChallengeModel.findByIdAndUpdate(id, patch, { new: true }).lean();
+      return doc ? normalizeDoc(doc) : null;
+    }
+    if (!Array.isArray(this.store.otpChallenges)) this.store.otpChallenges = [];
+    const idx = this.store.otpChallenges.findIndex((c) => c.id === id);
+    if (idx === -1) return null;
+    this.store.otpChallenges[idx] = {
+      ...this.store.otpChallenges[idx],
+      ...patch,
+      updatedAt: new Date().toISOString(),
+    };
+    this.persistLocalStore();
+    return this.store.otpChallenges[idx];
   }
 }
 

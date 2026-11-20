@@ -5,11 +5,12 @@ import { repo } from '../db/repository.js';
 export function signAccessToken(user) {
   const payload = {
     userId: user.id,
-    email: user.email,
+    email: user.email || null,
+    mobile: user.mobile || null,
     name: user.name,
     role: user.role,
   };
-  return jwt.sign(payload, env.jwtSecret, { expiresIn: '12h' });
+  return jwt.sign(payload, env.jwtSecret, { expiresIn: '15m' });
 }
 
 export function signRefreshToken(user) {
@@ -20,21 +21,21 @@ export function setAuthCookies(res, accessToken, refreshToken) {
   const isProd = env.nodeEnv === 'production';
   res.cookie('passline_access', accessToken, {
     httpOnly: true,
-    sameSite: isProd ? 'none' : 'lax',
+    sameSite: 'lax',
     secure: isProd,
-    maxAge: 12 * 60 * 60 * 1000,
+    maxAge: 15 * 60 * 1000,
   });
   res.cookie('passline_refresh', refreshToken, {
     httpOnly: true,
-    sameSite: isProd ? 'none' : 'lax',
+    sameSite: 'lax',
     secure: isProd,
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 }
 
 export function clearAuthCookies(res) {
-  res.clearCookie('passline_access');
-  res.clearCookie('passline_refresh');
+  res.clearCookie('passline_access', { sameSite: 'lax' });
+  res.clearCookie('passline_refresh', { sameSite: 'lax' });
 }
 
 export function extractToken(req) {
@@ -65,7 +66,8 @@ export async function authenticate(req, res, next) {
     }
     req.user = {
       userId: user.id,
-      email: user.email,
+      email: user.email || null,
+      mobile: user.mobile || null,
       name: user.name,
       role: user.role,
     };

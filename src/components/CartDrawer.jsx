@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { X, Minus, Plus, Trash2, ShoppingBag, CheckCircle2, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { api } from '../api/client';
 import { formatCurrency } from '../utils/format';
+import { useModalA11y } from '../utils/useModalA11y';
 
 export function CartDrawer({ onRequireAuth, onOrderPlaced }) {
   const { user, config } = useAuth();
@@ -25,6 +26,14 @@ export function CartDrawer({ onRequireAuth, onOrderPlaced }) {
   const [selectedTableId, setSelectedTableId] = useState('');
   const [placing, setPlacing] = useState(false);
   const [lastOrder, setLastOrder] = useState(null);
+  const drawerRef = useRef(null);
+
+  const handleClose = useCallback(() => {
+    setLastOrder(null);
+    setCartOpen(false);
+  }, [setCartOpen]);
+
+  useModalA11y(cartOpen, handleClose, drawerRef);
 
   if (!cartOpen) return null;
 
@@ -78,15 +87,15 @@ export function CartDrawer({ onRequireAuth, onOrderPlaced }) {
       <button
         type="button"
         aria-label="Close cart backdrop"
-        onClick={() => {
-          setLastOrder(null);
-          setCartOpen(false);
-        }}
+        onClick={handleClose}
         className="flex-1 hidden md:block cursor-default"
       />
 
-      {/* Bottom sheet on mobile, right side drawer on desktop */}
-      <div className="w-full md:w-[430px] max-w-full bg-white rounded-t-2xl md:rounded-none md:rounded-l-2xl max-h-[85vh] md:max-h-screen md:h-full flex flex-col shadow-2xl border-t md:border-t-0 md:border-l border-slate-200">
+      {/* Bottom sheet on mobile (max-h-[85dvh]), right side drawer on desktop (400px) */}
+      <div
+        ref={drawerRef}
+        className="w-full md:w-[400px] max-w-full bg-white rounded-t-2xl md:rounded-none md:rounded-l-2xl max-h-[85dvh] md:max-h-dvh md:h-dvh flex flex-col shadow-2xl border-t md:border-t-0 md:border-l border-slate-200"
+      >
         <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between gap-3 shrink-0">
           <div>
             <h2 id="cart-drawer-title" className="text-base font-bold text-slate-900">
@@ -100,10 +109,7 @@ export function CartDrawer({ onRequireAuth, onOrderPlaced }) {
           </div>
           <button
             type="button"
-            onClick={() => {
-              setLastOrder(null);
-              setCartOpen(false);
-            }}
+            onClick={handleClose}
             aria-label="Close cart drawer"
             className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900"
           >
@@ -217,13 +223,13 @@ export function CartDrawer({ onRequireAuth, onOrderPlaced }) {
                     onChange={(e) => updateNotes(item.id, e.target.value)}
                     placeholder="Kitchen note (e.g., no onions, extra sauce)..."
                     aria-label={`Notes for ${item.name}`}
-                    className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600"
+                    className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-slate-200 text-base sm:text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600"
                   />
                 </div>
               ))}
             </div>
 
-            <div className="p-5 border-t border-slate-200 bg-slate-50/70 space-y-3 shrink-0">
+            <div className="p-5 safe-bottom-bar border-t border-slate-200 bg-slate-50/90 space-y-3 shrink-0">
               {/* Service Option */}
               <div className="space-y-2">
                 <div className="grid grid-cols-2 gap-2">
@@ -261,7 +267,7 @@ export function CartDrawer({ onRequireAuth, onOrderPlaced }) {
                     aria-label="Select dining table"
                     value={selectedTableId}
                     onChange={(e) => setSelectedTableId(e.target.value)}
-                    className="w-full min-h-[44px] px-3 rounded-lg border border-slate-300 bg-white text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-600"
+                    className="w-full min-h-[44px] px-3 rounded-lg border border-slate-300 bg-white text-base sm:text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-600"
                   >
                     {tables.map((t) => (
                       <option key={t.id} value={t.id}>

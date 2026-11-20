@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
+import rateLimit, { MemoryStore, ipKeyGenerator } from 'express-rate-limit';
 import { z } from 'zod';
 import { env } from '../config/env.js';
 import { repo } from '../db/repository.js';
@@ -26,6 +26,15 @@ import {
   escapeCsvCell,
   roundCurrency,
 } from '../services/orderCalculator.js';
+import {
+  normalizeIdentifier,
+  maskIdentifier,
+  generateSixDigitOtp,
+  hashOtp,
+  evaluateResendPolicy,
+  evaluateOtpVerification,
+} from '../services/otpLogic.js';
+import { dispatchOtp, verifyCaptchaToken } from '../services/otpService.js';
 import { seedDatabase } from '../seed/seedData.js';
 
 const router = Router();
@@ -41,15 +50,110 @@ function extractClientIp(req) {
   return ipKeyGenerator(req.ip || req.socket?.remoteAddress || '127.0.0.1');
 }
 
+function getNormalizedOtpKey(req) {
+  const body = req.body || {};
+  const channel =
+    body.channel || (typeof body.identifier === 'string' && body.identifier.includes('@') ? 'email' : 'mobile');
+  const norm = normalizeIdentifier(channel, body.identifier || '', body.countryCode || '+91');
+  if (norm.valid) return norm.identifier;
+  return `raw:${String(body.identifier || '').trim().toLowerCase() || extractClientIp(req)}`;
+}
+
+// Track failed OTP verification/CAPTCHA attempts per IP for optional CAPTCHA trigger (>= 2 failures)
+const failedIpAttempts = new Map();
+
+function recordIpFailure(ip) {
+  const now = Date.now();
+  const prev = failedIpAttempts.get(ip);
+  if (!prev || now - prev.updatedAt > 60 * 60 * 1000) {
+    failedIpAttempts.set(ip, { count: 1, updatedAt: now });
+    return 1;
+  }
+  const nextCount = prev.count + 1;
+  failedIpAttempts.set(ip, { count: nextCount, updatedAt: now });
+  return nextCount;
+}
+
+function getIpFailureCount(ip) {
+  const prev = failedIpAttempts.get(ip);
+  if (!prev || Date.now() - prev.updatedAt > 60 * 60 * 1000) return 0;
+  return prev.count;
+}
+
+function clearIpFailures(ip) {
+  failedIpAttempts.delete(ip);
+}
+
 // Rate limiters
 const loginLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
   max: 60,
   standardHeaders: true,
   legacyHeaders: false,
+  store: new MemoryStore(),
   keyGenerator: (req) => `login:${extractClientIp(req)}`,
   validate: { forwardedHeader: false },
   message: { success: false, data: null, message: 'Too many login attempts. Please wait a few minutes.' },
+});
+
+const otpRequestIpLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: new MemoryStore(),
+  keyGenerator: (req) => `otp-req-ip:${extractClientIp(req)}`,
+  validate: { forwardedHeader: false },
+  message: {
+    success: false,
+    data: null,
+    message: 'Too many OTP requests from this IP address. Please try again later.',
+  },
+});
+
+const otpRequestIdentifierLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: new MemoryStore(),
+  keyGenerator: (req) => `otp-req-id:${getNormalizedOtpKey(req)}`,
+  validate: { forwardedHeader: false },
+  message: {
+    success: false,
+    data: null,
+    message: 'Maximum 3 OTP requests per 15 minutes reached for this mobile/email. Please wait.',
+  },
+});
+
+const otpVerifyIpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: new MemoryStore(),
+  keyGenerator: (req) => `otp-ver-ip:${extractClientIp(req)}`,
+  validate: { forwardedHeader: false },
+  message: {
+    success: false,
+    data: null,
+    message: 'Too many verification attempts from this IP. Please wait before retrying.',
+  },
+});
+
+const otpVerifyIdentifierLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: new MemoryStore(),
+  keyGenerator: (req) => `otp-ver-id:${getNormalizedOtpKey(req)}`,
+  validate: { forwardedHeader: false },
+  message: {
+    success: false,
+    data: null,
+    message: 'Too many verification attempts for this mobile/email. Please request a new code later.',
+  },
 });
 
 const guestCallLimiter = rateLimit({
@@ -108,6 +212,18 @@ function asyncHandler(fn) {
   };
 }
 
+function sanitizeAuthUser(user) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email || null,
+    mobile: user.mobile || null,
+    role: user.role,
+    isDemo: Boolean(user.isDemo),
+    lastLoginAt: user.lastLoginAt || null,
+  };
+}
+
 // ==========================================
 // HEALTH & PUBLIC CONFIG
 // ==========================================
@@ -127,6 +243,11 @@ router.get(
     sendOk(res, {
       restaurantName: env.restaurantName,
       demoMode: env.demoMode,
+      demoOtpHint: env.demoMode ? env.demoOtp : null,
+      otpExpiryMinutes: env.otpExpiryMinutes,
+      captchaEnabled: Boolean(env.captchaSecret),
+      captchaProvider: env.captchaProvider,
+      captchaSiteKey: env.captchaSiteKey || null,
       taxRate: env.taxRate,
       tables: tables.map((t) => ({ id: t.id, number: t.number, name: t.name, section: t.section })),
       demoTables: env.demoMode
@@ -137,102 +258,317 @@ router.get(
 );
 
 // ==========================================
-// AUTHENTICATION
+// AUTHENTICATION (CUSTOMER OTP + STAFF PASSWORD)
 // ==========================================
-const loginSchema = z.object({
+const otpRequestSchema = z.object({
+  channel: z.enum(['mobile', 'email']),
+  identifier: z.string().min(3).max(120),
+  countryCode: z.string().max(6).optional(),
+  purpose: z.enum(['login', 'signup']).default('login'),
+  name: z.string().max(80).optional(),
+  captchaToken: z.string().max(4096).optional(),
+});
+
+const otpVerifySchema = z.object({
+  channel: z.enum(['mobile', 'email']).optional(),
+  identifier: z.string().min(3).max(120),
+  countryCode: z.string().max(6).optional(),
+  otp: z.string().regex(/^\d{6}$/, 'Enter the 6-digit verification code.'),
+  purpose: z.enum(['login', 'signup']).optional(),
+  name: z.string().max(80).optional(),
+});
+
+const staffPasswordLoginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(4),
 });
 
-const signupSchema = z.object({
-  name: z.string().min(2).max(80),
-  email: z.string().email(),
-  password: z.string().min(6).max(64),
-});
-
 router.post(
-  '/auth/signup',
-  loginLimiter,
+  '/auth/otp/request',
+  otpRequestIpLimiter,
+  otpRequestIdentifierLimiter,
   asyncHandler(async (req, res) => {
-    const parsed = signupSchema.safeParse(req.body);
+    const parsed = otpRequestSchema.safeParse(req.body);
     if (!parsed.success) {
-      return sendErr(res, 'Please enter a valid name, email, and password (6+ characters).', 400);
+      return sendErr(res, 'Please enter a valid mobile number or email address.', 400);
     }
 
-    const existing = await repo.findUserByEmail(parsed.data.email);
-    if (existing) {
-      return sendErr(res, 'An account with this email already exists. Please sign in instead.', 409);
+    const { channel, identifier, countryCode, purpose, name, captchaToken } = parsed.data;
+    const normalized = normalizeIdentifier(channel, identifier, countryCode || '+91');
+    if (!normalized.valid) {
+      return sendErr(res, normalized.error, 400);
     }
 
-    const passwordHash = await bcrypt.hash(parsed.data.password, 10);
-    const created = await repo.createUser({
-      name: sanitizeText(parsed.data.name),
-      email: parsed.data.email.toLowerCase().trim(),
-      passwordHash,
-      role: 'customer',
-      isActive: true,
-      lastLoginAt: new Date().toISOString(),
-      isDemo: false,
+    const cleanName = typeof name === 'string' ? sanitizeText(name) : '';
+    if (purpose === 'signup' && cleanName.length < 2) {
+      return sendErr(res, 'Please enter your full name (at least 2 characters).', 400);
+    }
+
+    const clientIp = extractClientIp(req);
+    if (env.captchaSecret && getIpFailureCount(clientIp) >= 2) {
+      const captchaCheck = await verifyCaptchaToken(captchaToken, clientIp);
+      if (!captchaCheck.valid) {
+        return sendErr(res, captchaCheck.error || 'CAPTCHA verification required.', 400, {
+          captchaRequired: true,
+        });
+      }
+    }
+
+    const nowMs = Date.now();
+    const latestChallenge = await repo.findLatestOtpChallenge(normalized.identifier);
+    const resendPolicy = evaluateResendPolicy(latestChallenge, nowMs, {
+      cooldownSeconds: 30,
+      maxResends: 3,
+      windowMinutes: 15,
     });
 
-    const accessToken = signAccessToken(created);
-    const refreshToken = signRefreshToken(created);
-    setAuthCookies(res, accessToken, refreshToken);
+    if (!resendPolicy.allowed) {
+      const msg =
+        resendPolicy.code === 'COOLDOWN'
+          ? `Please wait ${resendPolicy.retryAfterSeconds}s before requesting a new code.`
+          : 'Maximum 3 resends per 15 minutes reached. Please try again later.';
+      return sendErr(res, msg, 429, {
+        code: resendPolicy.code,
+        retryAfterSeconds: resendPolicy.retryAfterSeconds,
+      });
+    }
 
-    await logAudit(req, 'CUSTOMER_SIGNUP', 'User', created.id, `New customer account ${created.email}`);
+    await repo.invalidateActiveOtps(normalized.identifier);
+
+    const existingUser = await repo.findUserByIdentifier(channel, normalized.identifier);
+    const otpCode = env.demoMode ? env.demoOtp : generateSixDigitOtp();
+    const otpHash = hashOtp(normalized.identifier, otpCode, env.otpSecret);
+    const nowIso = new Date(nowMs).toISOString();
+    const expiresAt = new Date(nowMs + env.otpExpiryMinutes * 60 * 1000).toISOString();
+
+    // Create challenge for signups and for registered login accounts; keep response identical to prevent enumeration
+    if (purpose === 'signup' || (existingUser && existingUser.isActive)) {
+      await repo.createOtpChallenge({
+        identifier: normalized.identifier,
+        channel,
+        purpose,
+        pendingName: purpose === 'signup' ? cleanName : null,
+        otpHash,
+        attempts: 0,
+        maxAttempts: env.otpMaxAttempts,
+        resendCount: resendPolicy.nextResendCount,
+        windowStartedAt: resendPolicy.windowStartedAt,
+        lastSentAt: nowIso,
+        expiresAt,
+        invalidated: false,
+        consumedAt: null,
+        ip: clientIp,
+      });
+
+      await dispatchOtp({ channel, identifier: normalized.identifier, otp: otpCode });
+    }
+
+    const masked = maskIdentifier(channel, normalized.identifier);
+    await logAudit(
+      req,
+      'OTP_REQUEST',
+      'OtpChallenge',
+      null,
+      `OTP requested (${purpose}, ${channel}) for ${masked} from IP ${clientIp}`
+    );
 
     return sendOk(
       res,
       {
-        accessToken,
-        user: {
-          id: created.id,
-          name: created.name,
-          email: created.email,
-          role: created.role,
-          isDemo: created.isDemo,
-        },
+        channel,
+        identifier: normalized.identifier,
+        maskedIdentifier: masked,
+        purpose,
+        expiresInSeconds: env.otpExpiryMinutes * 60,
+        resendCooldownSeconds: 30,
+        resendsRemaining: Math.max(0, 3 - resendPolicy.nextResendCount),
+        ...(env.demoMode ? { demoOtp: env.demoOtp } : {}),
       },
-      'Account created.',
-      201
+      'If your details are eligible, a 6-digit verification code has been sent.'
     );
   })
 );
 
 router.post(
-  '/auth/login',
-  loginLimiter,
+  '/auth/otp/verify',
+  otpVerifyIpLimiter,
+  otpVerifyIdentifierLimiter,
   asyncHandler(async (req, res) => {
-    const parsed = loginSchema.safeParse(req.body);
+    const parsed = otpVerifySchema.safeParse(req.body);
     if (!parsed.success) {
-      return sendErr(res, 'Please enter a valid email and password.', 400);
+      return sendErr(res, 'Please enter a valid identifier and 6-digit numeric OTP.', 400);
     }
 
-    const user = await repo.findUserByEmail(parsed.data.email);
-    if (!user || !user.isActive) {
-      return sendErr(res, 'Invalid email or password.', 401);
+    const inferredChannel =
+      parsed.data.channel || (parsed.data.identifier.includes('@') ? 'email' : 'mobile');
+    const normalized = normalizeIdentifier(
+      inferredChannel,
+      parsed.data.identifier,
+      parsed.data.countryCode || '+91'
+    );
+    if (!normalized.valid) {
+      return sendErr(res, normalized.error, 400);
     }
 
-    const valid = await bcrypt.compare(parsed.data.password, user.passwordHash);
-    if (!valid) {
-      return sendErr(res, 'Invalid email or password.', 401);
+    const clientIp = extractClientIp(req);
+    const challenge = await repo.findActiveOtpChallenge(normalized.identifier);
+    const verdict = evaluateOtpVerification(
+      challenge,
+      parsed.data.otp,
+      env.otpSecret,
+      Date.now(),
+      env.otpMaxAttempts
+    );
+
+    if (!verdict.valid) {
+      const failures = recordIpFailure(clientIp);
+      if (challenge) {
+        await repo.updateOtpChallenge(challenge.id, {
+          ...(typeof verdict.nextAttempts === 'number' ? { attempts: verdict.nextAttempts } : {}),
+          ...(verdict.shouldInvalidate ? { invalidated: true } : {}),
+        });
+      }
+
+      const captchaRequired = Boolean(env.captchaSecret) && failures >= 2;
+      if (verdict.reason === 'MAX_ATTEMPTS') {
+        return sendErr(
+          res,
+          'Maximum wrong OTP attempts reached. This code has been invalidated; please request a new one.',
+          401,
+          { code: 'OTP_LOCKED', captchaRequired }
+        );
+      }
+      if (verdict.reason === 'EXPIRED') {
+        return sendErr(res, 'Your verification code has expired. Please request a new one.', 401, {
+          code: 'OTP_EXPIRED',
+          captchaRequired,
+        });
+      }
+      if (verdict.reason === 'WRONG_OTP') {
+        return sendErr(
+          res,
+          `Incorrect verification code. ${verdict.attemptsRemaining} attempt(s) remaining.`,
+          401,
+          { code: 'WRONG_OTP', attemptsRemaining: verdict.attemptsRemaining, captchaRequired }
+        );
+      }
+      return sendErr(res, 'Invalid or expired verification code. Please request a new one.', 401, {
+        code: 'NO_ACTIVE_OTP',
+        captchaRequired,
+      });
     }
 
-    await repo.updateUser(user.id, { lastLoginAt: new Date().toISOString() });
+    const nowIso = new Date().toISOString();
+    await repo.updateOtpChallenge(challenge.id, { consumedAt: nowIso });
+    clearIpFailures(clientIp);
+
+    const purpose = parsed.data.purpose || challenge.purpose || 'login';
+    const existingUser = await repo.findUserByIdentifier(inferredChannel, normalized.identifier);
+
+    let user = existingUser;
+    if (purpose === 'signup') {
+      if (existingUser) {
+        return sendErr(
+          res,
+          'An account already exists with this mobile or email. Please log in instead.',
+          409,
+          { code: 'ACCOUNT_EXISTS' }
+        );
+      }
+      const customerName = sanitizeText(parsed.data.name || challenge.pendingName || '');
+      if (customerName.length < 2) {
+        return sendErr(res, 'Please enter your full name (at least 2 characters).', 400);
+      }
+      user = await repo.createUser({
+        name: customerName,
+        email: inferredChannel === 'email' ? normalized.identifier : null,
+        mobile: inferredChannel === 'mobile' ? normalized.identifier : null,
+        passwordHash: null,
+        role: 'customer',
+        isActive: true,
+        lastLoginAt: nowIso,
+        isDemo: false,
+      });
+      await logAudit(
+        req,
+        'CUSTOMER_SIGNUP',
+        'User',
+        user.id,
+        `New customer verified via ${inferredChannel} (${maskIdentifier(inferredChannel, normalized.identifier)})`
+      );
+    } else {
+      if (!existingUser || !existingUser.isActive) {
+        return sendErr(res, 'No active account found for this identifier. Please sign up first.', 401);
+      }
+      if (existingUser.role !== 'customer') {
+        return sendErr(res, 'Staff accounts must sign in with email and password.', 403);
+      }
+      user = await repo.updateUser(existingUser.id, { lastLoginAt: nowIso });
+    }
+
     const accessToken = signAccessToken(user);
     const refreshToken = signRefreshToken(user);
     setAuthCookies(res, accessToken, refreshToken);
 
-    return sendOk(res, {
-      accessToken,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isDemo: user.isDemo,
+    return sendOk(
+      res,
+      {
+        accessToken,
+        user: sanitizeAuthUser(user),
       },
-    });
+      purpose === 'signup' ? 'Account verified and created.' : 'Signed in.'
+    );
+  })
+);
+
+async function handleStaffPasswordLogin(req, res) {
+  const parsed = staffPasswordLoginSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return sendErr(res, 'Please enter a valid email and password.', 400);
+  }
+
+  const user = await repo.findUserByEmail(parsed.data.email);
+  if (!user || !user.isActive) {
+    return sendErr(res, 'Invalid email or password.', 401);
+  }
+  if (!['admin', 'manager', 'waiter', 'kitchen'].includes(user.role)) {
+    return sendErr(res, 'Customers sign in using Mobile or Email OTP.', 403);
+  }
+  if (!user.passwordHash) {
+    return sendErr(res, 'Password login is not configured for this account.', 401);
+  }
+
+  const valid = await bcrypt.compare(parsed.data.password, user.passwordHash);
+  if (!valid) {
+    return sendErr(res, 'Invalid email or password.', 401);
+  }
+
+  await repo.updateUser(user.id, { lastLoginAt: new Date().toISOString() });
+  const accessToken = signAccessToken(user);
+  const refreshToken = signRefreshToken(user);
+  setAuthCookies(res, accessToken, refreshToken);
+
+  return sendOk(res, {
+    accessToken,
+    user: sanitizeAuthUser(user),
+  });
+}
+
+router.post('/auth/password/login', loginLimiter, asyncHandler(handleStaffPasswordLogin));
+router.post('/auth/login', loginLimiter, asyncHandler(handleStaffPasswordLogin));
+
+router.post(
+  '/auth/set-password',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const schema = z.object({ password: z.string().min(6).max(64) });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) {
+      return sendErr(res, 'Password must be at least 6 characters.', 400);
+    }
+    const passwordHash = await bcrypt.hash(parsed.data.password, 10);
+    await repo.updateUser(req.user.userId, { passwordHash });
+    return sendOk(res, { passwordSet: true }, 'Password saved.');
   })
 );
 
@@ -268,13 +604,7 @@ router.post(
 
     return sendOk(res, {
       accessToken,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isDemo: user.isDemo,
-      },
+      user: sanitizeAuthUser(user),
     });
   })
 );
@@ -297,13 +627,7 @@ router.post(
       setAuthCookies(res, accessToken, newRefresh);
       return sendOk(res, {
         accessToken,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          isDemo: user.isDemo,
-        },
+        user: sanitizeAuthUser(user),
       });
     } catch {
       return sendErr(res, 'Invalid refresh token.', 401);
@@ -324,19 +648,27 @@ router.get(
         ? req.headers.authorization.slice(7).trim()
         : null) || (typeof req.cookies?.passline_access === 'string' ? req.cookies.passline_access : null);
 
-    if (!token) return sendOk(res, null);
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, env.jwtSecret);
+        const user = await repo.findUserById(decoded.userId);
+        if (user && user.isActive) return sendOk(res, sanitizeAuthUser(user));
+      } catch {
+        // access token expired; try refresh cookie below
+      }
+    }
+
+    const refreshToken = req.cookies?.passline_refresh;
+    if (!refreshToken) return sendOk(res, null);
+
     try {
-      const decoded = jwt.verify(token, env.jwtSecret);
-      const user = await repo.findUserById(decoded.userId);
+      const decodedRefresh = jwt.verify(refreshToken, env.jwtRefreshSecret);
+      const user = await repo.findUserById(decodedRefresh.userId);
       if (!user || !user.isActive) return sendOk(res, null);
-      return sendOk(res, {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isDemo: user.isDemo,
-        lastLoginAt: user.lastLoginAt,
-      });
+      const newAccess = signAccessToken(user);
+      const newRefresh = signRefreshToken(user);
+      setAuthCookies(res, newAccess, newRefresh);
+      return sendOk(res, sanitizeAuthUser(user));
     } catch {
       return sendOk(res, null);
     }
@@ -349,14 +681,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const user = await repo.findUserById(req.user.userId);
     if (!user) return sendErr(res, 'User not found.', 404);
-    return sendOk(res, {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      isDemo: user.isDemo,
-      lastLoginAt: user.lastLoginAt,
-    });
+    return sendOk(res, sanitizeAuthUser(user));
   })
 );
 

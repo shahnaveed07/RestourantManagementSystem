@@ -7,13 +7,42 @@
 }
 
 @layer base {
-  body {
-    font-family: var(--font-sans);
-    color: #0f172a;
-    background-color: #f8fafc;
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
   }
 
-  h1, h2, h3, h4 {
+  html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #0f172a;
+    background-color: #f8fafc;
+    overflow-x: clip;
+  }
+
+  #root {
+    min-height: 100dvh;
+    overflow-x: clip;
+  }
+
+  img,
+  video,
+  svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
     font-family: var(--font-display);
     text-wrap: balance;
   }
@@ -21,6 +50,25 @@
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.safe-bottom-bar {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+@media (hover: hover) {
+  .hover-lift:hover {
+    transform: translateY(-2px);
+  }
 }
 
 @keyframes callFlash {
@@ -37,6 +85,11 @@
 }
 
 @media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
   .no-print {
     display: none !important;
   }
@@ -46,5 +99,18 @@
   body {
     background: #ffffff !important;
     color: #000000 !important;
+  }
+  .qr-print-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 12mm !important;
+    padding: 0 !important;
+  }
+  .receipt-print-sheet {
+    max-width: 80mm !important;
+    margin: 0 auto !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
   }
 }

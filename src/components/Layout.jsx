@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   ClipboardList,
@@ -25,6 +25,7 @@ import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { ROLE_LABELS } from '../utils/format';
 import { BrandLogo } from './BrandLogo';
+import { useModalA11y } from '../utils/useModalA11y';
 
 export function Layout({ title, subtitle, actions, darkMode = false, children }) {
   const { user, config, logout } = useAuth();
@@ -37,7 +38,15 @@ export function Layout({ title, subtitle, actions, darkMode = false, children })
     setSoundEnabled,
   } = useSocket();
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const drawerRef = useRef(null);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname, location.search]);
+
+  useModalA11y(mobileOpen, () => setMobileOpen(false), drawerRef);
 
   if (!user) return null;
 
@@ -100,9 +109,9 @@ export function Layout({ title, subtitle, actions, darkMode = false, children })
           type="button"
           onClick={() => setMobileOpen(false)}
           aria-label="Close navigation menu"
-          className="lg:hidden p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+          className="lg:hidden min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
         >
-          <X className="w-4 h-4" />
+          <X className="w-5 h-5" />
         </button>
       </div>
 
@@ -158,7 +167,7 @@ export function Layout({ title, subtitle, actions, darkMode = false, children })
         <button
           type="button"
           onClick={handleLogout}
-          className={`w-full px-3 py-2 rounded-lg text-xs font-medium inline-flex items-center justify-center gap-2 transition-colors ${
+          className={`w-full min-h-[44px] px-3 py-2 rounded-lg text-xs font-medium inline-flex items-center justify-center gap-2 transition-colors ${
             darkMode
               ? 'border border-slate-700 text-slate-300 hover:bg-slate-900'
               : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
@@ -173,18 +182,24 @@ export function Layout({ title, subtitle, actions, darkMode = false, children })
 
   return (
     <div
-      className={`min-h-screen flex ${
+      className={`min-h-dvh flex ${
         darkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
       }`}
     >
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:block w-60 shrink-0 sticky top-0 h-screen no-print">
+      {/* Desktop Sidebar (256px) */}
+      <aside className="hidden lg:block w-64 shrink-0 sticky top-0 h-dvh no-print">
         {sidebarContent}
       </aside>
 
       {/* Mobile Sidebar Drawer */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden flex no-print">
+        <div
+          ref={drawerRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Staff navigation drawer"
+          className="fixed inset-0 z-50 lg:hidden flex no-print"
+        >
           <div className="w-64 max-w-[82vw] h-full shadow-2xl">{sidebarContent}</div>
           <button
             type="button"
@@ -214,7 +229,7 @@ export function Layout({ title, subtitle, actions, darkMode = false, children })
         )}
 
         <header
-          className={`sticky top-0 z-30 px-4 lg:px-8 py-3.5 border-b flex items-center justify-between gap-4 no-print ${
+          className={`sticky top-0 z-30 px-4 lg:px-8 py-3 border-b flex flex-wrap items-center justify-between gap-2 sm:gap-4 no-print ${
             callFlashActive ? 'animate-call-flash' : ''
           } ${
             darkMode
@@ -222,28 +237,28 @@ export function Layout({ title, subtitle, actions, darkMode = false, children })
               : 'bg-white/95 border-slate-200 backdrop-blur-xs'
           }`}
         >
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
             <button
               type="button"
               onClick={() => setMobileOpen(true)}
               aria-label="Open navigation menu"
-              className={`lg:hidden p-2 rounded-lg ${
+              className={`lg:hidden min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg shrink-0 ${
                 darkMode ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
               <MenuIcon className="w-5 h-5" />
             </button>
             <div className="min-w-0">
-              <h1 className="text-lg font-bold tracking-tight truncate">{title}</h1>
+              <h1 className="text-base sm:text-lg font-bold tracking-tight truncate">{title}</h1>
               {subtitle && (
-                <p className={`text-xs truncate ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                <p className={`hidden sm:block text-xs truncate ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                   {subtitle}
                 </p>
               )}
             </div>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0 flex-wrap justify-end">
             <div
               className={`inline-flex items-center gap-1.5 text-xs font-medium whitespace-nowrap ${
                 connectionState === 'live'
@@ -259,7 +274,7 @@ export function Layout({ title, subtitle, actions, darkMode = false, children })
               {connectionState === 'live' && <Wifi className="w-3.5 h-3.5" />}
               {connectionState === 'reconnecting' && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
               {connectionState === 'offline' && <WifiOff className="w-3.5 h-3.5" />}
-              <span>
+              <span className="hidden sm:inline">
                 {connectionState === 'live'
                   ? 'Live'
                   : connectionState === 'reconnecting'
@@ -273,7 +288,7 @@ export function Layout({ title, subtitle, actions, darkMode = false, children })
               onClick={() => setSoundEnabled(!soundEnabled)}
               aria-label={soundEnabled ? 'Mute alert chimes' : 'Enable alert chimes'}
               title={soundEnabled ? 'Mute alert chimes' : 'Enable alert chimes'}
-              className={`p-2 rounded-lg transition-colors ${
+              className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors ${
                 darkMode
                   ? 'text-slate-300 hover:bg-slate-800'
                   : 'text-slate-600 hover:bg-slate-100'
@@ -286,7 +301,7 @@ export function Layout({ title, subtitle, actions, darkMode = false, children })
           </div>
         </header>
 
-        <main className="flex-1 p-4 lg:p-8 max-w-[1440px] w-full mx-auto">{children}</main>
+        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-7xl w-full mx-auto">{children}</main>
       </div>
     </div>
   );

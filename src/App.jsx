@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { SocketProvider } from './context/SocketContext';
 import { RoleRoute } from './routes/ProtectedRoute';
+import { useMediaQuery } from './utils/useMediaQuery';
 
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
@@ -22,20 +23,23 @@ import { StaffPage } from './pages/StaffPage';
 import { DemoToolsPage } from './pages/DemoToolsPage';
 
 export default function App() {
+  const isDesktop = useMediaQuery('(min-width: 768px)');
+
   return (
     <BrowserRouter>
       <AuthProvider>
         <CartProvider>
           <SocketProvider>
             <Toaster
-              position="top-center"
-              containerStyle={{ top: 72 }}
+              position={isDesktop ? 'top-right' : 'top-center'}
+              containerStyle={{ top: 12, zIndex: 70 }}
               toastOptions={{
                 duration: 2400,
                 style: {
                   fontSize: '13px',
                   borderRadius: '10px',
                   border: '1px solid #e2e8f0',
+                  maxWidth: '90vw',
                 },
               }}
             />

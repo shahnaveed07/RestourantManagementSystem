@@ -7,13 +7,20 @@ import cors from 'cors';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import { createServer as createViteServer } from 'vite';
-import { env } from './server/src/config/env.js';
+import { env, assertSafeDemoConfig } from './server/src/config/env.js';
 import { repo } from './server/src/db/repository.js';
 import { seedDatabase } from './server/src/seed/seedData.js';
 import { initSocketServer } from './server/src/sockets/index.js';
 import apiRouter from './server/src/routes/api.js';
 
 async function bootstrap() {
+  try {
+    assertSafeDemoConfig(env.nodeEnv, env.demoMode);
+  } catch (err) {
+    console.error(`[Passline] ${err.message}`);
+    process.exit(1);
+  }
+
   const engine = await repo.init();
   await seedDatabase(false);
 

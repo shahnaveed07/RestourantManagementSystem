@@ -6,6 +6,7 @@ import { DishImage } from '../components/DishImage';
 import { api } from '../api/client';
 import { useSocket } from '../context/SocketContext';
 import { formatCurrency } from '../utils/format';
+import { useModalA11y } from '../utils/useModalA11y';
 
 const PRESET_IMAGES = [
   { label: 'Starter Plate', url: '/src/assets/images/dish_burrata_starter_1795178821594.jpg' },
@@ -47,6 +48,10 @@ export function MenuPage() {
   const [bulkCat, setBulkCat] = useState('');
   const [bulkMode, setBulkMode] = useState('percent');
   const [bulkAmount, setBulkAmount] = useState('5');
+
+  const itemModalRef = useModalA11y(itemModalOpen, () => setItemModalOpen(false));
+  const catModalRef = useModalA11y(catModalOpen, () => setCatModalOpen(false));
+  const bulkModalRef = useModalA11y(bulkModalOpen, () => setBulkModalOpen(false));
 
   const fetchMenu = useCallback(async () => {
     try {
@@ -242,11 +247,11 @@ export function MenuPage() {
       title="Menu Management"
       subtitle="Toggle live availability, edit dishes, manage categories, and run bulk price adjustments"
       actions={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => setBulkModalOpen(true)}
-            className="px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1.5 whitespace-nowrap"
+            className="min-h-[44px] px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1.5 whitespace-nowrap"
           >
             <Percent className="w-3.5 h-3.5" />
             Bulk Pricing
@@ -254,7 +259,7 @@ export function MenuPage() {
           <button
             type="button"
             onClick={() => setCatModalOpen(true)}
-            className="px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1.5 whitespace-nowrap"
+            className="min-h-[44px] px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1.5 whitespace-nowrap"
           >
             <FolderPlus className="w-3.5 h-3.5" />
             Category
@@ -262,7 +267,7 @@ export function MenuPage() {
           <button
             type="button"
             onClick={openCreateItem}
-            className="px-3.5 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 inline-flex items-center gap-1.5 whitespace-nowrap"
+            className="min-h-[44px] px-3.5 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 inline-flex items-center gap-1.5 whitespace-nowrap"
           >
             <Plus className="w-3.5 h-3.5" />
             Add Dish
@@ -272,11 +277,11 @@ export function MenuPage() {
     >
       {/* Filters */}
       <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
           <button
             type="button"
             onClick={() => setActiveCategory('all')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${
+            className={`min-h-[44px] px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap ${
               activeCategory === 'all'
                 ? 'bg-slate-900 text-white'
                 : 'bg-white border border-slate-200 text-slate-600'
@@ -289,7 +294,7 @@ export function MenuPage() {
               key={c.id}
               type="button"
               onClick={() => setActiveCategory(c.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${
+              className={`min-h-[44px] px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap ${
                 activeCategory === c.id
                   ? 'bg-slate-900 text-white'
                   : 'bg-white border border-slate-200 text-slate-600'
@@ -308,14 +313,83 @@ export function MenuPage() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search dishes..."
             aria-label="Search menu items"
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-teal-600"
+            className="w-full min-h-[44px] pl-9 pr-3 py-2 rounded-lg border border-slate-200 bg-white text-base sm:text-xs focus:outline-none focus:ring-2 focus:ring-teal-600"
           />
         </div>
       </div>
 
-      {/* Menu Table */}
+      {/* Menu Cards (< md) & Table (md+) */}
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Mobile Card Stack */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {loading ? (
+            <div className="py-10 text-center text-slate-400 text-xs">Loading menu...</div>
+          ) : filteredItems.length === 0 ? (
+            <div className="py-10 text-center text-slate-400 text-xs">No dishes found.</div>
+          ) : (
+            filteredItems.map((item) => (
+              <article key={item.id} className="p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <DishImage
+                    src={item.imageUrl}
+                    alt={item.name}
+                    className="w-16 h-14 rounded-lg shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-sm font-semibold text-slate-900 leading-snug">
+                        {item.name}
+                      </h3>
+                      <span className="font-mono text-sm font-bold text-slate-900 tabular-nums shrink-0">
+                        {formatCurrency(item.price)}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {catMap.get(item.categoryId) || 'Uncategorized'} · {item.isVeg ? 'Veg' : 'Non-Veg'} ·{' '}
+                      {item.prepTimeMinutes}m prep
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleAvailability(item)}
+                    aria-label={`Toggle availability for ${item.name}`}
+                    className={`min-h-[44px] px-3 py-2 rounded-lg text-xs font-semibold border transition-colors whitespace-nowrap ${
+                      item.isAvailable
+                        ? 'bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100'
+                        : 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'
+                    }`}
+                  >
+                    {item.isAvailable ? 'Available' : 'Sold Out'}
+                  </button>
+                  <div className="inline-flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => openEditItem(item)}
+                      aria-label={`Edit ${item.name}`}
+                      className="min-w-[44px] min-h-[44px] p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900 inline-flex items-center justify-center"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteItem(item)}
+                      aria-label={`Delete ${item.name}`}
+                      className="min-w-[44px] min-h-[44px] p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-700 inline-flex items-center justify-center"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+
+        {/* Desktop Table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
@@ -376,7 +450,7 @@ export function MenuPage() {
                         type="button"
                         onClick={() => handleToggleAvailability(item)}
                         aria-label={`Toggle availability for ${item.name}`}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors whitespace-nowrap ${
+                        className={`min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors whitespace-nowrap ${
                           item.isAvailable
                             ? 'bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100'
                             : 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'
@@ -391,7 +465,7 @@ export function MenuPage() {
                           type="button"
                           onClick={() => openEditItem(item)}
                           aria-label={`Edit ${item.name}`}
-                          className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                          className="min-w-[44px] min-h-[44px] p-2 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 inline-flex items-center justify-center"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
@@ -399,7 +473,7 @@ export function MenuPage() {
                           type="button"
                           onClick={() => handleDeleteItem(item)}
                           aria-label={`Delete ${item.name}`}
-                          className="p-2 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-700"
+                          className="min-w-[44px] min-h-[44px] p-2 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-700 inline-flex items-center justify-center"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -416,27 +490,31 @@ export function MenuPage() {
       {/* Add/Edit Dish Modal */}
       {itemModalOpen && (
         <div
-          className="fixed inset-0 z-50 bg-slate-950/50 flex items-center justify-center p-4 overflow-y-auto"
+          className="fixed inset-0 z-50 bg-slate-950/50 flex items-center justify-center sm:p-4 overflow-y-auto"
           role="dialog"
           aria-modal="true"
           aria-labelledby="dish-modal-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setItemModalOpen(false);
+          }}
         >
           <form
+            ref={itemModalRef}
             onSubmit={handleSaveItem}
-            className="bg-white border border-slate-200 rounded-xl w-full max-w-lg p-6 space-y-4 my-8"
+            className="bg-white sm:border border-slate-200 sm:rounded-xl w-full h-dvh sm:h-auto sm:max-h-[90dvh] sm:max-w-lg p-6 space-y-4 overflow-y-auto"
           >
-            <div className="flex items-center justify-between">
-              <h2 id="dish-modal-title" className="text-base font-bold text-slate-900">
-                {editingItem ? 'Edit Dish' : 'Add Menu Dish'}
-              </h2>
+            <div className="flex items-center justify-between gap-2">
               <button
                 type="button"
                 onClick={() => setItemModalOpen(false)}
                 aria-label="Close dish modal"
-                className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100"
+                className="sm:order-last min-w-[44px] min-h-[44px] p-2 rounded-lg text-slate-500 hover:bg-slate-100 inline-flex items-center justify-center"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
+              <h2 id="dish-modal-title" className="text-base font-bold text-slate-900">
+                {editingItem ? 'Edit Dish' : 'Add Menu Dish'}
+              </h2>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -449,7 +527,7 @@ export function MenuPage() {
                   required
                   value={formState.name}
                   onChange={(e) => setFormState((s) => ({ ...s, name: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-slate-300 text-base sm:text-sm"
                 />
               </div>
 
@@ -461,7 +539,7 @@ export function MenuPage() {
                   id="dish-cat"
                   value={formState.categoryId}
                   onChange={(e) => setFormState((s) => ({ ...s, categoryId: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-slate-300 text-base sm:text-sm bg-white"
                 >
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -483,7 +561,7 @@ export function MenuPage() {
                   required
                   value={formState.price}
                   onChange={(e) => setFormState((s) => ({ ...s, price: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm font-mono"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-slate-300 text-base sm:text-sm font-mono"
                 />
               </div>
 
@@ -496,7 +574,7 @@ export function MenuPage() {
                   rows={2}
                   value={formState.description}
                   onChange={(e) => setFormState((s) => ({ ...s, description: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-base sm:text-sm"
                 />
               </div>
 
@@ -513,7 +591,7 @@ export function MenuPage() {
                       spiceLevel: e.target.value,
                     }))
                   }
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-slate-300 text-base sm:text-sm bg-white"
                 >
                   <option value="none">None</option>
                   <option value="mild">Mild</option>
@@ -533,7 +611,7 @@ export function MenuPage() {
                   max={120}
                   value={formState.prepTimeMinutes}
                   onChange={(e) => setFormState((s) => ({ ...s, prepTimeMinutes: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm font-mono"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-slate-300 text-base sm:text-sm font-mono"
                 />
               </div>
 
@@ -546,7 +624,7 @@ export function MenuPage() {
                   value={formState.allergens}
                   onChange={(e) => setFormState((s) => ({ ...s, allergens: e.target.value }))}
                   placeholder="Dairy, Gluten, Tree Nuts"
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-slate-300 text-base sm:text-sm"
                 />
               </div>
 
@@ -558,7 +636,7 @@ export function MenuPage() {
                       key={p.url}
                       type="button"
                       onClick={() => setFormState((s) => ({ ...s, imageUrl: p.url }))}
-                      className={`px-2.5 py-1 rounded border text-[11px] font-medium ${
+                      className={`min-h-[40px] px-2.5 py-1.5 rounded border text-xs font-medium ${
                         formState.imageUrl === p.url
                           ? 'bg-teal-700 border-teal-700 text-white'
                           : 'bg-slate-50 border-slate-200 text-slate-700'
@@ -567,45 +645,47 @@ export function MenuPage() {
                       {p.label}
                     </button>
                   ))}
-                  <label className="px-2.5 py-1 rounded border border-slate-200 bg-white text-[11px] font-medium text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1 cursor-pointer">
-                    <Upload className="w-3 h-3" />
+                  <label className="min-h-[40px] px-2.5 py-1.5 rounded border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1 cursor-pointer">
+                    <Upload className="w-3.5 h-3.5" />
                     Upload File
                     <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                   </label>
                 </div>
               </div>
 
-              <div className="sm:col-span-2 flex items-center gap-6 pt-1">
-                <label className="inline-flex items-center gap-2 text-xs font-medium text-slate-700">
+              <div className="sm:col-span-2 flex flex-wrap items-center gap-6 pt-1">
+                <label className="min-h-[44px] inline-flex items-center gap-2 text-xs font-medium text-slate-700">
                   <input
                     type="checkbox"
                     checked={formState.isVeg}
                     onChange={(e) => setFormState((s) => ({ ...s, isVeg: e.target.checked }))}
+                    className="w-4 h-4"
                   />
                   Vegetarian
                 </label>
-                <label className="inline-flex items-center gap-2 text-xs font-medium text-slate-700">
+                <label className="min-h-[44px] inline-flex items-center gap-2 text-xs font-medium text-slate-700">
                   <input
                     type="checkbox"
                     checked={formState.isAvailable}
                     onChange={(e) => setFormState((s) => ({ ...s, isAvailable: e.target.checked }))}
+                    className="w-4 h-4"
                   />
                   Available on guest menus
                 </label>
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setItemModalOpen(false)}
-                className="px-4 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700"
+                className="min-h-[44px] px-4 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800"
+                className="min-h-[44px] px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800"
               >
                 {editingItem ? 'Save Changes' : 'Create Dish'}
               </button>
@@ -617,24 +697,29 @@ export function MenuPage() {
       {/* Category Modal */}
       {catModalOpen && (
         <div
-          className="fixed inset-0 z-50 bg-slate-950/50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-slate-950/50 flex items-center justify-center sm:p-4"
           role="dialog"
           aria-modal="true"
+          aria-labelledby="cat-modal-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setCatModalOpen(false);
+          }}
         >
           <form
+            ref={catModalRef}
             onSubmit={handleCreateCategory}
-            className="bg-white border border-slate-200 rounded-xl w-full max-w-sm p-6 space-y-4"
+            className="bg-white sm:border border-slate-200 sm:rounded-xl w-full h-dvh sm:h-auto sm:max-w-sm p-6 space-y-4 overflow-y-auto"
           >
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-slate-900">New Menu Category</h2>
+            <div className="flex items-center justify-between gap-2">
               <button
                 type="button"
                 onClick={() => setCatModalOpen(false)}
                 aria-label="Close category modal"
-                className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100"
+                className="sm:order-last min-w-[44px] min-h-[44px] p-2 rounded-lg text-slate-500 hover:bg-slate-100 inline-flex items-center justify-center"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
+              <h2 id="cat-modal-title" className="text-base font-bold text-slate-900">New Menu Category</h2>
             </div>
             <div>
               <label htmlFor="cat-name" className="block text-xs font-medium text-slate-700 mb-1">
@@ -646,7 +731,7 @@ export function MenuPage() {
                 value={catName}
                 onChange={(e) => setCatName(e.target.value)}
                 placeholder="Seasonal Specials"
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm"
+                className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-slate-300 text-base sm:text-sm"
               />
             </div>
             <div>
@@ -658,20 +743,20 @@ export function MenuPage() {
                 type="number"
                 value={catOrder}
                 onChange={(e) => setCatOrder(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm font-mono"
+                className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-slate-300 text-base sm:text-sm font-mono"
               />
             </div>
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setCatModalOpen(false)}
-                className="px-4 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700"
+                className="min-h-[44px] px-4 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold"
+                className="min-h-[44px] px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold"
               >
                 Add Category
               </button>
@@ -683,24 +768,29 @@ export function MenuPage() {
       {/* Bulk Price Update Modal */}
       {bulkModalOpen && (
         <div
-          className="fixed inset-0 z-50 bg-slate-950/50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-slate-950/50 flex items-center justify-center sm:p-4"
           role="dialog"
           aria-modal="true"
+          aria-labelledby="bulk-modal-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setBulkModalOpen(false);
+          }}
         >
           <form
+            ref={bulkModalRef}
             onSubmit={handleBulkPrice}
-            className="bg-white border border-slate-200 rounded-xl w-full max-w-sm p-6 space-y-4"
+            className="bg-white sm:border border-slate-200 sm:rounded-xl w-full h-dvh sm:h-auto sm:max-w-sm p-6 space-y-4 overflow-y-auto"
           >
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-slate-900">Bulk Price Adjustment</h2>
+            <div className="flex items-center justify-between gap-2">
               <button
                 type="button"
                 onClick={() => setBulkModalOpen(false)}
                 aria-label="Close bulk price modal"
-                className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100"
+                className="sm:order-last min-w-[44px] min-h-[44px] p-2 rounded-lg text-slate-500 hover:bg-slate-100 inline-flex items-center justify-center"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
+              <h2 id="bulk-modal-title" className="text-base font-bold text-slate-900">Bulk Price Adjustment</h2>
             </div>
             <div>
               <label htmlFor="bulk-cat" className="block text-xs font-medium text-slate-700 mb-1">
@@ -710,7 +800,7 @@ export function MenuPage() {
                 id="bulk-cat"
                 value={bulkCat}
                 onChange={(e) => setBulkCat(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white"
+                className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-slate-300 text-base sm:text-sm bg-white"
               >
                 <option value="">All Categories</option>
                 {categories.map((c) => (
@@ -720,7 +810,7 @@ export function MenuPage() {
                 ))}
               </select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label htmlFor="bulk-mode" className="block text-xs font-medium text-slate-700 mb-1">
                   Mode
@@ -729,7 +819,7 @@ export function MenuPage() {
                   id="bulk-mode"
                   value={bulkMode}
                   onChange={(e) => setBulkMode(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-slate-300 text-base sm:text-sm bg-white"
                 >
                   <option value="percent">Percent (%)</option>
                   <option value="flat">Flat USD ($)</option>
@@ -745,21 +835,21 @@ export function MenuPage() {
                   step="0.5"
                   value={bulkAmount}
                   onChange={(e) => setBulkAmount(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm font-mono"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-slate-300 text-base sm:text-sm font-mono"
                 />
               </div>
             </div>
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setBulkModalOpen(false)}
-                className="px-4 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700"
+                className="min-h-[44px] px-4 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold"
+                className="min-h-[44px] px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold"
               >
                 Apply Prices
               </button>

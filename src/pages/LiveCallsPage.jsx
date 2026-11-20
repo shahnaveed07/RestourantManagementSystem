@@ -98,7 +98,7 @@ export function LiveCallsPage() {
           <button
             type="button"
             onClick={() => setFilter('active')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap ${
+            className={`min-h-[44px] px-3.5 py-2 text-xs font-semibold rounded-md transition-colors whitespace-nowrap ${
               filter === 'active' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
             }`}
           >
@@ -107,7 +107,7 @@ export function LiveCallsPage() {
           <button
             type="button"
             onClick={() => setFilter('resolved')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap ${
+            className={`min-h-[44px] px-3.5 py-2 text-xs font-semibold rounded-md transition-colors whitespace-nowrap ${
               filter === 'resolved' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
             }`}
           >
@@ -194,13 +194,13 @@ export function LiveCallsPage() {
                 </div>
 
                 {call.status !== 'resolved' && (
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex flex-wrap items-center gap-2 shrink-0">
                     {call.status === 'open' && (
                       <button
                         type="button"
                         disabled={busyId === call.id}
                         onClick={() => handleAcknowledge(call.id)}
-                        className="min-h-[42px] px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 text-xs font-semibold hover:bg-slate-50 inline-flex items-center gap-1.5 whitespace-nowrap"
+                        className="min-h-[44px] px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 text-xs font-semibold hover:bg-slate-50 inline-flex items-center justify-center gap-1.5 whitespace-nowrap flex-1 sm:flex-initial"
                       >
                         <Check className="w-4 h-4" />
                         Acknowledge
@@ -210,7 +210,7 @@ export function LiveCallsPage() {
                       type="button"
                       disabled={busyId === call.id}
                       onClick={() => handleResolve(call.id)}
-                      className="min-h-[42px] px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 inline-flex items-center gap-1.5 whitespace-nowrap"
+                      className="min-h-[44px] px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 inline-flex items-center justify-center gap-1.5 whitespace-nowrap flex-1 sm:flex-initial"
                     >
                       <CheckCheck className="w-4 h-4" />
                       Resolve

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import toast from 'react-hot-toast';
@@ -23,6 +23,7 @@ import { useAuth } from '../context/AuthContext';
 import { DishImage } from '../components/DishImage';
 import { BrandLogo } from '../components/BrandLogo';
 import { AuthModal } from '../components/AuthModal';
+import { useModalA11y } from '../utils/useModalA11y';
 import {
   formatCurrency,
   ORDER_STATUS_LABEL,
@@ -77,6 +78,11 @@ export function GuestMenuPage() {
   const [placingOrder, setPlacingOrder] = useState(false);
   const [sendingCall, setSendingCall] = useState(false);
   const [socketLive, setSocketLive] = useState(false);
+  const mobileCartRef = useRef(null);
+  const callModalRef = useRef(null);
+
+  useModalA11y(cartOpen, () => setCartOpen(false), mobileCartRef);
+  useModalA11y(callDrawerOpen, () => setCallDrawerOpen(false), callModalRef);
 
   useEffect(() => {
     try {
@@ -304,7 +310,7 @@ export function GuestMenuPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+      <div className="min-h-dvh flex items-center justify-center bg-slate-50 p-6">
         <p className="text-sm text-slate-500">Loading your table menu...</p>
       </div>
     );
@@ -312,7 +318,7 @@ export function GuestMenuPage() {
 
   if (error || !table) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+      <div className="min-h-dvh flex items-center justify-center bg-slate-50 p-6">
         <div className="max-w-md w-full bg-white border border-slate-200 rounded-xl p-8 text-center">
           <h1 className="text-xl font-bold text-slate-900">Table QR Code Not Recognized</h1>
           <p className="mt-2 text-sm text-slate-600">
@@ -320,7 +326,7 @@ export function GuestMenuPage() {
           </p>
           <Link
             to="/login"
-            className="mt-6 inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-teal-700 text-white text-sm font-medium hover:bg-teal-800"
+            className="mt-6 min-h-[44px] inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-teal-700 text-white text-sm font-medium hover:bg-teal-800"
           >
             Go to Staff Login
           </Link>
@@ -340,9 +346,9 @@ export function GuestMenuPage() {
           type="button"
           onClick={() => setCartOpen(false)}
           aria-label="Close cart"
-          className="lg:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100"
+          className="lg:hidden min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
         >
-          <X className="w-4 h-4" />
+          <X className="w-5 h-5" />
         </button>
       </div>
 
@@ -373,20 +379,20 @@ export function GuestMenuPage() {
                       type="button"
                       onClick={() => updateCartQty(item.id, -1)}
                       aria-label={`Decrease quantity of ${item.name}`}
-                      className="w-9 h-9 flex items-center justify-center text-slate-700 hover:bg-slate-200 rounded-l-lg"
+                      className="w-11 h-11 flex items-center justify-center text-slate-700 hover:bg-slate-200 rounded-l-lg"
                     >
-                      {qty === 1 ? <Trash2 className="w-3.5 h-3.5 text-red-600" /> : <Minus className="w-3.5 h-3.5" />}
+                      {qty === 1 ? <Trash2 className="w-4 h-4 text-red-600" /> : <Minus className="w-4 h-4" />}
                     </button>
-                    <span className="w-8 text-center text-sm font-mono font-semibold tabular-nums">
+                    <span className="w-9 text-center text-sm font-mono font-semibold tabular-nums">
                       {qty}
                     </span>
                     <button
                       type="button"
                       onClick={() => updateCartQty(item.id, 1)}
                       aria-label={`Increase quantity of ${item.name}`}
-                      className="w-9 h-9 flex items-center justify-center text-slate-700 hover:bg-slate-200 rounded-r-lg"
+                      className="w-11 h-11 flex items-center justify-center text-slate-700 hover:bg-slate-200 rounded-r-lg"
                     >
-                      <Plus className="w-3.5 h-3.5" />
+                      <Plus className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -397,7 +403,7 @@ export function GuestMenuPage() {
                   onChange={(e) => updateCartNotes(item.id, e.target.value)}
                   placeholder="Add kitchen note (e.g., no onions, allergy)..."
                   aria-label={`Notes for ${item.name}`}
-                  className="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-slate-200 text-base sm:text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600"
                 />
               </div>
             ))}
@@ -421,7 +427,7 @@ export function GuestMenuPage() {
               type="button"
               disabled={placingOrder}
               onClick={handlePlaceOrder}
-              className="mt-4 w-full min-h-[46px] py-3 px-4 rounded-xl bg-teal-700 text-white text-sm font-semibold hover:bg-teal-800 disabled:opacity-60 transition-colors"
+              className="mt-4 w-full min-h-[48px] py-3 px-4 rounded-xl bg-teal-700 text-white text-sm font-semibold hover:bg-teal-800 disabled:opacity-60 transition-colors"
             >
               {placingOrder ? 'Sending to Kitchen...' : `Place Order · ${formatCurrency(cartTotal)}`}
             </button>
@@ -432,10 +438,10 @@ export function GuestMenuPage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24 lg:pb-12">
-      {/* Compact Sticky Top Bar (<7% viewport height on mobile) */}
+    <div className="min-h-dvh bg-slate-50 pb-28 lg:pb-12">
+      {/* Compact Sticky Top Bar */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-xs border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 lg:px-8 h-14 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 h-14 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
             <BrandLogo size="sm" />
             <span className="text-base font-bold text-slate-900 truncate block">
@@ -443,7 +449,7 @@ export function GuestMenuPage() {
             </span>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <span className="text-xs font-mono font-semibold text-slate-700 whitespace-nowrap">
               Table {table.number}
             </span>
@@ -458,7 +464,7 @@ export function GuestMenuPage() {
             <button
               type="button"
               onClick={() => setCallDrawerOpen(true)}
-              className="min-h-[40px] px-3.5 py-2 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 inline-flex items-center gap-1.5 whitespace-nowrap"
+              className="min-h-[44px] px-3.5 py-2 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 inline-flex items-center gap-1.5 whitespace-nowrap"
             >
               <BellRing className="w-3.5 h-3.5" />
               Call Waiter
@@ -505,7 +511,7 @@ export function GuestMenuPage() {
                   type="button"
                   disabled={sendingCall}
                   onClick={() => handleServiceCall(type)}
-                  className="min-h-[38px] px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-teal-50 hover:border-teal-600 text-xs font-medium text-slate-700 hover:text-teal-900 transition-colors whitespace-nowrap"
+                  className="min-h-[44px] px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-teal-50 hover:border-teal-600 text-xs font-medium text-slate-700 hover:text-teal-900 transition-colors whitespace-nowrap"
                 >
                   {type === 'water'
                     ? 'Water'
@@ -519,7 +525,7 @@ export function GuestMenuPage() {
               <button
                 type="button"
                 onClick={() => setCallDrawerOpen(true)}
-                className="min-h-[38px] px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-xs font-medium text-slate-700 whitespace-nowrap"
+                className="min-h-[44px] px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-xs font-medium text-slate-700 whitespace-nowrap"
               >
                 Other...
               </button>
@@ -630,22 +636,22 @@ export function GuestMenuPage() {
 
           {/* Search & Category Tabs */}
           <div className="space-y-3">
-            <div className="flex flex-col sm:flex-row gap-2.5">
-              <div className="relative flex-1">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+              <div className="relative w-full sm:max-w-md">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search dishes, ingredients..."
                   aria-label="Search menu"
-                  className="w-full min-h-[44px] pl-10 pr-4 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600"
+                  className="w-full min-h-[44px] pl-10 pr-4 rounded-xl border border-slate-200 bg-white text-base sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600"
                 />
               </div>
               <button
                 type="button"
                 onClick={() => setVegOnly((v) => !v)}
-                className={`min-h-[44px] px-4 rounded-xl border text-xs font-semibold inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-colors ${
+                className={`min-h-[44px] px-4 rounded-xl border text-xs font-semibold inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-colors shrink-0 ${
                   vegOnly
                     ? 'bg-emerald-700 border-emerald-700 text-white'
                     : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
@@ -656,11 +662,11 @@ export function GuestMenuPage() {
               </button>
             </div>
 
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+            <div className="flex flex-nowrap lg:flex-wrap items-center gap-1.5 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-1">
               <button
                 type="button"
                 onClick={() => setSelectedCategory('all')}
-                className={`min-h-[40px] px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
+                className={`snap-start min-h-[44px] px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
                   selectedCategory === 'all'
                     ? 'bg-slate-900 text-white'
                     : 'bg-white border border-slate-200 text-slate-600 hover:text-slate-900'
@@ -673,7 +679,7 @@ export function GuestMenuPage() {
                   key={cat.id}
                   type="button"
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`min-h-[40px] px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
+                  className={`snap-start min-h-[44px] px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
                     selectedCategory === cat.id
                       ? 'bg-slate-900 text-white'
                       : 'bg-white border border-slate-200 text-slate-600 hover:text-slate-900'
@@ -698,7 +704,7 @@ export function GuestMenuPage() {
                   <span className="text-xs text-slate-500">{items.length} dishes</span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {items.map((item) => {
                     const inCart = cart[item.id];
                     return (
@@ -710,11 +716,11 @@ export function GuestMenuPage() {
                             : 'border-slate-200 opacity-70'
                         }`}
                       >
-                        <div className="relative">
+                        <div className="relative overflow-hidden">
                           <DishImage
                             src={item.imageUrl}
                             alt={item.name}
-                            className={`w-full h-44 ${!item.isAvailable ? 'grayscale' : ''}`}
+                            className={`w-full aspect-[4/3] ${!item.isAvailable ? 'grayscale' : ''}`}
                           />
                           {!item.isAvailable && (
                             <div className="absolute inset-0 bg-slate-950/55 flex items-center justify-center">
@@ -736,7 +742,7 @@ export function GuestMenuPage() {
                               </span>
                             </div>
 
-                            <p className="mt-1.5 text-xs text-slate-600 leading-relaxed">
+                            <p className="mt-1.5 text-xs text-slate-600 leading-relaxed line-clamp-2">
                               {item.description}
                             </p>
 
@@ -785,7 +791,7 @@ export function GuestMenuPage() {
                               <button
                                 type="button"
                                 disabled
-                                className="min-h-[40px] px-4 py-2 rounded-lg bg-slate-100 text-slate-400 text-xs font-semibold cursor-not-allowed"
+                                className="w-full sm:w-auto min-h-[44px] px-4 py-2 rounded-lg bg-slate-100 text-slate-400 text-xs font-semibold cursor-not-allowed"
                               >
                                 Unavailable
                               </button>
@@ -795,20 +801,20 @@ export function GuestMenuPage() {
                                   type="button"
                                   onClick={() => updateCartQty(item.id, -1)}
                                   aria-label={`Remove one ${item.name}`}
-                                  className="w-10 h-10 flex items-center justify-center text-teal-800 hover:bg-teal-50"
+                                  className="w-11 h-11 flex items-center justify-center text-teal-800 hover:bg-teal-50"
                                 >
-                                  <Minus className="w-3.5 h-3.5" />
+                                  <Minus className="w-4 h-4" />
                                 </button>
-                                <span className="w-8 text-center text-xs font-mono font-bold text-slate-900 tabular-nums">
+                                <span className="w-9 text-center text-xs font-mono font-bold text-slate-900 tabular-nums">
                                   {inCart.qty}
                                 </span>
                                 <button
                                   type="button"
                                   onClick={() => updateCartQty(item.id, 1)}
                                   aria-label={`Add one more ${item.name}`}
-                                  className="w-10 h-10 flex items-center justify-center text-teal-800 hover:bg-teal-50"
+                                  className="w-11 h-11 flex items-center justify-center text-teal-800 hover:bg-teal-50"
                                 >
-                                  <Plus className="w-3.5 h-3.5" />
+                                  <Plus className="w-4 h-4" />
                                 </button>
                               </div>
                             ) : (
@@ -816,9 +822,9 @@ export function GuestMenuPage() {
                                 type="button"
                                 onClick={() => addToCart(item)}
                                 aria-label={`Add ${item.name} to order`}
-                                className="min-h-[40px] px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 inline-flex items-center gap-1.5 transition-colors"
+                                className="w-full sm:w-auto min-h-[44px] px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 inline-flex items-center justify-center gap-1.5 transition-colors"
                               >
-                                <Plus className="w-3.5 h-3.5" />
+                                <Plus className="w-4 h-4" />
                                 Add to Order
                               </button>
                             )}
@@ -834,14 +840,14 @@ export function GuestMenuPage() {
         </div>
 
         {/* Desktop Sticky Cart Column */}
-        <aside className="hidden lg:block lg:col-span-4 sticky top-20 bg-white border border-slate-200 rounded-xl p-5 max-h-[calc(100vh-6.5rem)] overflow-hidden">
+        <aside className="hidden lg:block lg:col-span-4 sticky top-20 bg-white border border-slate-200 rounded-xl p-5 max-h-[calc(100dvh-6.5rem)] overflow-hidden">
           {cartPanelContent}
         </aside>
       </div>
 
       {/* Mobile Compact Bottom Cart Bar */}
       {cartCount > 0 && (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 p-3 bg-white/95 backdrop-blur-xs border-t border-slate-200">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 px-4 pt-2.5 safe-bottom-bar bg-white/95 backdrop-blur-xs border-t border-slate-200">
           <button
             type="button"
             onClick={() => setCartOpen(true)}
@@ -861,8 +867,16 @@ export function GuestMenuPage() {
 
       {/* Mobile Cart Sheet */}
       {cartOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-slate-950/50 flex items-end">
-          <div className="w-full bg-white rounded-t-2xl p-5 max-h-[85vh] overflow-y-auto">
+        <div
+          className="lg:hidden fixed inset-0 z-50 bg-slate-950/50 flex items-end"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Your table order"
+        >
+          <div
+            ref={mobileCartRef}
+            className="w-full bg-white rounded-t-2xl p-5 safe-bottom-bar max-h-[85dvh] overflow-y-auto"
+          >
             {cartPanelContent}
           </div>
         </div>
@@ -876,7 +890,10 @@ export function GuestMenuPage() {
           aria-modal="true"
           aria-labelledby="call-waiter-title"
         >
-          <div className="bg-white rounded-t-2xl sm:rounded-xl w-full max-w-md p-6 border border-slate-200">
+          <div
+            ref={callModalRef}
+            className="bg-white rounded-t-2xl sm:rounded-xl w-full max-w-md p-6 safe-bottom-bar sm:pb-6 border border-slate-200 max-h-[90dvh] overflow-y-auto"
+          >
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 id="call-waiter-title" className="text-base font-bold text-slate-900">
@@ -888,9 +905,9 @@ export function GuestMenuPage() {
                 type="button"
                 onClick={() => setCallDrawerOpen(false)}
                 aria-label="Close service call dialog"
-                className="p-2 rounded-lg text-slate-500 hover:bg-slate-100"
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -923,7 +940,7 @@ export function GuestMenuPage() {
                 value={customCallMsg}
                 onChange={(e) => setCustomCallMsg(e.target.value)}
                 placeholder="e.g., Extra cutlery, high chair, allergy question..."
-                className="w-full min-h-[44px] px-3.5 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600"
+                className="w-full min-h-[44px] px-3.5 py-2 rounded-lg border border-slate-300 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal-600"
               />
               <button
                 type="button"

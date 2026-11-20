@@ -4,8 +4,9 @@ import mongoose, { Schema } from 'mongoose';
 const userSchema = new Schema(
   {
     name: { type: String, required: true, trim: true },
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    passwordHash: { type: String, required: true },
+    email: { type: String, default: null, unique: true, sparse: true, lowercase: true, trim: true },
+    mobile: { type: String, default: null, unique: true, sparse: true, trim: true },
+    passwordHash: { type: String, default: null },
     role: { type: String, enum: ['admin', 'manager', 'waiter', 'kitchen', 'customer'], required: true },
     isActive: { type: Boolean, default: true },
     lastLoginAt: { type: Date, default: null },
@@ -174,6 +175,27 @@ const auditLogSchema = new Schema(
   { timestamps: false }
 );
 
+// 9. OtpChallenge Model (stores hashed OTPs only, never plain text)
+const otpChallengeSchema = new Schema(
+  {
+    identifier: { type: String, required: true, index: true },
+    channel: { type: String, enum: ['mobile', 'email'], required: true },
+    purpose: { type: String, enum: ['login', 'signup'], required: true },
+    pendingName: { type: String, default: null },
+    otpHash: { type: String, required: true },
+    attempts: { type: Number, default: 0 },
+    maxAttempts: { type: Number, default: 5 },
+    resendCount: { type: Number, default: 0 },
+    windowStartedAt: { type: Date, default: Date.now },
+    lastSentAt: { type: Date, default: Date.now },
+    expiresAt: { type: Date, required: true, index: true },
+    invalidated: { type: Boolean, default: false },
+    consumedAt: { type: Date, default: null },
+    ip: { type: String, default: null },
+  },
+  { timestamps: true }
+);
+
 export const UserModel = mongoose.models.User || mongoose.model('User', userSchema);
 export const TableModel = mongoose.models.Table || mongoose.model('Table', tableSchema);
 export const CategoryModel = mongoose.models.Category || mongoose.model('Category', categorySchema);
@@ -183,3 +205,6 @@ export const ServiceCallModel =
   mongoose.models.ServiceCall || mongoose.model('ServiceCall', serviceCallSchema);
 export const PaymentModel = mongoose.models.Payment || mongoose.model('Payment', paymentSchema);
 export const AuditLogModel = mongoose.models.AuditLog || mongoose.model('AuditLog', auditLogSchema);
+export const OtpChallengeModel =
+  mongoose.models.OtpChallenge || mongoose.model('OtpChallenge', otpChallengeSchema);
+

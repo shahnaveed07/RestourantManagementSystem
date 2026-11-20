@@ -156,16 +156,16 @@ export function BillingPage() {
         {/* Bill & Receipt Panel */}
         <section className="lg:col-span-8 space-y-6">
           {lastReceipt ? (
-            <div className="bg-white border border-slate-200 rounded-xl p-6 sm:p-8 max-w-xl">
-              <div className="flex items-center justify-between pb-4 border-b border-slate-200 no-print">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-8 w-full md:max-w-sm mx-auto receipt-print-sheet">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-200 no-print">
                 <div className="inline-flex items-center gap-2 text-emerald-700 font-semibold text-sm">
-                  <CheckCircle2 className="w-5 h-5" />
+                  <CheckCircle2 className="w-5 h-5 shrink-0" />
                   Payment Recorded & Table Closed
                 </div>
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="px-3.5 py-2 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 inline-flex items-center gap-1.5"
+                  className="min-h-[44px] px-3.5 py-2 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 inline-flex items-center gap-1.5"
                 >
                   <Printer className="w-3.5 h-3.5" />
                   Print Receipt
@@ -236,7 +236,7 @@ export function BillingPage() {
               Select an open table on the left to review its itemized bill and process payment.
             </div>
           ) : (
-            <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-6 space-y-6 receipt-print-sheet">
               <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-200">
                 <div>
                   <h2 className="text-lg font-bold text-slate-900">
@@ -250,7 +250,7 @@ export function BillingPage() {
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="px-3.5 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1.5 no-print"
+                  className="min-h-[44px] px-3.5 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1.5 no-print"
                 >
                   <Printer className="w-3.5 h-3.5" />
                   Print Pro-Forma
@@ -300,7 +300,7 @@ export function BillingPage() {
                     max={100}
                     value={discountPercent}
                     onChange={(e) => setDiscountPercent(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm font-mono"
+                    className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-slate-300 text-base sm:text-sm font-mono"
                   />
                 </div>
                 <div>
@@ -314,7 +314,7 @@ export function BillingPage() {
                     step="0.5"
                     value={flatDiscount}
                     onChange={(e) => setFlatDiscount(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm font-mono"
+                    className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-slate-300 text-base sm:text-sm font-mono"
                   />
                 </div>
               </div>
@@ -372,13 +372,13 @@ export function BillingPage() {
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 no-print">
-                <div className="flex items-center gap-3 text-xs text-slate-600">
+                <div className="flex flex-wrap items-center gap-2.5 text-xs text-slate-600">
                   <span>After payment, set table to:</span>
                   <select
                     aria-label="Table status after payment"
                     value={nextTableStatus}
                     onChange={(e) => setNextTableStatus(e.target.value)}
-                    className="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-900"
+                    className="min-h-[44px] px-3 py-2 rounded-lg border border-slate-300 bg-white text-base sm:text-xs font-semibold text-slate-900"
                   >
                     <option value="free">Free</option>
                     <option value="cleaning">Cleaning</option>
@@ -389,7 +389,7 @@ export function BillingPage() {
                   type="button"
                   disabled={processing || activeTab.orders.length === 0}
                   onClick={handleSettle}
-                  className="min-h-[46px] px-6 py-2.5 rounded-lg bg-teal-700 text-white text-sm font-semibold hover:bg-teal-800 disabled:opacity-50"
+                  className="min-h-[48px] w-full sm:w-auto px-6 py-2.5 rounded-lg bg-teal-700 text-white text-sm font-semibold hover:bg-teal-800 disabled:opacity-50"
                 >
                   {processing
                     ? 'Recording Payment...'
