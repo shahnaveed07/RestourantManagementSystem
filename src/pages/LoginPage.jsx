@@ -4,6 +4,7 @@ import { QrCode, ArrowRight, ShieldCheck, UtensilsCrossed, ChefHat, ConciergeBel
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { ROLE_HOME_ROUTE } from '../utils/format';
+import { BrandLogo } from '../components/BrandLogo';
 
 const HERO_IMAGE = '/src/assets/images/hero_dining_room_1795178823770.jpg';
 
@@ -97,8 +98,12 @@ export function LoginPage() {
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/35 to-slate-950/20 flex flex-col justify-between p-12 text-white">
-            <div>
-              <span className="text-sm font-semibold tracking-tight text-teal-300">Passline</span>
+            <div className="flex items-center gap-3">
+              <BrandLogo size="lg" />
+              <div>
+                <span className="text-base font-bold tracking-tight text-white block">Passline</span>
+                <span className="text-xs text-teal-300">Restaurant Operations</span>
+              </div>
             </div>
             <div className="max-w-md">
               <h1 className="text-4xl font-bold tracking-tight leading-tight">
@@ -121,14 +126,17 @@ export function LoginPage() {
         {/* Right Sign-In & Demo Column */}
         <div className="lg:col-span-6 flex items-center justify-center p-6 sm:p-10 lg:p-14">
           <div className="w-full max-w-md">
-            <div className="mb-8">
-              <span className="text-xs font-semibold text-teal-700 lg:hidden block mb-1">
-                Passline · {config.restaurantName}
-              </span>
-              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Staff Sign In</h2>
-              <p className="mt-1.5 text-sm text-slate-600">
-                Sign in with your staff credentials or launch a seeded role below.
-              </p>
+            <div className="mb-8 flex items-center gap-3.5">
+              <BrandLogo size="lg" className="lg:hidden" />
+              <div>
+                <span className="text-xs font-semibold text-teal-700 lg:hidden block mb-0.5">
+                  Passline · {config.restaurantName}
+                </span>
+                <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Staff Sign In</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Sign in with your staff credentials or launch a seeded role below.
+                </p>
+              </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4 bg-white border border-slate-200 rounded-xl p-6">

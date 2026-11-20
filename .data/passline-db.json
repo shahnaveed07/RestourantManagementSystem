@@ -6,7 +6,7 @@
       "passwordHash": "$2b$10$RJFiCg/w9E0w4zkf0jxK4OWkDfwL7Ppj4GR5abNWa8iTgg8cqrSNO",
       "role": "admin",
       "isActive": true,
-      "lastLoginAt": null,
+      "lastLoginAt": "2026-11-20T14:05:05.853Z",
       "isDemo": true,
       "id": "312021ad85d8342765cbfada",
       "createdAt": "2026-11-20T13:43:03.563Z"

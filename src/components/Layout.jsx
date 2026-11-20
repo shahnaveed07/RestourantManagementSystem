@@ -24,6 +24,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { ROLE_LABELS } from '../utils/format';
+import { BrandLogo } from './BrandLogo';
 
 export function Layout({ title, subtitle, actions, darkMode = false, children }) {
   const { user, config, logout } = useAuth();
@@ -85,12 +86,15 @@ export function Layout({ title, subtitle, actions, darkMode = false, children })
           : 'bg-white text-slate-900 border-r border-slate-200'
       }`}
     >
-      <div className="px-5 py-4 border-b border-inherit flex items-center justify-between">
-        <div>
-          <span className="text-base font-bold tracking-tight block">{config.restaurantName}</span>
-          <span className={`text-xs ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-            Passline Operations
-          </span>
+      <div className="px-4 py-4 border-b border-inherit flex items-center justify-between gap-2">
+        <div className="flex items-center gap-3 min-w-0">
+          <BrandLogo size="md" />
+          <div className="min-w-0">
+            <span className="text-sm font-bold tracking-tight block truncate">{config.restaurantName}</span>
+            <span className={`text-xs block truncate ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+              Passline Operations
+            </span>
+          </div>
         </div>
         <button
           type="button"

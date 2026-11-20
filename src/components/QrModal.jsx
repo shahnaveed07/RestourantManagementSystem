@@ -4,6 +4,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { Download, Printer, RefreshCw, X, Copy, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getGuestQrUrl } from '../utils/format';
+import { BrandLogo } from './BrandLogo';
 
 export function QrModal({ table, restaurantName, canRotate, onRotate, onClose }) {
   const qrWrapperRef = useRef(null);
@@ -60,6 +61,7 @@ export function QrModal({ table, restaurantName, canRotate, onRotate, onClose })
         </div>
 
         <div className="p-6 flex flex-col items-center text-center">
+          <BrandLogo size="lg" className="mb-2" />
           <p className="text-sm font-semibold text-slate-900 mb-1">{restaurantName}</p>
           <p className="text-xs text-slate-500 mb-5">
             Scan to view menu, order directly, or call your server
@@ -175,6 +177,7 @@ export function QrSheetModal({ tables, restaurantName, onClose }) {
                 key={t.id}
                 className="border border-slate-200 rounded-xl p-5 flex flex-col items-center text-center break-inside-avoid"
               >
+                <BrandLogo size="md" className="mb-1.5" />
                 <span className="text-xs font-medium text-slate-500">{restaurantName}</span>
                 <h3 className="text-base font-bold text-slate-900 mt-0.5">Table {t.number}</h3>
                 <span className="text-xs text-slate-500 mb-3">

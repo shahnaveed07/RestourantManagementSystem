@@ -7,6 +7,7 @@ import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { formatCurrency, formatDateTime } from '../utils/format';
+import { BrandLogo } from '../components/BrandLogo';
 
 export function BillingPage() {
   const { config } = useAuth();
@@ -173,6 +174,7 @@ export function BillingPage() {
 
               <div className="mt-6 space-y-4">
                 <div className="text-center border-b border-dashed border-slate-300 pb-4">
+                  <BrandLogo size="lg" className="mx-auto mb-2" />
                   <h2 className="text-lg font-bold text-slate-900">{config.restaurantName}</h2>
                   <p className="text-xs text-slate-500">
                     Receipt #{lastReceipt.payment.id.slice(-6).toUpperCase()} · Table{' '}

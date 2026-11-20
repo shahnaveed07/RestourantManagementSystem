@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { api } from '../api/client';
 import { DishImage } from '../components/DishImage';
+import { BrandLogo } from '../components/BrandLogo';
 import {
   formatCurrency,
   ORDER_STATUS_LABEL,
@@ -406,7 +407,8 @@ export function GuestMenuPage() {
       {/* Compact Sticky Top Bar (<7% viewport height on mobile) */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-xs border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 lg:px-8 h-14 flex items-center justify-between gap-4">
-          <div className="min-w-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <BrandLogo size="sm" />
             <span className="text-base font-bold text-slate-900 truncate block">
               {restaurantName}
             </span>
