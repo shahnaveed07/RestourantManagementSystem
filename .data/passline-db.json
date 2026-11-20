@@ -3,46 +3,46 @@
     {
       "name": "Elena Vance",
       "email": "admin@demo.com",
-      "passwordHash": "$2b$10$QQvFTDDzngm46yjo8NDszeXfMVA06ZyreHRXViqsycFNfBwoCZZvq",
+      "passwordHash": "$2b$10$RJFiCg/w9E0w4zkf0jxK4OWkDfwL7Ppj4GR5abNWa8iTgg8cqrSNO",
       "role": "admin",
       "isActive": true,
       "lastLoginAt": null,
       "isDemo": true,
-      "id": "f37aaa780aeccec01cc6ed6c",
-      "createdAt": "2026-11-20T13:21:12.357Z"
+      "id": "312021ad85d8342765cbfada",
+      "createdAt": "2026-11-20T13:43:03.563Z"
     },
     {
       "name": "Marcus Chen",
       "email": "manager@demo.com",
-      "passwordHash": "$2b$10$Wx3gmRRcNfBgt/KVsGELAOefjWxJiyMKw/jZlphtNMvXYgee8PA5C",
+      "passwordHash": "$2b$10$5KHGKq8iB3DWitNlHJ4/yuawEXSdFzKr/VcxLqwLHRRnkpPxwXEq2",
       "role": "manager",
       "isActive": true,
       "lastLoginAt": null,
       "isDemo": true,
-      "id": "d2078026fc41315d2edf8d68",
-      "createdAt": "2026-11-20T13:21:12.438Z"
+      "id": "a7d9ba0be47d8acb39a6a293",
+      "createdAt": "2026-11-20T13:43:03.646Z"
     },
     {
       "name": "Sofia Morales",
       "email": "waiter@demo.com",
-      "passwordHash": "$2b$10$qBKMQEfKhTb8o4PpT3e7.u.MsSrMMc2Tdv7uWxpucNFmMbw4tAsj6",
+      "passwordHash": "$2b$10$7SCcSv.H2k5fkhpgT7qcMu6X3kbmmnTruHGUaM2cA9NCeBK4kA2UO",
       "role": "waiter",
       "isActive": true,
       "lastLoginAt": null,
       "isDemo": true,
-      "id": "8d3565372273ca3b2e3f0201",
-      "createdAt": "2026-11-20T13:21:12.519Z"
+      "id": "2118df770055bdf40f99c056",
+      "createdAt": "2026-11-20T13:43:03.727Z"
     },
     {
       "name": "Devon Brooks",
       "email": "kitchen@demo.com",
-      "passwordHash": "$2b$10$cVuKprfg/IhCGAYCcLi7auJnebLIgXsXf0Azd4u4L8zCP5Vtzjy2a",
+      "passwordHash": "$2b$10$/E5EVBIjJyMrzcC3B/aHR.bxLMsbF4hnYHHSZQDnmchp7yIiOGoGe",
       "role": "kitchen",
       "isActive": true,
       "lastLoginAt": null,
       "isDemo": true,
-      "id": "cd9485a1819c7cbaec4c673d",
-      "createdAt": "2026-11-20T13:21:12.600Z"
+      "id": "fb2bc101f2550367306ff65e",
+      "createdAt": "2026-11-20T13:43:03.806Z"
     }
   ],
   "tables": [
@@ -54,8 +54,8 @@
       "status": "occupied",
       "qrToken": "t01-linden01",
       "currentSessionId": "sess-demo-t1",
-      "id": "4c8cdb1a5bed9583c9111bea",
-      "createdAt": "2026-11-20T13:21:12.601Z"
+      "id": "9121bd9b47186849e3394e51",
+      "createdAt": "2026-11-20T13:43:03.806Z"
     },
     {
       "number": 2,
@@ -65,8 +65,8 @@
       "status": "occupied",
       "qrToken": "t02-linden02",
       "currentSessionId": "sess-demo-t2",
-      "id": "382131d9d40e3fc12f8c2a52",
-      "createdAt": "2026-11-20T13:21:12.601Z"
+      "id": "3808f04ebb9c3ec8e287007f",
+      "createdAt": "2026-11-20T13:43:03.807Z"
     },
     {
       "number": 3,
@@ -76,8 +76,8 @@
       "status": "free",
       "qrToken": "t03-linden03",
       "currentSessionId": null,
-      "id": "a878f385b854124c0fe3d50b",
-      "createdAt": "2026-11-20T13:21:12.601Z"
+      "id": "644ef7fb10670cc8e1e83ddd",
+      "createdAt": "2026-11-20T13:43:03.807Z"
     },
     {
       "number": 4,
@@ -87,8 +87,8 @@
       "status": "occupied",
       "qrToken": "t04-linden04",
       "currentSessionId": "sess-demo-t4",
-      "id": "5c7a13dd13bff8ef96f30943",
-      "createdAt": "2026-11-20T13:21:12.601Z"
+      "id": "71fa49799c9b9983cc03da4c",
+      "createdAt": "2026-11-20T13:43:03.807Z"
     },
     {
       "number": 5,
@@ -98,8 +98,8 @@
       "status": "reserved",
       "qrToken": "t05-linden05",
       "currentSessionId": null,
-      "id": "e402ef47a77173c8723007a6",
-      "createdAt": "2026-11-20T13:21:12.601Z"
+      "id": "15d33afe1893d4d020554300",
+      "createdAt": "2026-11-20T13:43:03.807Z"
     },
     {
       "number": 6,
@@ -109,8 +109,8 @@
       "status": "free",
       "qrToken": "t06-linden06",
       "currentSessionId": null,
-      "id": "5b0c425ca5181a930b036d35",
-      "createdAt": "2026-11-20T13:21:12.601Z"
+      "id": "c320abb56897a8a39070a7a3",
+      "createdAt": "2026-11-20T13:43:03.807Z"
     },
     {
       "number": 7,
@@ -120,8 +120,8 @@
       "status": "free",
       "qrToken": "t07-patio07",
       "currentSessionId": null,
-      "id": "c9061ffc382b70abb77463f4",
-      "createdAt": "2026-11-20T13:21:12.601Z"
+      "id": "9dd5b32cc1ed9208b69f8afa",
+      "createdAt": "2026-11-20T13:43:03.807Z"
     },
     {
       "number": 8,
@@ -131,8 +131,8 @@
       "status": "cleaning",
       "qrToken": "t08-patio08",
       "currentSessionId": null,
-      "id": "903ae7aa6b8f99e7168a8c88",
-      "createdAt": "2026-11-20T13:21:12.601Z"
+      "id": "caa972d8bbbec1303620b499",
+      "createdAt": "2026-11-20T13:43:03.807Z"
     },
     {
       "number": 9,
@@ -142,8 +142,8 @@
       "status": "reserved",
       "qrToken": "t09-patio09",
       "currentSessionId": null,
-      "id": "aa2abc04ef42fc1205125ad0",
-      "createdAt": "2026-11-20T13:21:12.601Z"
+      "id": "dc09e525fe415465acd7fe6c",
+      "createdAt": "2026-11-20T13:43:03.808Z"
     },
     {
       "number": 10,
@@ -153,8 +153,8 @@
       "status": "free",
       "qrToken": "t10-lounge10",
       "currentSessionId": null,
-      "id": "efb2d97082e3d649a5285043",
-      "createdAt": "2026-11-20T13:21:12.602Z"
+      "id": "bf19c6a32d065cee8b3a0b08",
+      "createdAt": "2026-11-20T13:43:03.808Z"
     },
     {
       "number": 11,
@@ -164,8 +164,8 @@
       "status": "free",
       "qrToken": "t11-lounge11",
       "currentSessionId": null,
-      "id": "a69893b0d4cf830a01e608e3",
-      "createdAt": "2026-11-20T13:21:12.602Z"
+      "id": "862fd23ff5a478135d91af3e",
+      "createdAt": "2026-11-20T13:43:03.808Z"
     },
     {
       "number": 12,
@@ -175,8 +175,8 @@
       "status": "free",
       "qrToken": "t12-lounge12",
       "currentSessionId": null,
-      "id": "d84e7748ef27d9ab4e547740",
-      "createdAt": "2026-11-20T13:21:12.602Z"
+      "id": "f2cbfe58bcd1dbd7c9b78e0a",
+      "createdAt": "2026-11-20T13:43:03.808Z"
     }
   ],
   "categories": [
@@ -184,25 +184,25 @@
       "name": "Small Plates & Starters",
       "sortOrder": 1,
       "isActive": true,
-      "id": "23bc580f665a30128c7c0ac0"
+      "id": "e2449483eb6e4119e64a2bc2"
     },
     {
       "name": "Wood-Fired Mains & Pasta",
       "sortOrder": 2,
       "isActive": true,
-      "id": "a887fe3a34833b91640a4fd8"
+      "id": "fabca84d413c3250248943af"
     },
     {
       "name": "Sourdough Flatbreads & Sides",
       "sortOrder": 3,
       "isActive": true,
-      "id": "3bb5b3f47f2e259524ff325e"
+      "id": "20f5f123d0f47356c3120806"
     },
     {
       "name": "Desserts & Craft Drinks",
       "sortOrder": 4,
       "isActive": true,
-      "id": "695bccdb3ab0f1626d5e4df9"
+      "id": "9b90acf6962c2478e9e9ce8c"
     }
   ],
   "menuItems": [
@@ -210,7 +210,7 @@
       "name": "Heirloom Tomato & Burrata",
       "description": "Creamy Pugliese burrata, charred sourdough crostini, cold-pressed basil oil, Maldon sea salt.",
       "price": 16.5,
-      "categoryId": "23bc580f665a30128c7c0ac0",
+      "categoryId": "e2449483eb6e4119e64a2bc2",
       "imageUrl": "/src/assets/images/dish_burrata_starter_1795178821594.jpg",
       "isVeg": true,
       "spiceLevel": "none",
@@ -221,13 +221,13 @@
       "prepTimeMinutes": 7,
       "isAvailable": true,
       "isActive": true,
-      "id": "fc3d38bc1832a627beffb045"
+      "id": "14687268ab587abaabb9b218"
     },
     {
       "name": "Charred Shishito Peppers",
       "description": "Blistered over white oak embers with smoked yuzu kosho aioli and toasted sesame.",
       "price": 12,
-      "categoryId": "23bc580f665a30128c7c0ac0",
+      "categoryId": "e2449483eb6e4119e64a2bc2",
       "imageUrl": "/src/assets/images/dish_woodfired_pizza_1795178824146.jpg",
       "isVeg": true,
       "spiceLevel": "mild",
@@ -238,13 +238,13 @@
       "prepTimeMinutes": 8,
       "isAvailable": true,
       "isActive": true,
-      "id": "72c033bf9e6b0378ba15aae4"
+      "id": "34008001aa167c902f1e5033"
     },
     {
       "name": "Crispy Calamari Fritti",
       "description": "Semolina-dusted Pacific squid, Calabrian chili marinara, charred Meyer lemon.",
       "price": 17.5,
-      "categoryId": "23bc580f665a30128c7c0ac0",
+      "categoryId": "e2449483eb6e4119e64a2bc2",
       "imageUrl": "/src/assets/images/dish_seared_salmon_1795178823192.jpg",
       "isVeg": false,
       "spiceLevel": "medium",
@@ -255,13 +255,13 @@
       "prepTimeMinutes": 10,
       "isAvailable": true,
       "isActive": true,
-      "id": "92ff9f055714d372cba7d32f"
+      "id": "34a0c044425dadac67bd3c95"
     },
     {
       "name": "Roasted Beet & Goat Cheese Carpaccio",
       "description": "Salt-baked ruby beets, whipped chèvre, candied pistachios, aged sherry reduction.",
       "price": 15,
-      "categoryId": "23bc580f665a30128c7c0ac0",
+      "categoryId": "e2449483eb6e4119e64a2bc2",
       "imageUrl": "/src/assets/images/dish_burrata_starter_1795178821594.jpg",
       "isVeg": true,
       "spiceLevel": "none",
@@ -272,13 +272,13 @@
       "prepTimeMinutes": 8,
       "isAvailable": true,
       "isActive": true,
-      "id": "1ba58af355bb44b7ac6cd4e3"
+      "id": "81ba35ac8c83498f884772ce"
     },
     {
       "name": "Yellowfin Tuna Crudo",
       "description": "Line-caught ahi, blood orange segments, pickled shallots, crispy capers, Fresno chili.",
       "price": 21,
-      "categoryId": "23bc580f665a30128c7c0ac0",
+      "categoryId": "e2449483eb6e4119e64a2bc2",
       "imageUrl": "/src/assets/images/dish_seared_salmon_1795178823192.jpg",
       "isVeg": false,
       "spiceLevel": "mild",
@@ -288,13 +288,13 @@
       "prepTimeMinutes": 9,
       "isAvailable": true,
       "isActive": true,
-      "id": "042ba06e280e438b718a65a3"
+      "id": "70c2a01214b741b7d6bd7042"
     },
     {
       "name": "Whipped Ricotta & Wild Honey",
       "description": "House-pulled sheep milk ricotta, thyme blossom honey, cracked Tellicherry pepper, country levain.",
       "price": 14,
-      "categoryId": "23bc580f665a30128c7c0ac0",
+      "categoryId": "e2449483eb6e4119e64a2bc2",
       "imageUrl": "/src/assets/images/dish_burrata_starter_1795178821594.jpg",
       "isVeg": true,
       "spiceLevel": "none",
@@ -305,13 +305,13 @@
       "prepTimeMinutes": 6,
       "isAvailable": true,
       "isActive": true,
-      "id": "eaf4c2f0dcdb0cf01be3a19e"
+      "id": "0e8f76a47acdf47aad370dc3"
     },
     {
       "name": "Spicy Nduja Mussels",
       "description": "Prince Edward Island mussels steamed in dry vermouth, spicy Calabrian nduja, grilled focaccia.",
       "price": 19.5,
-      "categoryId": "23bc580f665a30128c7c0ac0",
+      "categoryId": "e2449483eb6e4119e64a2bc2",
       "imageUrl": "/src/assets/images/dish_seared_salmon_1795178823192.jpg",
       "isVeg": false,
       "spiceLevel": "hot",
@@ -322,13 +322,13 @@
       "prepTimeMinutes": 12,
       "isAvailable": true,
       "isActive": true,
-      "id": "576effbe5e37b58b89a5d6af"
+      "id": "2a5c3dff77617e6a0e12dfc0"
     },
     {
       "name": "Truffle Arancini Trio",
       "description": "Crisp Carnaroli risotto spheres stuffed with fontina fonduta and black summer truffle.",
       "price": 15.5,
-      "categoryId": "23bc580f665a30128c7c0ac0",
+      "categoryId": "e2449483eb6e4119e64a2bc2",
       "imageUrl": "/src/assets/images/dish_truffle_pasta_1795178825033.jpg",
       "isVeg": true,
       "spiceLevel": "none",
@@ -340,13 +340,13 @@
       "prepTimeMinutes": 11,
       "isAvailable": false,
       "isActive": true,
-      "id": "772e1d7701450209a74816ad"
+      "id": "418eb6093dc4618147b12e0d"
     },
     {
       "name": "Pan-Seared Atlantic Salmon",
       "description": "Crispy-skin wild fillet over charred broccolini, saffron fennel purée, caper herb butter.",
       "price": 32,
-      "categoryId": "a887fe3a34833b91640a4fd8",
+      "categoryId": "fabca84d413c3250248943af",
       "imageUrl": "/src/assets/images/dish_seared_salmon_1795178823192.jpg",
       "isVeg": false,
       "spiceLevel": "none",
@@ -357,13 +357,13 @@
       "prepTimeMinutes": 16,
       "isAvailable": true,
       "isActive": true,
-      "id": "0ee5c8f4c05ce3fc04fa8c8d"
+      "id": "996af65322814ac9def6894b"
     },
     {
       "name": "Wild Chanterelle Truffle Tagliatelle",
       "description": "Hand-rolled egg ribbons, roasted golden chanterelles, 24-month Parmigiano, shaved black truffle.",
       "price": 28.5,
-      "categoryId": "a887fe3a34833b91640a4fd8",
+      "categoryId": "fabca84d413c3250248943af",
       "imageUrl": "/src/assets/images/dish_truffle_pasta_1795178825033.jpg",
       "isVeg": true,
       "spiceLevel": "none",
@@ -375,13 +375,13 @@
       "prepTimeMinutes": 14,
       "isAvailable": true,
       "isActive": true,
-      "id": "c85accb2efaf8cb6720fcdeb"
+      "id": "3eb615eadd37c50562aff836"
     },
     {
       "name": "Hearth-Roasted Half Chicken",
       "description": "Brined heritage poultry, rosemary jus, crispy fingerling potatoes, blistered heirloom carrots.",
       "price": 29,
-      "categoryId": "a887fe3a34833b91640a4fd8",
+      "categoryId": "fabca84d413c3250248943af",
       "imageUrl": "/src/assets/images/dish_seared_salmon_1795178823192.jpg",
       "isVeg": false,
       "spiceLevel": "none",
@@ -389,13 +389,13 @@
       "prepTimeMinutes": 20,
       "isAvailable": true,
       "isActive": true,
-      "id": "974ba864e3a75c95bf5257a3"
+      "id": "9729340a6294a77cade24cdd"
     },
     {
       "name": "Spicy Vodka Rigatoni",
       "description": "Bronze-die rigatoni in slow-simmered San Marzano tomato cream, Calabrian chili oil, basil.",
       "price": 24,
-      "categoryId": "a887fe3a34833b91640a4fd8",
+      "categoryId": "fabca84d413c3250248943af",
       "imageUrl": "/src/assets/images/dish_truffle_pasta_1795178825033.jpg",
       "isVeg": true,
       "spiceLevel": "medium",
@@ -406,13 +406,13 @@
       "prepTimeMinutes": 13,
       "isAvailable": true,
       "isActive": true,
-      "id": "f12f94831da9b95845673512"
+      "id": "a1832545674351b4dbd6e960"
     },
     {
       "name": "Prime Hanger Steak Frites",
       "description": "Oak-grilled 9oz prime hanger, black garlic compound butter, rosemary tallow fries.",
       "price": 38,
-      "categoryId": "a887fe3a34833b91640a4fd8",
+      "categoryId": "fabca84d413c3250248943af",
       "imageUrl": "/src/assets/images/dish_seared_salmon_1795178823192.jpg",
       "isVeg": false,
       "spiceLevel": "none",
@@ -422,13 +422,13 @@
       "prepTimeMinutes": 18,
       "isAvailable": true,
       "isActive": true,
-      "id": "166117a8ce1ef401791f31ce"
+      "id": "f90222388e7d451393e2d617"
     },
     {
       "name": "Braised Short Rib Pappardelle",
       "description": "12-hour Barolo braised beef ragu, wide ribbon pasta, gremolata, pecorino snow.",
       "price": 31,
-      "categoryId": "a887fe3a34833b91640a4fd8",
+      "categoryId": "fabca84d413c3250248943af",
       "imageUrl": "/src/assets/images/dish_truffle_pasta_1795178825033.jpg",
       "isVeg": false,
       "spiceLevel": "none",
@@ -440,13 +440,13 @@
       "prepTimeMinutes": 15,
       "isAvailable": true,
       "isActive": true,
-      "id": "1cb1251f2674ef0425cbe271"
+      "id": "8a295f084ec7ec6daeff7543"
     },
     {
       "name": "Miso-Glazed Black Cod",
       "description": "Sustainably caught sablefish, dashi-braised bok choy, crispy ginger rice cake.",
       "price": 36,
-      "categoryId": "a887fe3a34833b91640a4fd8",
+      "categoryId": "fabca84d413c3250248943af",
       "imageUrl": "/src/assets/images/dish_seared_salmon_1795178823192.jpg",
       "isVeg": false,
       "spiceLevel": "mild",
@@ -457,13 +457,13 @@
       "prepTimeMinutes": 17,
       "isAvailable": false,
       "isActive": true,
-      "id": "6a0c19f6eb8d5eead4777389"
+      "id": "6c4062d9d9c9a696cf4cbcca"
     },
     {
       "name": "Charred Maitake & Polenta Bowl",
       "description": "Wood-roasted hen-of-the-woods mushroom, creamy heirloom polenta, crispy sage, pine nuts.",
       "price": 25,
-      "categoryId": "a887fe3a34833b91640a4fd8",
+      "categoryId": "fabca84d413c3250248943af",
       "imageUrl": "/src/assets/images/dish_truffle_pasta_1795178825033.jpg",
       "isVeg": true,
       "spiceLevel": "none",
@@ -474,13 +474,13 @@
       "prepTimeMinutes": 14,
       "isAvailable": true,
       "isActive": true,
-      "id": "753cf1df0f91bfc11c4f5c68"
+      "id": "e158e5b7c0e72b53c6eb4e81"
     },
     {
       "name": "Wood-Fired Margherita Flatbread",
       "description": "72-hour fermented sourdough crust, crushed San Marzano tomatoes, fior di latte, garden basil.",
       "price": 19,
-      "categoryId": "3bb5b3f47f2e259524ff325e",
+      "categoryId": "20f5f123d0f47356c3120806",
       "imageUrl": "/src/assets/images/dish_woodfired_pizza_1795178824146.jpg",
       "isVeg": true,
       "spiceLevel": "none",
@@ -491,13 +491,13 @@
       "prepTimeMinutes": 11,
       "isAvailable": true,
       "isActive": true,
-      "id": "f92960a53b46b941847b6f0f"
+      "id": "6a405e5cfb5da5d180044575"
     },
     {
       "name": "Hot Honey & Soppressata Flatbread",
       "description": "Crisp artisan salami, smoked provolone, pickled jalapeños, wildflower chili honey.",
       "price": 22,
-      "categoryId": "3bb5b3f47f2e259524ff325e",
+      "categoryId": "20f5f123d0f47356c3120806",
       "imageUrl": "/src/assets/images/dish_woodfired_pizza_1795178824146.jpg",
       "isVeg": false,
       "spiceLevel": "hot",
@@ -508,13 +508,13 @@
       "prepTimeMinutes": 12,
       "isAvailable": true,
       "isActive": true,
-      "id": "80a663a435ac282cb61be858"
+      "id": "4ebe2c16079cf17db4d8200d"
     },
     {
       "name": "Roasted Mushroom & Taleggio Flatbread",
       "description": "Garlic confit base, thyme-roasted cremini, melted Taleggio, baby arugula.",
       "price": 21,
-      "categoryId": "3bb5b3f47f2e259524ff325e",
+      "categoryId": "20f5f123d0f47356c3120806",
       "imageUrl": "/src/assets/images/dish_woodfired_pizza_1795178824146.jpg",
       "isVeg": true,
       "spiceLevel": "none",
@@ -525,13 +525,13 @@
       "prepTimeMinutes": 12,
       "isAvailable": true,
       "isActive": true,
-      "id": "9d19d5c6799ee5fbb244e082"
+      "id": "dcc8433c122e9e00dc530eaa"
     },
     {
       "name": "Rosemary Sea Salt Focaccia",
       "description": "Warm house-baked olive oil focaccia served with roasted garlic oil and aged balsamic.",
       "price": 9.5,
-      "categoryId": "3bb5b3f47f2e259524ff325e",
+      "categoryId": "20f5f123d0f47356c3120806",
       "imageUrl": "/src/assets/images/dish_woodfired_pizza_1795178824146.jpg",
       "isVeg": true,
       "spiceLevel": "none",
@@ -541,13 +541,13 @@
       "prepTimeMinutes": 5,
       "isAvailable": true,
       "isActive": true,
-      "id": "5711a08982e18efc6da5d7ba"
+      "id": "0abd75b39462ce64ee4b00fd"
     },
     {
       "name": "Crispy Brussels & Pancetta",
       "description": "Flash-fried sprouts, smoky cured pancetta, cider glaze, toasted hazelnuts.",
       "price": 13,
-      "categoryId": "3bb5b3f47f2e259524ff325e",
+      "categoryId": "20f5f123d0f47356c3120806",
       "imageUrl": "/src/assets/images/dish_burrata_starter_1795178821594.jpg",
       "isVeg": false,
       "spiceLevel": "none",
@@ -557,13 +557,13 @@
       "prepTimeMinutes": 9,
       "isAvailable": true,
       "isActive": true,
-      "id": "58cd79c2a67dcbf87f23eae3"
+      "id": "fb5b8eb3189f8d3ee4bbf798"
     },
     {
       "name": "Parmesan Truffle Pommes Frites",
       "description": "Twice-cooked Kennebec potatoes, white truffle oil, aged parmesan, garlic aioli.",
       "price": 11.5,
-      "categoryId": "3bb5b3f47f2e259524ff325e",
+      "categoryId": "20f5f123d0f47356c3120806",
       "imageUrl": "/src/assets/images/dish_truffle_pasta_1795178825033.jpg",
       "isVeg": true,
       "spiceLevel": "none",
@@ -574,13 +574,13 @@
       "prepTimeMinutes": 8,
       "isAvailable": true,
       "isActive": true,
-      "id": "994684405110ae4aefeced9c"
+      "id": "f3ae887b6d05e9dbaa5a2ec3"
     },
     {
       "name": "Little Gem Caesar Salad",
       "description": "Crisp baby gem leaves, sourdough pangrattato, white anchovy dressing, shaved grana.",
       "price": 14.5,
-      "categoryId": "3bb5b3f47f2e259524ff325e",
+      "categoryId": "20f5f123d0f47356c3120806",
       "imageUrl": "/src/assets/images/dish_burrata_starter_1795178821594.jpg",
       "isVeg": false,
       "spiceLevel": "none",
@@ -593,13 +593,13 @@
       "prepTimeMinutes": 7,
       "isAvailable": true,
       "isActive": true,
-      "id": "a05d0d9225f1e7a6729027b5"
+      "id": "7e59f62cf9a06bca0a91724d"
     },
     {
       "name": "Espresso Mascarpone Tiramisu",
       "description": "Savoiardi soaked in single-origin espresso, whipped mascarpone zabaglione, Valrhona cocoa.",
       "price": 13.5,
-      "categoryId": "695bccdb3ab0f1626d5e4df9",
+      "categoryId": "9b90acf6962c2478e9e9ce8c",
       "imageUrl": "/src/assets/images/dish_tiramisu_dessert_1795178823665.jpg",
       "isVeg": true,
       "spiceLevel": "none",
@@ -611,13 +611,13 @@
       "prepTimeMinutes": 5,
       "isAvailable": true,
       "isActive": true,
-      "id": "2139cdd376082c17346902fd"
+      "id": "3e13d4525a6480069444324b"
     },
     {
       "name": "Burnt Basque Cheesecake",
       "description": "Caramelized crust with custardy vanilla bean center and macerated blackberry compote.",
       "price": 14,
-      "categoryId": "695bccdb3ab0f1626d5e4df9",
+      "categoryId": "9b90acf6962c2478e9e9ce8c",
       "imageUrl": "/src/assets/images/dish_tiramisu_dessert_1795178823665.jpg",
       "isVeg": true,
       "spiceLevel": "none",
@@ -628,13 +628,13 @@
       "prepTimeMinutes": 5,
       "isAvailable": true,
       "isActive": true,
-      "id": "f0e883dc4b324e5c719a8edb"
+      "id": "643606a64a4f5672b408441d"
     },
     {
       "name": "Dark Chocolate Olive Oil Torte",
       "description": "Flourless 70% dark chocolate cake, flaky sea salt, crème fraîche.",
       "price": 13,
-      "categoryId": "695bccdb3ab0f1626d5e4df9",
+      "categoryId": "9b90acf6962c2478e9e9ce8c",
       "imageUrl": "/src/assets/images/dish_tiramisu_dessert_1795178823665.jpg",
       "isVeg": true,
       "spiceLevel": "none",
@@ -645,13 +645,13 @@
       "prepTimeMinutes": 5,
       "isAvailable": true,
       "isActive": true,
-      "id": "f943a0ebb703372c65f5e4c3"
+      "id": "5f218735d5fa6e1db0e9ea93"
     },
     {
       "name": "Blood Orange & Rosemary Spritz",
       "description": "Fresh-pressed blood orange, botanical bitter aperitif (zero-proof), rosemary sprig, tonic.",
       "price": 11,
-      "categoryId": "695bccdb3ab0f1626d5e4df9",
+      "categoryId": "9b90acf6962c2478e9e9ce8c",
       "imageUrl": "/src/assets/images/dish_craft_beverage_1795178823569.jpg",
       "isVeg": true,
       "spiceLevel": "none",
@@ -659,13 +659,13 @@
       "prepTimeMinutes": 4,
       "isAvailable": true,
       "isActive": true,
-      "id": "bbd5901687fd07dfd407f42f"
+      "id": "bec1cb071bf289199ab291a5"
     },
     {
       "name": "Yuzu Ginger Highball",
       "description": "Japanese yuzu juice, house-brewed spicy ginger beer, lime leaf, clear ice spear.",
       "price": 10.5,
-      "categoryId": "695bccdb3ab0f1626d5e4df9",
+      "categoryId": "9b90acf6962c2478e9e9ce8c",
       "imageUrl": "/src/assets/images/dish_craft_beverage_1795178823569.jpg",
       "isVeg": true,
       "spiceLevel": "mild",
@@ -673,13 +673,13 @@
       "prepTimeMinutes": 4,
       "isAvailable": true,
       "isActive": true,
-      "id": "59a691041c07593c853baf72"
+      "id": "14f88f7ceb7fe5d96d627583"
     },
     {
       "name": "Smoked Orchard Old Fashioned",
       "description": "Small-batch rye, spiced apple reduction, aromatic bitters, expressed orange peel.",
       "price": 16,
-      "categoryId": "695bccdb3ab0f1626d5e4df9",
+      "categoryId": "9b90acf6962c2478e9e9ce8c",
       "imageUrl": "/src/assets/images/dish_craft_beverage_1795178823569.jpg",
       "isVeg": true,
       "spiceLevel": "none",
@@ -687,13 +687,13 @@
       "prepTimeMinutes": 5,
       "isAvailable": true,
       "isActive": true,
-      "id": "016d6ad05987dd1283241a7f"
+      "id": "dad3a2e3c533db0238304553"
     },
     {
       "name": "Single-Origin Cold Brew Tonic",
       "description": "18-hour Ethiopian cold brew layered over artisanal Indian tonic and grapefruit twist.",
       "price": 8.5,
-      "categoryId": "695bccdb3ab0f1626d5e4df9",
+      "categoryId": "9b90acf6962c2478e9e9ce8c",
       "imageUrl": "/src/assets/images/dish_craft_beverage_1795178823569.jpg",
       "isVeg": true,
       "spiceLevel": "none",
@@ -701,19 +701,19 @@
       "prepTimeMinutes": 3,
       "isAvailable": true,
       "isActive": true,
-      "id": "1ca176238c72b48e02888eae"
+      "id": "dcf039cd41854b8e4e229319"
     }
   ],
   "orders": [
     {
       "orderNumber": "ORD-1009",
-      "tableId": "5c7a13dd13bff8ef96f30943",
+      "tableId": "71fa49799c9b9983cc03da4c",
       "tableNumber": 4,
       "tableName": "Table 4 — Center Round",
       "sessionId": "sess-demo-t4",
       "items": [
         {
-          "menuItemId": "166117a8ce1ef401791f31ce",
+          "menuItemId": "f90222388e7d451393e2d617",
           "name": "Prime Hanger Steak Frites",
           "price": 38,
           "qty": 1,
@@ -722,7 +722,7 @@
           "prepTimeMinutes": 18
         },
         {
-          "menuItemId": "2139cdd376082c17346902fd",
+          "menuItemId": "3e13d4525a6480069444324b",
           "name": "Espresso Mascarpone Tiramisu",
           "price": 13.5,
           "qty": 2,
@@ -737,30 +737,30 @@
       "total": 70.2,
       "status": "ready",
       "source": "staff",
-      "waiterId": "8d3565372273ca3b2e3f0201",
+      "waiterId": "2118df770055bdf40f99c056",
       "waiterName": "Sofia Morales",
       "statusTimestamps": {
-        "pending": "2026-11-20T13:05:12.612Z",
-        "accepted": "2026-11-20T13:05:12.612Z",
-        "preparing": "2026-11-20T13:05:12.612Z",
-        "ready": "2026-11-20T13:20:12.612Z",
+        "pending": "2026-11-20T13:27:03.813Z",
+        "accepted": "2026-11-20T13:27:03.813Z",
+        "preparing": "2026-11-20T13:27:03.813Z",
+        "ready": "2026-11-20T13:42:03.813Z",
         "served": null,
         "paid": null,
         "cancelled": null
       },
-      "createdAt": "2026-11-20T13:05:12.612Z",
-      "updatedAt": "2026-11-20T13:05:12.612Z",
-      "id": "00a3d17639fb992c264029e3"
+      "createdAt": "2026-11-20T13:27:03.813Z",
+      "updatedAt": "2026-11-20T13:27:03.813Z",
+      "id": "106a2b091eec222f4fc5fde9"
     },
     {
       "orderNumber": "ORD-1008",
-      "tableId": "382131d9d40e3fc12f8c2a52",
+      "tableId": "3808f04ebb9c3ec8e287007f",
       "tableNumber": 2,
       "tableName": "Table 2 — Window Four-Top",
       "sessionId": "sess-demo-t2",
       "items": [
         {
-          "menuItemId": "0ee5c8f4c05ce3fc04fa8c8d",
+          "menuItemId": "996af65322814ac9def6894b",
           "name": "Pan-Seared Atlantic Salmon",
           "price": 32,
           "qty": 2,
@@ -769,7 +769,7 @@
           "prepTimeMinutes": 16
         },
         {
-          "menuItemId": "f92960a53b46b941847b6f0f",
+          "menuItemId": "6a405e5cfb5da5d180044575",
           "name": "Wood-Fired Margherita Flatbread",
           "price": 19,
           "qty": 1,
@@ -784,30 +784,30 @@
       "total": 89.64,
       "status": "preparing",
       "source": "guest_qr",
-      "waiterId": "8d3565372273ca3b2e3f0201",
+      "waiterId": "2118df770055bdf40f99c056",
       "waiterName": "Sofia Morales",
       "statusTimestamps": {
-        "pending": "2026-11-20T13:10:12.612Z",
-        "accepted": "2026-11-20T13:10:12.612Z",
-        "preparing": "2026-11-20T13:10:12.612Z",
+        "pending": "2026-11-20T13:32:03.813Z",
+        "accepted": "2026-11-20T13:32:03.813Z",
+        "preparing": "2026-11-20T13:32:03.813Z",
         "ready": null,
         "served": null,
         "paid": null,
         "cancelled": null
       },
-      "createdAt": "2026-11-20T13:10:12.612Z",
-      "updatedAt": "2026-11-20T13:10:12.612Z",
-      "id": "0fd73544095e2fcaa0028541"
+      "createdAt": "2026-11-20T13:32:03.813Z",
+      "updatedAt": "2026-11-20T13:32:03.813Z",
+      "id": "1e26615aa817590abe4f1663"
     },
     {
       "orderNumber": "ORD-1007",
-      "tableId": "4c8cdb1a5bed9583c9111bea",
+      "tableId": "9121bd9b47186849e3394e51",
       "tableNumber": 1,
       "tableName": "Table 1 — Window Two-Top",
       "sessionId": "sess-demo-t1",
       "items": [
         {
-          "menuItemId": "fc3d38bc1832a627beffb045",
+          "menuItemId": "14687268ab587abaabb9b218",
           "name": "Heirloom Tomato & Burrata",
           "price": 16.5,
           "qty": 1,
@@ -816,7 +816,7 @@
           "prepTimeMinutes": 7
         },
         {
-          "menuItemId": "c85accb2efaf8cb6720fcdeb",
+          "menuItemId": "3eb615eadd37c50562aff836",
           "name": "Wild Chanterelle Truffle Tagliatelle",
           "price": 28.5,
           "qty": 1,
@@ -825,7 +825,7 @@
           "prepTimeMinutes": 14
         },
         {
-          "menuItemId": "bbd5901687fd07dfd407f42f",
+          "menuItemId": "bec1cb071bf289199ab291a5",
           "name": "Blood Orange & Rosemary Spritz",
           "price": 11,
           "qty": 2,
@@ -840,10 +840,10 @@
       "total": 72.36,
       "status": "pending",
       "source": "guest_qr",
-      "waiterId": "8d3565372273ca3b2e3f0201",
+      "waiterId": "2118df770055bdf40f99c056",
       "waiterName": "Sofia Morales",
       "statusTimestamps": {
-        "pending": "2026-11-20T13:18:12.612Z",
+        "pending": "2026-11-20T13:40:03.813Z",
         "accepted": null,
         "preparing": null,
         "ready": null,
@@ -851,19 +851,19 @@
         "paid": null,
         "cancelled": null
       },
-      "createdAt": "2026-11-20T13:18:12.612Z",
-      "updatedAt": "2026-11-20T13:18:12.612Z",
-      "id": "2337646f9c2c40291ded5573"
+      "createdAt": "2026-11-20T13:40:03.813Z",
+      "updatedAt": "2026-11-20T13:40:03.813Z",
+      "id": "9bae17fe1be3d5eba1521690"
     },
     {
       "orderNumber": "ORD-1006",
-      "tableId": "903ae7aa6b8f99e7168a8c88",
+      "tableId": "caa972d8bbbec1303620b499",
       "tableNumber": 8,
       "tableName": "Table 8 — Pergola Lounge",
       "sessionId": "past-sess-ORD-1006",
       "items": [
         {
-          "menuItemId": "80a663a435ac282cb61be858",
+          "menuItemId": "4ebe2c16079cf17db4d8200d",
           "name": "Hot Honey & Soppressata Flatbread",
           "price": 22,
           "qty": 1,
@@ -872,7 +872,7 @@
           "prepTimeMinutes": 12
         },
         {
-          "menuItemId": "a05d0d9225f1e7a6729027b5",
+          "menuItemId": "7e59f62cf9a06bca0a91724d",
           "name": "Little Gem Caesar Salad",
           "price": 14.5,
           "qty": 1,
@@ -881,7 +881,7 @@
           "prepTimeMinutes": 7
         },
         {
-          "menuItemId": "974ba864e3a75c95bf5257a3",
+          "menuItemId": "9729340a6294a77cade24cdd",
           "name": "Hearth-Roasted Half Chicken",
           "price": 29,
           "qty": 1,
@@ -896,30 +896,30 @@
       "total": 70.74,
       "status": "paid",
       "source": "guest_qr",
-      "waiterId": "8d3565372273ca3b2e3f0201",
+      "waiterId": "2118df770055bdf40f99c056",
       "waiterName": "Sofia Morales",
       "statusTimestamps": {
-        "pending": "2026-11-20T11:51:12.612Z",
-        "accepted": "2026-11-20T11:52:12.612Z",
-        "preparing": "2026-11-20T11:53:12.612Z",
-        "ready": "2026-11-20T12:05:12.612Z",
-        "served": "2026-11-20T12:08:12.612Z",
-        "paid": "2026-11-20T12:36:12.612Z",
+        "pending": "2026-11-20T12:13:03.813Z",
+        "accepted": "2026-11-20T12:14:03.813Z",
+        "preparing": "2026-11-20T12:15:03.813Z",
+        "ready": "2026-11-20T12:27:03.813Z",
+        "served": "2026-11-20T12:30:03.813Z",
+        "paid": "2026-11-20T12:58:03.813Z",
         "cancelled": null
       },
-      "createdAt": "2026-11-20T11:51:12.612Z",
-      "updatedAt": "2026-11-20T12:36:12.612Z",
-      "id": "d858fdd9ff71aa1a8394f86b"
+      "createdAt": "2026-11-20T12:13:03.813Z",
+      "updatedAt": "2026-11-20T12:58:03.813Z",
+      "id": "0b60d9671f6df563f29091c7"
     },
     {
       "orderNumber": "ORD-1005",
-      "tableId": "a69893b0d4cf830a01e608e3",
+      "tableId": "862fd23ff5a478135d91af3e",
       "tableNumber": 11,
       "tableName": "Table 11 — Cellar Nook",
       "sessionId": "past-sess-ORD-1005",
       "items": [
         {
-          "menuItemId": "1cb1251f2674ef0425cbe271",
+          "menuItemId": "8a295f084ec7ec6daeff7543",
           "name": "Braised Short Rib Pappardelle",
           "price": 31,
           "qty": 1,
@@ -928,7 +928,7 @@
           "prepTimeMinutes": 15
         },
         {
-          "menuItemId": "0ee5c8f4c05ce3fc04fa8c8d",
+          "menuItemId": "996af65322814ac9def6894b",
           "name": "Pan-Seared Atlantic Salmon",
           "price": 32,
           "qty": 1,
@@ -937,7 +937,7 @@
           "prepTimeMinutes": 16
         },
         {
-          "menuItemId": "2139cdd376082c17346902fd",
+          "menuItemId": "3e13d4525a6480069444324b",
           "name": "Espresso Mascarpone Tiramisu",
           "price": 13.5,
           "qty": 1,
@@ -946,7 +946,7 @@
           "prepTimeMinutes": 5
         },
         {
-          "menuItemId": "bbd5901687fd07dfd407f42f",
+          "menuItemId": "bec1cb071bf289199ab291a5",
           "name": "Blood Orange & Rosemary Spritz",
           "price": 11,
           "qty": 1,
@@ -961,30 +961,30 @@
       "total": 94.5,
       "status": "paid",
       "source": "guest_qr",
-      "waiterId": "8d3565372273ca3b2e3f0201",
+      "waiterId": "2118df770055bdf40f99c056",
       "waiterName": "Sofia Morales",
       "statusTimestamps": {
-        "pending": "2026-11-20T11:21:12.612Z",
-        "accepted": "2026-11-20T11:22:12.612Z",
-        "preparing": "2026-11-20T11:23:12.612Z",
-        "ready": "2026-11-20T11:35:12.612Z",
-        "served": "2026-11-20T11:38:12.612Z",
-        "paid": "2026-11-20T12:06:12.612Z",
+        "pending": "2026-11-20T11:43:03.813Z",
+        "accepted": "2026-11-20T11:44:03.813Z",
+        "preparing": "2026-11-20T11:45:03.813Z",
+        "ready": "2026-11-20T11:57:03.813Z",
+        "served": "2026-11-20T12:00:03.813Z",
+        "paid": "2026-11-20T12:28:03.813Z",
         "cancelled": null
       },
-      "createdAt": "2026-11-20T11:21:12.612Z",
-      "updatedAt": "2026-11-20T12:06:12.612Z",
-      "id": "5002fbb56816e62072e0eeb7"
+      "createdAt": "2026-11-20T11:43:03.813Z",
+      "updatedAt": "2026-11-20T12:28:03.813Z",
+      "id": "5aeb47142a6f792cf34d7da8"
     },
     {
       "orderNumber": "ORD-1004",
-      "tableId": "efb2d97082e3d649a5285043",
+      "tableId": "bf19c6a32d065cee8b3a0b08",
       "tableNumber": 10,
       "tableName": "Table 10 — Slate Bar High",
       "sessionId": "past-sess-ORD-1004",
       "items": [
         {
-          "menuItemId": "f12f94831da9b95845673512",
+          "menuItemId": "a1832545674351b4dbd6e960",
           "name": "Spicy Vodka Rigatoni",
           "price": 24,
           "qty": 1,
@@ -993,7 +993,7 @@
           "prepTimeMinutes": 13
         },
         {
-          "menuItemId": "5711a08982e18efc6da5d7ba",
+          "menuItemId": "0abd75b39462ce64ee4b00fd",
           "name": "Rosemary Sea Salt Focaccia",
           "price": 9.5,
           "qty": 1,
@@ -1002,7 +1002,7 @@
           "prepTimeMinutes": 5
         },
         {
-          "menuItemId": "59a691041c07593c853baf72",
+          "menuItemId": "14f88f7ceb7fe5d96d627583",
           "name": "Yuzu Ginger Highball",
           "price": 10.5,
           "qty": 1,
@@ -1017,30 +1017,30 @@
       "total": 47.52,
       "status": "paid",
       "source": "guest_qr",
-      "waiterId": "8d3565372273ca3b2e3f0201",
+      "waiterId": "2118df770055bdf40f99c056",
       "waiterName": "Sofia Morales",
       "statusTimestamps": {
-        "pending": "2026-11-20T10:21:12.612Z",
-        "accepted": "2026-11-20T10:22:12.612Z",
-        "preparing": "2026-11-20T10:23:12.612Z",
-        "ready": "2026-11-20T10:35:12.612Z",
-        "served": "2026-11-20T10:38:12.612Z",
-        "paid": "2026-11-20T11:06:12.612Z",
+        "pending": "2026-11-20T10:43:03.813Z",
+        "accepted": "2026-11-20T10:44:03.813Z",
+        "preparing": "2026-11-20T10:45:03.813Z",
+        "ready": "2026-11-20T10:57:03.813Z",
+        "served": "2026-11-20T11:00:03.813Z",
+        "paid": "2026-11-20T11:28:03.813Z",
         "cancelled": null
       },
-      "createdAt": "2026-11-20T10:21:12.612Z",
-      "updatedAt": "2026-11-20T11:06:12.612Z",
-      "id": "561e268d1e740d96f32eb6dd"
+      "createdAt": "2026-11-20T10:43:03.813Z",
+      "updatedAt": "2026-11-20T11:28:03.813Z",
+      "id": "17d6d1e8ba32da75790721cb"
     },
     {
       "orderNumber": "ORD-1003",
-      "tableId": "c9061ffc382b70abb77463f4",
+      "tableId": "9dd5b32cc1ed9208b69f8afa",
       "tableNumber": 7,
       "tableName": "Table 7 — Olive Tree Patio",
       "sessionId": "past-sess-ORD-1003",
       "items": [
         {
-          "menuItemId": "166117a8ce1ef401791f31ce",
+          "menuItemId": "f90222388e7d451393e2d617",
           "name": "Prime Hanger Steak Frites",
           "price": 38,
           "qty": 1,
@@ -1049,7 +1049,7 @@
           "prepTimeMinutes": 18
         },
         {
-          "menuItemId": "92ff9f055714d372cba7d32f",
+          "menuItemId": "34a0c044425dadac67bd3c95",
           "name": "Crispy Calamari Fritti",
           "price": 17.5,
           "qty": 1,
@@ -1058,7 +1058,7 @@
           "prepTimeMinutes": 10
         },
         {
-          "menuItemId": "016d6ad05987dd1283241a7f",
+          "menuItemId": "dad3a2e3c533db0238304553",
           "name": "Smoked Orchard Old Fashioned",
           "price": 16,
           "qty": 1,
@@ -1067,7 +1067,7 @@
           "prepTimeMinutes": 5
         },
         {
-          "menuItemId": "f0e883dc4b324e5c719a8edb",
+          "menuItemId": "643606a64a4f5672b408441d",
           "name": "Burnt Basque Cheesecake",
           "price": 14,
           "qty": 1,
@@ -1082,30 +1082,30 @@
       "total": 92.34,
       "status": "paid",
       "source": "guest_qr",
-      "waiterId": "8d3565372273ca3b2e3f0201",
+      "waiterId": "2118df770055bdf40f99c056",
       "waiterName": "Sofia Morales",
       "statusTimestamps": {
-        "pending": "2026-11-20T09:21:12.612Z",
-        "accepted": "2026-11-20T09:22:12.612Z",
-        "preparing": "2026-11-20T09:23:12.612Z",
-        "ready": "2026-11-20T09:35:12.612Z",
-        "served": "2026-11-20T09:38:12.612Z",
-        "paid": "2026-11-20T10:06:12.612Z",
+        "pending": "2026-11-20T09:43:03.813Z",
+        "accepted": "2026-11-20T09:44:03.813Z",
+        "preparing": "2026-11-20T09:45:03.813Z",
+        "ready": "2026-11-20T09:57:03.813Z",
+        "served": "2026-11-20T10:00:03.813Z",
+        "paid": "2026-11-20T10:28:03.813Z",
         "cancelled": null
       },
-      "createdAt": "2026-11-20T09:21:12.612Z",
-      "updatedAt": "2026-11-20T10:06:12.612Z",
-      "id": "8168afe79a12ca970329e61e"
+      "createdAt": "2026-11-20T09:43:03.813Z",
+      "updatedAt": "2026-11-20T10:28:03.813Z",
+      "id": "8f7a4cf7c4f8a82cc9346f08"
     },
     {
       "orderNumber": "ORD-1002",
-      "tableId": "5b0c425ca5181a930b036d35",
+      "tableId": "c320abb56897a8a39070a7a3",
       "tableNumber": 6,
       "tableName": "Table 6 — Corner Booth",
       "sessionId": "past-sess-ORD-1002",
       "items": [
         {
-          "menuItemId": "c85accb2efaf8cb6720fcdeb",
+          "menuItemId": "3eb615eadd37c50562aff836",
           "name": "Wild Chanterelle Truffle Tagliatelle",
           "price": 28.5,
           "qty": 1,
@@ -1114,7 +1114,7 @@
           "prepTimeMinutes": 14
         },
         {
-          "menuItemId": "f92960a53b46b941847b6f0f",
+          "menuItemId": "6a405e5cfb5da5d180044575",
           "name": "Wood-Fired Margherita Flatbread",
           "price": 19,
           "qty": 1,
@@ -1123,7 +1123,7 @@
           "prepTimeMinutes": 11
         },
         {
-          "menuItemId": "2139cdd376082c17346902fd",
+          "menuItemId": "3e13d4525a6480069444324b",
           "name": "Espresso Mascarpone Tiramisu",
           "price": 13.5,
           "qty": 1,
@@ -1138,30 +1138,30 @@
       "total": 65.88,
       "status": "paid",
       "source": "guest_qr",
-      "waiterId": "8d3565372273ca3b2e3f0201",
+      "waiterId": "2118df770055bdf40f99c056",
       "waiterName": "Sofia Morales",
       "statusTimestamps": {
-        "pending": "2026-11-20T08:21:12.612Z",
-        "accepted": "2026-11-20T08:22:12.612Z",
-        "preparing": "2026-11-20T08:23:12.612Z",
-        "ready": "2026-11-20T08:35:12.612Z",
-        "served": "2026-11-20T08:38:12.612Z",
-        "paid": "2026-11-20T09:06:12.612Z",
+        "pending": "2026-11-20T08:43:03.813Z",
+        "accepted": "2026-11-20T08:44:03.813Z",
+        "preparing": "2026-11-20T08:45:03.813Z",
+        "ready": "2026-11-20T08:57:03.813Z",
+        "served": "2026-11-20T09:00:03.813Z",
+        "paid": "2026-11-20T09:28:03.813Z",
         "cancelled": null
       },
-      "createdAt": "2026-11-20T08:21:12.612Z",
-      "updatedAt": "2026-11-20T09:06:12.612Z",
-      "id": "fd3cd2f897d1216c76a38491"
+      "createdAt": "2026-11-20T08:43:03.813Z",
+      "updatedAt": "2026-11-20T09:28:03.813Z",
+      "id": "2fd6c0c87aefd9cde8b8ff8b"
     },
     {
       "orderNumber": "ORD-1001",
-      "tableId": "a878f385b854124c0fe3d50b",
+      "tableId": "644ef7fb10670cc8e1e83ddd",
       "tableNumber": 3,
       "tableName": "Table 3 — Oak Banquette",
       "sessionId": "past-sess-ORD-1001",
       "items": [
         {
-          "menuItemId": "fc3d38bc1832a627beffb045",
+          "menuItemId": "14687268ab587abaabb9b218",
           "name": "Heirloom Tomato & Burrata",
           "price": 16.5,
           "qty": 1,
@@ -1170,7 +1170,7 @@
           "prepTimeMinutes": 7
         },
         {
-          "menuItemId": "0ee5c8f4c05ce3fc04fa8c8d",
+          "menuItemId": "996af65322814ac9def6894b",
           "name": "Pan-Seared Atlantic Salmon",
           "price": 32,
           "qty": 1,
@@ -1179,7 +1179,7 @@
           "prepTimeMinutes": 16
         },
         {
-          "menuItemId": "bbd5901687fd07dfd407f42f",
+          "menuItemId": "bec1cb071bf289199ab291a5",
           "name": "Blood Orange & Rosemary Spritz",
           "price": 11,
           "qty": 1,
@@ -1194,25 +1194,25 @@
       "total": 64.26,
       "status": "paid",
       "source": "guest_qr",
-      "waiterId": "8d3565372273ca3b2e3f0201",
+      "waiterId": "2118df770055bdf40f99c056",
       "waiterName": "Sofia Morales",
       "statusTimestamps": {
-        "pending": "2026-11-20T07:21:12.612Z",
-        "accepted": "2026-11-20T07:22:12.612Z",
-        "preparing": "2026-11-20T07:23:12.612Z",
-        "ready": "2026-11-20T07:35:12.612Z",
-        "served": "2026-11-20T07:38:12.612Z",
-        "paid": "2026-11-20T08:06:12.612Z",
+        "pending": "2026-11-20T07:43:03.813Z",
+        "accepted": "2026-11-20T07:44:03.813Z",
+        "preparing": "2026-11-20T07:45:03.813Z",
+        "ready": "2026-11-20T07:57:03.813Z",
+        "served": "2026-11-20T08:00:03.813Z",
+        "paid": "2026-11-20T08:28:03.813Z",
         "cancelled": null
       },
-      "createdAt": "2026-11-20T07:21:12.612Z",
-      "updatedAt": "2026-11-20T08:06:12.612Z",
-      "id": "07523c4f8fb9346028f57e47"
+      "createdAt": "2026-11-20T07:43:03.813Z",
+      "updatedAt": "2026-11-20T08:28:03.813Z",
+      "id": "04e0dece5f51dd7384017ef2"
     }
   ],
   "calls": [
     {
-      "tableId": "5c7a13dd13bff8ef96f30943",
+      "tableId": "71fa49799c9b9983cc03da4c",
       "tableNumber": 4,
       "tableName": "Table 4 — Center Round",
       "sessionId": "sess-demo-t4",
@@ -1221,12 +1221,12 @@
       "status": "open",
       "acknowledgedBy": null,
       "acknowledgedByName": null,
-      "createdAt": "2026-11-20T13:20:00.612Z",
+      "createdAt": "2026-11-20T13:41:51.813Z",
       "resolvedAt": null,
-      "id": "78587894682fa95dad0d2d28"
+      "id": "69228f3791c1cde0bf290985"
     },
     {
-      "tableId": "382131d9d40e3fc12f8c2a52",
+      "tableId": "3808f04ebb9c3ec8e287007f",
       "tableNumber": 2,
       "tableName": "Table 2 — Window Four-Top",
       "sessionId": "sess-demo-t2",
@@ -1235,17 +1235,17 @@
       "status": "open",
       "acknowledgedBy": null,
       "acknowledgedByName": null,
-      "createdAt": "2026-11-20T13:16:42.612Z",
+      "createdAt": "2026-11-20T13:38:33.813Z",
       "resolvedAt": null,
-      "id": "6ce2c308235d381e33ae5f7b"
+      "id": "aaeda347a256507f68cf7944"
     }
   ],
   "payments": [
     {
       "orderIds": [
-        "d858fdd9ff71aa1a8394f86b"
+        "0b60d9671f6df563f29091c7"
       ],
-      "tableId": "903ae7aa6b8f99e7168a8c88",
+      "tableId": "caa972d8bbbec1303620b499",
       "tableNumber": 8,
       "subtotal": 65.5,
       "tax": 5.24,
@@ -1253,16 +1253,16 @@
       "amount": 70.74,
       "method": "demo",
       "status": "completed",
-      "processedBy": "8d3565372273ca3b2e3f0201",
+      "processedBy": "2118df770055bdf40f99c056",
       "processedByName": "Sofia Morales",
-      "createdAt": "2026-11-20T12:36:12.612Z",
-      "id": "d296445e230a12699e3eea85"
+      "createdAt": "2026-11-20T12:58:03.813Z",
+      "id": "c67eea99342205b92b6eed7e"
     },
     {
       "orderIds": [
-        "5002fbb56816e62072e0eeb7"
+        "5aeb47142a6f792cf34d7da8"
       ],
-      "tableId": "a69893b0d4cf830a01e608e3",
+      "tableId": "862fd23ff5a478135d91af3e",
       "tableNumber": 11,
       "subtotal": 87.5,
       "tax": 7,
@@ -1270,16 +1270,16 @@
       "amount": 94.5,
       "method": "card",
       "status": "completed",
-      "processedBy": "8d3565372273ca3b2e3f0201",
+      "processedBy": "2118df770055bdf40f99c056",
       "processedByName": "Sofia Morales",
-      "createdAt": "2026-11-20T12:06:12.612Z",
-      "id": "d8d6f37e688985a8c6cfd49e"
+      "createdAt": "2026-11-20T12:28:03.813Z",
+      "id": "5066e81d241e698b444bb2e0"
     },
     {
       "orderIds": [
-        "561e268d1e740d96f32eb6dd"
+        "17d6d1e8ba32da75790721cb"
       ],
-      "tableId": "efb2d97082e3d649a5285043",
+      "tableId": "bf19c6a32d065cee8b3a0b08",
       "tableNumber": 10,
       "subtotal": 44,
       "tax": 3.52,
@@ -1287,16 +1287,16 @@
       "amount": 47.52,
       "method": "cash",
       "status": "completed",
-      "processedBy": "8d3565372273ca3b2e3f0201",
+      "processedBy": "2118df770055bdf40f99c056",
       "processedByName": "Sofia Morales",
-      "createdAt": "2026-11-20T11:06:12.612Z",
-      "id": "2b68a29a478b7e05f8c55720"
+      "createdAt": "2026-11-20T11:28:03.813Z",
+      "id": "9b76c126755ab6173fa2b76c"
     },
     {
       "orderIds": [
-        "8168afe79a12ca970329e61e"
+        "8f7a4cf7c4f8a82cc9346f08"
       ],
-      "tableId": "c9061ffc382b70abb77463f4",
+      "tableId": "9dd5b32cc1ed9208b69f8afa",
       "tableNumber": 7,
       "subtotal": 85.5,
       "tax": 6.84,
@@ -1304,16 +1304,16 @@
       "amount": 92.34,
       "method": "upi",
       "status": "completed",
-      "processedBy": "8d3565372273ca3b2e3f0201",
+      "processedBy": "2118df770055bdf40f99c056",
       "processedByName": "Sofia Morales",
-      "createdAt": "2026-11-20T10:06:12.612Z",
-      "id": "0718859bec92172de3b76c21"
+      "createdAt": "2026-11-20T10:28:03.813Z",
+      "id": "21c950404644c2640b7e6c7f"
     },
     {
       "orderIds": [
-        "fd3cd2f897d1216c76a38491"
+        "2fd6c0c87aefd9cde8b8ff8b"
       ],
-      "tableId": "5b0c425ca5181a930b036d35",
+      "tableId": "c320abb56897a8a39070a7a3",
       "tableNumber": 6,
       "subtotal": 61,
       "tax": 4.88,
@@ -1321,16 +1321,16 @@
       "amount": 65.88,
       "method": "card",
       "status": "completed",
-      "processedBy": "8d3565372273ca3b2e3f0201",
+      "processedBy": "2118df770055bdf40f99c056",
       "processedByName": "Sofia Morales",
-      "createdAt": "2026-11-20T09:06:12.612Z",
-      "id": "8f3c3c04f3936bc69e27c9d0"
+      "createdAt": "2026-11-20T09:28:03.813Z",
+      "id": "af8dc12748eaddad4e5fba7c"
     },
     {
       "orderIds": [
-        "07523c4f8fb9346028f57e47"
+        "04e0dece5f51dd7384017ef2"
       ],
-      "tableId": "a878f385b854124c0fe3d50b",
+      "tableId": "644ef7fb10670cc8e1e83ddd",
       "tableNumber": 3,
       "subtotal": 59.5,
       "tax": 4.76,
@@ -1338,23 +1338,23 @@
       "amount": 64.26,
       "method": "card",
       "status": "completed",
-      "processedBy": "8d3565372273ca3b2e3f0201",
+      "processedBy": "2118df770055bdf40f99c056",
       "processedByName": "Sofia Morales",
-      "createdAt": "2026-11-20T08:06:12.612Z",
-      "id": "728aef1064d4667b15ecffb2"
+      "createdAt": "2026-11-20T08:28:03.813Z",
+      "id": "eabbd1a09ef27310683ed554"
     }
   ],
   "auditLogs": [
     {
-      "actorId": "f37aaa780aeccec01cc6ed6c",
+      "actorId": "312021ad85d8342765cbfada",
       "actorName": "Elena Vance",
       "actorRole": "admin",
       "action": "SEED_DATABASE",
       "entity": "System",
       "entityId": null,
       "details": "Initialized 4 demo staff accounts, 12 tables, 4 categories, 30 menu items, and live shift data.",
-      "id": "f3f8e8e5f1f787f7c9bb20cd",
-      "timestamp": "2026-11-20T13:21:12.619Z"
+      "id": "731db8166296c4e4f551b2d8",
+      "timestamp": "2026-11-20T13:43:03.824Z"
     }
   ],
   "orderSeq": 1009

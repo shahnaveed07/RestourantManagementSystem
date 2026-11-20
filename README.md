@@ -26,7 +26,7 @@ Full-stack restaurant operations platform built with Express.js, Mongoose (Mongo
 
 5. **Run unit tests:**
    ```bash
-   npx --yes tsx --test server/src/services/orderCalculator.test.ts
+   node --test server/src/services/orderCalculator.test.js
    ```
 
 ## Demo Accounts (`DEMO_MODE=true`)
