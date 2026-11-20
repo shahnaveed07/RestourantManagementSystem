@@ -175,3 +175,67 @@ export function escapeCsvCell(value) {
   }
   return str;
 }
+
+export function validateTableForOrder(table) {
+  if (!table || table.isActive === false) {
+    return {
+      ok: false,
+      status: 404,
+      message: 'Table not found.',
+    };
+  }
+  if (table.status === 'reserved' || table.status === 'cleaning') {
+    return {
+      ok: false,
+      status: 409,
+      message: 'This table is not accepting orders right now.',
+    };
+  }
+  return { ok: true, status: 200, message: '' };
+}
+
+export function resolveOrderSessionId(table, requestedSessionId, nowMs = Date.now()) {
+  if (table?.currentSessionId) {
+    return String(table.currentSessionId);
+  }
+  const cleaned = sanitizeText(requestedSessionId || '');
+  if (cleaned.length >= 4) {
+    return cleaned;
+  }
+  return `sess-t${table?.number ?? 0}-${nowMs}`;
+}
+
+export function resolveOrderSource({ qrToken, userRole, requestedSource }) {
+  if (qrToken) return 'qr';
+  if (userRole === 'customer') return 'home';
+  if (requestedSource === 'home' || requestedSource === 'staff' || requestedSource === 'qr') {
+    return requestedSource;
+  }
+  return 'staff';
+}
+
+export function toPublicTableSummary(table) {
+  return {
+    id: table.id,
+    number: table.number,
+    name: table.name,
+    section: table.section,
+    status: table.status,
+    capacity: table.capacity,
+  };
+}
+
+export function buildOrderCreatedSocketPayload(order) {
+  return {
+    ...order,
+    orderId: order.id,
+    tableId: String(order.tableId),
+    tableNumber: order.tableNumberSnapshot ?? order.tableNumber,
+    source: order.source,
+    items: order.items,
+    total: order.total,
+    status: order.status,
+    createdAt: order.createdAt,
+  };
+}
+

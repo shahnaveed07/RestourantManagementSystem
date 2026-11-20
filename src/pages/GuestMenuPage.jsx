@@ -312,7 +312,12 @@ export function GuestMenuPage() {
         notes: e.notes.trim() || undefined,
       }));
       const created = user
-        ? await api.createOrder({ qrToken, items: itemsPayload })
+        ? await api.createOrder({
+            tableId: table.id,
+            qrToken,
+            source: 'qr',
+            items: itemsPayload,
+          })
         : await api.placeGuestOrder(qrToken, {
             sessionId,
             items: itemsPayload,
@@ -409,7 +414,9 @@ export function GuestMenuPage() {
       <div className="flex items-center justify-between pb-4 border-b border-slate-200">
         <div>
           <h2 className="text-base font-bold text-slate-900">Your Order</h2>
-          <p className="text-xs text-slate-500">Table {table.number} · {cartCount} items</p>
+          <p className="text-xs text-slate-500">
+            Table {table.number} (from QR code) · {cartCount} item{cartCount === 1 ? '' : 's'}
+          </p>
         </div>
         <button
           type="button"

@@ -9,6 +9,11 @@ import {
   canRoleAccess,
   generateQrToken,
   escapeCsvCell,
+  validateTableForOrder,
+  resolveOrderSessionId,
+  resolveOrderSource,
+  toPublicTableSummary,
+  buildOrderCreatedSocketPayload,
 } from './orderCalculator.js';
 
 const sampleMenu = new Map([
@@ -133,3 +138,91 @@ test('generateQrToken generates unique table-prefixed tokens and CSV escaping wo
   assert.notEqual(t1, t2);
   assert.equal(escapeCsvCell('Chef, "Special"'), '"Chef, ""Special"""');
 });
+
+test('validateTableForOrder accepts free/occupied tables and rejects missing, reserved, or cleaning tables', () => {
+  assert.deepEqual(validateTableForOrder(null), {
+    ok: false,
+    status: 404,
+    message: 'Table not found.',
+  });
+  assert.equal(validateTableForOrder({ id: 't1', status: 'free', isActive: false }).status, 404);
+  assert.deepEqual(validateTableForOrder({ id: 't1', status: 'reserved', isActive: true }), {
+    ok: false,
+    status: 409,
+    message: 'This table is not accepting orders right now.',
+  });
+  assert.deepEqual(validateTableForOrder({ id: 't1', status: 'cleaning', isActive: true }), {
+    ok: false,
+    status: 409,
+    message: 'This table is not accepting orders right now.',
+  });
+  assert.equal(validateTableForOrder({ id: 't1', status: 'free', isActive: true }).ok, true);
+  assert.equal(validateTableForOrder({ id: 't1', status: 'occupied', isActive: true }).ok, true);
+});
+
+test('resolveOrderSessionId reuses existing open table session or creates one', () => {
+  assert.equal(
+    resolveOrderSessionId({ number: 5, currentSessionId: 'sess-existing' }, 'req-sess', 1000),
+    'sess-existing'
+  );
+  assert.equal(
+    resolveOrderSessionId({ number: 5, currentSessionId: null }, 'guest-t05-abc', 1000),
+    'guest-t05-abc'
+  );
+  assert.equal(
+    resolveOrderSessionId({ number: 5, currentSessionId: null }, '', 12345),
+    'sess-t5-12345'
+  );
+});
+
+test('resolveOrderSource determines qr, home, and staff strictly', () => {
+  assert.equal(resolveOrderSource({ qrToken: 't01-abc', userRole: 'customer', requestedSource: 'staff' }), 'qr');
+  assert.equal(resolveOrderSource({ qrToken: null, userRole: 'customer', requestedSource: 'staff' }), 'home');
+  assert.equal(resolveOrderSource({ qrToken: null, userRole: 'admin', requestedSource: 'home' }), 'home');
+  assert.equal(resolveOrderSource({ qrToken: null, userRole: 'waiter', requestedSource: undefined }), 'staff');
+});
+
+test('toPublicTableSummary strips qrToken and internal session fields', () => {
+  const pub = toPublicTableSummary({
+    id: 't1',
+    number: 3,
+    name: 'Table 3 — Oak',
+    section: 'Main Dining',
+    status: 'free',
+    capacity: 4,
+    qrToken: 'secret-qr',
+    currentSessionId: 'sess-secret',
+  });
+  assert.deepEqual(pub, {
+    id: 't1',
+    number: 3,
+    name: 'Table 3 — Oak',
+    section: 'Main Dining',
+    status: 'free',
+    capacity: 4,
+  });
+  assert.equal('qrToken' in pub, false);
+  assert.equal('currentSessionId' in pub, false);
+});
+
+test('buildOrderCreatedSocketPayload includes required real-time fields and snapshot table number', () => {
+  const payload = buildOrderCreatedSocketPayload({
+    id: 'ord-1',
+    orderNumber: 'ORD-1010',
+    tableId: 'tbl-5',
+    tableNumber: 5,
+    tableNumberSnapshot: 5,
+    source: 'home',
+    items: [{ menuItemId: 'm1', name: 'Burrata', qty: 1, price: 16.5 }],
+    total: 17.82,
+    status: 'pending',
+    createdAt: '2026-11-20T10:00:00.000Z',
+  });
+  assert.equal(payload.orderId, 'ord-1');
+  assert.equal(payload.tableId, 'tbl-5');
+  assert.equal(payload.tableNumber, 5);
+  assert.equal(payload.source, 'home');
+  assert.equal(payload.total, 17.82);
+  assert.equal(payload.status, 'pending');
+});
+

@@ -11,6 +11,7 @@ import { useModalA11y } from '../utils/useModalA11y';
 import {
   formatCurrency,
   formatDateTime,
+  getOrderSourceMeta,
   ORDER_STATUS_LABEL,
   TABLE_STATUS_LABEL,
 } from '../utils/format';
@@ -285,13 +286,23 @@ export function TablesPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-1.5 pt-2.5 border-t border-slate-200/70">
-                  <button
-                    type="button"
-                    onClick={() => openTableDrawer(t)}
-                    className="min-h-[44px] px-1.5 text-xs font-semibold text-slate-700 hover:text-slate-950 inline-flex items-center"
-                  >
-                    Details
-                  </button>
+                  {t.status === 'cleaning' ? (
+                    <button
+                      type="button"
+                      onClick={() => handleStatusChange(t.id, 'free')}
+                      className="min-h-[44px] px-2.5 rounded-lg bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 inline-flex items-center"
+                    >
+                      Mark Free
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => openTableDrawer(t)}
+                      className="min-h-[44px] px-1.5 text-xs font-semibold text-slate-700 hover:text-slate-950 inline-flex items-center"
+                    >
+                      Details
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => setQrTable(t)}
@@ -399,7 +410,16 @@ export function TablesPage() {
                   {tableHistory.orders.slice(0, 10).map((ord) => (
                     <div key={ord.id} className="border border-slate-200 rounded-lg p-3.5 text-xs">
                       <div className="flex items-center justify-between font-semibold text-slate-900">
-                        <span className="font-mono">{ord.orderNumber}</span>
+                        <span className="inline-flex items-center gap-1.5">
+                          <span className="font-mono">{ord.orderNumber}</span>
+                          <span
+                            className={`px-1.5 py-0.5 rounded border text-[10px] font-semibold ${
+                              getOrderSourceMeta(ord.source).className
+                            }`}
+                          >
+                            {getOrderSourceMeta(ord.source).label}
+                          </span>
+                        </span>
                         <span>
                           {ORDER_STATUS_LABEL[ord.status]} ·{' '}
                           <span className="font-mono">{formatCurrency(ord.total)}</span>

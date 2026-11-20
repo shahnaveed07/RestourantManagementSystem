@@ -29,6 +29,14 @@ Full-stack restaurant operations platform built with Express.js, Mongoose (Mongo
    node --test server/src/services/orderCalculator.test.js
    ```
 
+## Ordering flow
+
+Every order in the system is linked to a dining table (`tableId`, `tableNumberSnapshot`, and `source`: `qr`, `home`, or `staff`):
+
+- **QR table ordering (`/t/:qrToken`)**: Guests scanning a table QR code have their table automatically bound and locked (`Table N (from QR code)`). They can place table orders and send waiter/bill service calls directly to that table's open session.
+- **Home storefront ordering (`/`)**: Guests can browse the menu and build a cart without logging in. At checkout, they select an available table (`free` or `occupied`) from the public table grid (`GET /api/tables/public`), authenticate via Mobile/Email OTP, and submit (`POST /api/orders` with `source: "home"`). Tables marked `reserved` or `cleaning` cannot accept new orders (HTTP `409`).
+- **Unified Staff & Billing flow**: Both QR and Home orders on the same table share the table's active `sessionId`, stream live over Socket.IO to Kitchen, Waiter, and Live Orders with a `QR` / `Home` / `Staff` badge, and consolidate onto one table bill. Settling a table defaults its status to `cleaning` until staff confirms it `free`.
+
 ## Demo Accounts (`DEMO_MODE=true`)
 
 | Role | Email | Password | Access |

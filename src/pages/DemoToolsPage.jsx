@@ -47,7 +47,7 @@ export function DemoToolsPage() {
     setBusy(true);
     try {
       const order = await api.simulateOrder(selectedTableId || undefined);
-      toast.success(`Simulated QR order ${order.orderNumber} on Table ${order.tableNumber}`);
+      toast.success(`Simulated order ${order.orderNumber} on Table ${order.tableNumberSnapshot ?? order.tableNumber}`);
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -186,7 +186,7 @@ export function DemoToolsPage() {
                 className="min-h-[44px] px-4 py-2.5 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 inline-flex items-center justify-center gap-2"
               >
                 <ShoppingBag className="w-4 h-4" />
-                Simulate Guest QR Order
+                Simulate Guest Order
               </button>
               <button
                 type="button"

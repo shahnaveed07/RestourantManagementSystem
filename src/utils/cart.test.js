@@ -6,6 +6,8 @@ import {
   updateCartItemNotes,
   reconcileCartWithMenu,
   getCartTotals,
+  validateSelectedTable,
+  filterPublicTables,
 } from './cart.js';
 
 const availableDish = {
@@ -72,4 +74,36 @@ test('reconcileCartWithMenu drops items that became unavailable', () => {
   ]);
   assert.equal(Object.keys(nextCart).length, 0);
   assert.deepEqual(removedNames, ['Heirloom Tomato & Burrata']);
+});
+
+test('validateSelectedTable enforces table presence and rejects reserved/cleaning tables', () => {
+  assert.deepEqual(validateSelectedTable(null), {
+    valid: false,
+    error: 'Please select your table number to continue.',
+  });
+  assert.deepEqual(validateSelectedTable({ id: 't1', number: 1, status: 'reserved' }), {
+    valid: false,
+    error: 'This table is not accepting orders right now.',
+  });
+  assert.deepEqual(validateSelectedTable({ id: 't2', number: 2, status: 'cleaning' }), {
+    valid: false,
+    error: 'This table is not accepting orders right now.',
+  });
+  assert.deepEqual(validateSelectedTable({ id: 't3', number: 3, status: 'free' }), {
+    valid: true,
+  });
+  assert.deepEqual(validateSelectedTable({ id: 't4', number: 4, status: 'occupied' }), {
+    valid: true,
+  });
+});
+
+test('filterPublicTables filters by section and search query', () => {
+  const sample = [
+    { id: '1', number: 1, name: 'Window Two-Top', section: 'Main Dining' },
+    { id: '2', number: 9, name: 'Courtyard Cedar', section: 'Patio' },
+    { id: '3', number: 12, name: 'Chef Counter', section: 'Bar' },
+  ];
+  assert.equal(filterPublicTables(sample, { section: 'Patio' }).length, 1);
+  assert.equal(filterPublicTables(sample, { search: '12' })[0].id, '3');
+  assert.equal(filterPublicTables(sample, { search: 'window' })[0].id, '1');
 });

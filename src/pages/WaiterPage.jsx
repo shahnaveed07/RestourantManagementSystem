@@ -22,6 +22,7 @@ import {
   formatElapsed,
   formatOrderLocation,
   getElapsedMinutes,
+  getOrderSourceMeta,
   ORDER_STATUS_LABEL,
   TABLE_STATUS_LABEL,
 } from '../utils/format';
@@ -60,7 +61,8 @@ export function WaiterPage() {
       setCategories(menu.categories);
       setMenuItems(menu.items.filter((m) => m.isAvailable));
       if (!selectedTableId && tbls.length > 0) {
-        setSelectedTableId(tbls[0].id);
+        const orderable = tbls.find((t) => t.status === 'free' || t.status === 'occupied');
+        setSelectedTableId((orderable || tbls[0]).id);
       }
     } catch (err) {
       toast.error(err.message);
@@ -106,6 +108,19 @@ export function WaiterPage() {
     try {
       await api.updateOrderStatus(order.id, 'served');
       toast.success(`Marked ${order.orderNumber} (${formatOrderLocation(order)}) as Served`);
+      fetchAll();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleMarkTableFree = async (table) => {
+    setBusyId(table.id);
+    try {
+      await api.updateTableStatus(table.id, 'free');
+      toast.success(`Table ${table.number} confirmed Free`);
       fetchAll();
     } catch (err) {
       toast.error(err.message);
@@ -301,11 +316,17 @@ export function WaiterPage() {
                       className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-emerald-50/35"
                     >
                       <div>
-                        <div className="flex items-center gap-2 text-sm">
+                        <div className="flex flex-wrap items-center gap-1.5 text-sm">
                           <span className="font-mono font-bold text-slate-900">
                             {formatOrderLocation(order)}
                           </span>
-                          <span className="text-slate-400">·</span>
+                          <span
+                            className={`px-1.5 py-0.5 rounded border text-[10px] font-semibold ${
+                              getOrderSourceMeta(order.source).className
+                            }`}
+                          >
+                            {getOrderSourceMeta(order.source).label}
+                          </span>
                           <span className="font-mono text-xs text-slate-500">{order.orderNumber}</span>
                         </div>
                         <p className="text-xs text-slate-700 mt-1">
@@ -340,8 +361,16 @@ export function WaiterPage() {
                   {inProgressOrders.map((order) => (
                     <div key={order.id} className="p-4 flex items-center justify-between gap-3 text-xs">
                       <div className="min-w-0">
-                        <p className="font-semibold text-slate-900">
-                          {formatOrderLocation(order)} · <span className="font-mono">{order.orderNumber}</span>
+                        <p className="font-semibold text-slate-900 flex flex-wrap items-center gap-1.5">
+                          <span>{formatOrderLocation(order)}</span>
+                          <span
+                            className={`px-1.5 py-0.5 rounded border text-[10px] font-semibold ${
+                              getOrderSourceMeta(order.source).className
+                            }`}
+                          >
+                            {getOrderSourceMeta(order.source).label}
+                          </span>
+                          <span className="font-mono text-slate-500">{order.orderNumber}</span>
                         </p>
                         <p className="text-slate-600 truncate mt-0.5">
                           {order.items.map((i) => `${i.qty}× ${i.name}`).join(', ')}
@@ -390,16 +419,31 @@ export function WaiterPage() {
                   </div>
                   <p className="text-[11px] text-slate-500 truncate">{t.section}</p>
                   <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-200/60">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedTableId(t.id);
-                        setManualOpen(true);
-                      }}
-                      className="min-h-[44px] px-1.5 text-xs font-semibold text-teal-800 hover:underline inline-flex items-center"
-                    >
-                      + Order
-                    </button>
+                    {t.status === 'cleaning' ? (
+                      <button
+                        type="button"
+                        disabled={busyId === t.id}
+                        onClick={() => handleMarkTableFree(t)}
+                        className="min-h-[44px] px-2.5 rounded-lg bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 inline-flex items-center"
+                      >
+                        Mark Free
+                      </button>
+                    ) : t.status === 'reserved' ? (
+                      <span className="min-h-[44px] px-1.5 text-[11px] font-medium text-amber-800 inline-flex items-center">
+                        Reserved
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedTableId(t.id);
+                          setManualOpen(true);
+                        }}
+                        className="min-h-[44px] px-1.5 text-xs font-semibold text-teal-800 hover:underline inline-flex items-center"
+                      >
+                        + Order
+                      </button>
+                    )}
                     {(t.openOrderCount || 0) > 0 && (
                       <Link
                         to={`/billing?tableId=${t.id}`}
@@ -458,11 +502,15 @@ export function WaiterPage() {
                     onChange={(e) => setSelectedTableId(e.target.value)}
                     className="w-full min-h-[44px] px-3 py-2.5 rounded-lg border border-slate-300 text-base sm:text-sm bg-white"
                   >
-                    {tables.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        Table {t.number} — {t.name} ({TABLE_STATUS_LABEL[t.status]})
-                      </option>
-                    ))}
+                    {tables.map((t) => {
+                      const blocked = t.status === 'reserved' || t.status === 'cleaning';
+                      return (
+                        <option key={t.id} value={t.id} disabled={blocked}>
+                          Table {t.number} — {t.name} ({TABLE_STATUS_LABEL[t.status]}
+                          {blocked ? ' · Not accepting orders' : ''})
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
 

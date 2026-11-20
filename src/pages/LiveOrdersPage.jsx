@@ -5,7 +5,13 @@ import { Clock, Search, XCircle, ArrowRight } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { api } from '../api/client';
 import { useSocket } from '../context/SocketContext';
-import { formatCurrency, formatElapsed, formatOrderLocation } from '../utils/format';
+import {
+  formatCurrency,
+  formatElapsed,
+  formatOrderLocation,
+  getOrderSourceMeta,
+  ORDER_STATUS_LABEL,
+} from '../utils/format';
 
 const COLUMNS = [
   {
@@ -70,11 +76,18 @@ export function LiveOrdersPage() {
   useEffect(() => {
     if (!socket) return;
 
-    const onCreated = (order) => {
+    const normalizeSocketOrder = (raw) => ({
+      ...raw,
+      id: raw.id || raw.orderId,
+    });
+
+    const onCreated = (raw) => {
+      const order = normalizeSocketOrder(raw);
       setOrders((prev) => (prev.some((o) => o.id === order.id) ? prev : [order, ...prev]));
     };
 
-    const onUpdated = (order) => {
+    const onUpdated = (raw) => {
+      const order = normalizeSocketOrder(raw);
       setOrders((prev) => {
         if (order.status === 'paid' || order.status === 'cancelled') {
           return prev.filter((o) => o.id !== order.id);
@@ -84,8 +97,9 @@ export function LiveOrdersPage() {
       });
     };
 
-    const onCancelled = (order) => {
-      setOrders((prev) => prev.filter((o) => o.id !== order.id));
+    const onCancelled = (raw) => {
+      const id = raw.id || raw.orderId;
+      setOrders((prev) => prev.filter((o) => o.id !== id));
     };
 
     socket.on('order:created', onCreated);
@@ -119,9 +133,10 @@ export function LiveOrdersPage() {
   const filtered = orders.filter((o) => {
     const q = search.trim().toLowerCase();
     if (!q) return true;
+    const tblNum = o.tableNumberSnapshot ?? o.tableNumber ?? '';
     return (
       o.orderNumber.toLowerCase().includes(q) ||
-      `table ${o.tableNumber}`.includes(q) ||
+      `table ${tblNum}`.includes(q) ||
       o.items.some((i) => i.name.toLowerCase().includes(q))
     );
   });
@@ -226,6 +241,7 @@ export function LiveOrdersPage() {
                     {colOrders.map((order) => {
                       const mins = (nowMs - new Date(order.createdAt).getTime()) / 60000;
                       const late = mins >= 15 && col.key !== 'served';
+                      const srcMeta = getOrderSourceMeta(order.source);
 
                       return (
                         <article
@@ -236,16 +252,18 @@ export function LiveOrdersPage() {
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div>
-                              <h3 className="text-sm font-bold text-slate-900">
-                                {formatOrderLocation(order)}
-                              </h3>
-                              <p className="text-[11px] text-slate-500 font-mono">
-                                {order.orderNumber} ·{' '}
-                                {order.source === 'guest_qr'
-                                  ? 'QR'
-                                  : order.source === 'customer_web'
-                                    ? 'Online'
-                                    : 'Staff'}
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <h3 className="text-sm font-bold text-slate-900">
+                                  {formatOrderLocation(order)}
+                                </h3>
+                                <span
+                                  className={`px-1.5 py-0.5 rounded border text-[10px] font-semibold ${srcMeta.className}`}
+                                >
+                                  {srcMeta.label}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-slate-500 font-mono mt-0.5">
+                                {order.orderNumber} · {ORDER_STATUS_LABEL[order.status] || order.status}
                               </p>
                             </div>
                             <div className="text-right">

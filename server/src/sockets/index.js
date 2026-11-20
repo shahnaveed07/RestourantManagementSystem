@@ -2,6 +2,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
 import { repo } from '../db/repository.js';
+import { buildOrderCreatedSocketPayload } from '../services/orderCalculator.js';
 
 let ioInstance = null;
 
@@ -21,26 +22,34 @@ function parseCookieHeader(cookieHeader) {
 
 const STAFF_ROLES = new Set(['admin', 'manager', 'waiter', 'kitchen']);
 
-async function authenticateStaffSocket(socket, token) {
+async function authenticateSocketUser(socket, token) {
   if (!token || typeof token !== 'string') return false;
   try {
     const decoded = jwt.verify(token, env.jwtSecret);
     const user = await repo.findUserById(decoded.userId);
-    if (!user || !user.isActive || !STAFF_ROLES.has(user.role)) {
+    if (!user || !user.isActive) {
       return false;
     }
-    socket.join('restaurant:main');
-    socket.join(`role:${user.role}`);
-    if (user.role === 'admin') {
-      socket.join('role:manager');
-      socket.join('role:waiter');
-      socket.join('role:kitchen');
-    } else if (user.role === 'manager') {
-      socket.join('role:waiter');
-      socket.join('role:kitchen');
+    if (STAFF_ROLES.has(user.role)) {
+      socket.join('restaurant:main');
+      socket.join(`role:${user.role}`);
+      if (user.role === 'admin') {
+        socket.join('role:manager');
+        socket.join('role:waiter');
+        socket.join('role:kitchen');
+      } else if (user.role === 'manager') {
+        socket.join('role:waiter');
+        socket.join('role:kitchen');
+      }
+      socket.emit('socket:ready', { scope: 'staff', role: user.role });
+      return true;
     }
-    socket.emit('socket:ready', { scope: 'staff', role: user.role });
-    return true;
+    if (user.role === 'customer') {
+      socket.join(`customer:${user.id}`);
+      socket.emit('socket:ready', { scope: 'customer', userId: user.id });
+      return true;
+    }
+    return false;
   } catch {
     return false;
   }
@@ -59,11 +68,11 @@ export function initSocketServer(httpServer) {
     const auth = socket.handshake.auth || {};
 
     // Public storefront or QR guest menu room
-    if (auth.mode === 'guest' || auth.qrToken) {
+    if (auth.mode === 'guest' || auth.qrToken || auth.tableId) {
       socket.join('guests:menu');
     }
 
-    // Guest room join (validated strictly against table qrToken)
+    // Guest room join (validated strictly against table qrToken or tableId)
     if (auth.qrToken) {
       const table = await repo.findTableByQrToken(auth.qrToken);
       if (table) {
@@ -71,18 +80,28 @@ export function initSocketServer(httpServer) {
         socket.join('guests:menu');
         socket.emit('socket:ready', { scope: 'guest', tableId: table.id });
       }
+    } else if (auth.tableId) {
+      const table = await repo.findTableById(String(auth.tableId));
+      if (table) {
+        socket.join(`table:${table.id}`);
+        socket.join('guests:menu');
+      }
     }
 
-    // Staff room join (validated via JWT + active staff DB check)
+    // Authenticated user room join (staff or customer via JWT)
     const cookies = parseCookieHeader(socket.handshake.headers.cookie);
     const jwtToken = auth.token || cookies.passline_access;
     if (jwtToken) {
-      await authenticateStaffSocket(socket, jwtToken);
+      await authenticateSocketUser(socket, jwtToken);
     }
 
-    // Allow dynamic room joining if a staff user logs in after socket connects
+    // Allow dynamic room joining if a user logs in after socket connects
     socket.on('staff:authenticate', async (token) => {
-      await authenticateStaffSocket(socket, token);
+      await authenticateSocketUser(socket, token);
+    });
+
+    socket.on('customer:authenticate', async (token) => {
+      await authenticateSocketUser(socket, token);
     });
 
     socket.on('guest:joinTable', async (qrToken) => {
@@ -99,6 +118,20 @@ export function initSocketServer(httpServer) {
         socket.emit('socket:ready', { scope: 'guest', tableId: table.id });
       }
     });
+
+    socket.on('guest:watchTable', async (tableId) => {
+      if (!tableId) return;
+      const table = await repo.findTableById(String(tableId));
+      if (table) {
+        for (const room of socket.rooms) {
+          if (room.startsWith('table:') && room !== `table:${table.id}`) {
+            socket.leave(room);
+          }
+        }
+        socket.join(`table:${table.id}`);
+        socket.join('guests:menu');
+      }
+    });
   });
 
   return ioInstance;
@@ -107,20 +140,47 @@ export function initSocketServer(httpServer) {
 export const socketEmitter = {
   orderCreated(order) {
     if (!ioInstance) return;
-    ioInstance.to('restaurant:main').emit('order:created', order);
-    ioInstance.to(`table:${order.tableId}`).emit('order:created', order);
+    const payload = buildOrderCreatedSocketPayload(order);
+    ioInstance
+      .to('role:manager')
+      .to('role:waiter')
+      .to('role:kitchen')
+      .to('restaurant:main')
+      .emit('order:created', payload);
+    ioInstance.to(`table:${payload.tableId}`).emit('order:created', payload);
+    if (order.customerId) {
+      ioInstance.to(`customer:${order.customerId}`).emit('order:created', payload);
+    }
   },
 
   orderUpdated(order) {
     if (!ioInstance) return;
-    ioInstance.to('restaurant:main').emit('order:updated', order);
-    ioInstance.to(`table:${order.tableId}`).emit('order:updated', order);
+    const payload = buildOrderCreatedSocketPayload(order);
+    ioInstance
+      .to('role:manager')
+      .to('role:waiter')
+      .to('role:kitchen')
+      .to('restaurant:main')
+      .emit('order:updated', payload);
+    ioInstance.to(`table:${payload.tableId}`).emit('order:updated', payload);
+    if (order.customerId) {
+      ioInstance.to(`customer:${order.customerId}`).emit('order:updated', payload);
+    }
   },
 
   orderCancelled(order) {
     if (!ioInstance) return;
-    ioInstance.to('restaurant:main').emit('order:cancelled', order);
-    ioInstance.to(`table:${order.tableId}`).emit('order:cancelled', order);
+    const payload = buildOrderCreatedSocketPayload(order);
+    ioInstance
+      .to('role:manager')
+      .to('role:waiter')
+      .to('role:kitchen')
+      .to('restaurant:main')
+      .emit('order:cancelled', payload);
+    ioInstance.to(`table:${payload.tableId}`).emit('order:cancelled', payload);
+    if (order.customerId) {
+      ioInstance.to(`customer:${order.customerId}`).emit('order:cancelled', payload);
+    }
   },
 
   callCreated(call) {

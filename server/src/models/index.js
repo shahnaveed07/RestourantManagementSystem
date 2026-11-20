@@ -29,6 +29,7 @@ const tableSchema = new Schema(
     },
     qrToken: { type: String, required: true, unique: true, index: true },
     currentSessionId: { type: String, default: null },
+    isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
@@ -82,8 +83,9 @@ const orderItemSchema = new Schema(
 const orderSchema = new Schema(
   {
     orderNumber: { type: String, required: true },
-    tableId: { type: String, required: true, index: true },
+    tableId: { type: Schema.Types.ObjectId, ref: 'Table', required: true, index: true },
     tableNumber: { type: Number, required: true },
+    tableNumberSnapshot: { type: Number, required: true },
     tableName: { type: String, required: true },
     sessionId: { type: String, required: true, index: true },
     items: { type: [orderItemSchema], required: true },
@@ -97,8 +99,8 @@ const orderSchema = new Schema(
       default: 'pending',
       index: true,
     },
-    source: { type: String, enum: ['guest_qr', 'staff', 'customer_web'], default: 'guest_qr' },
-    orderType: { type: String, enum: ['dine_in', 'pickup'], default: 'dine_in' },
+    source: { type: String, enum: ['qr', 'home', 'staff'], default: 'qr', required: true },
+    orderType: { type: String, enum: ['dine_in'], default: 'dine_in' },
     customerId: { type: String, default: null, index: true },
     customerName: { type: String, default: null },
     waiterId: { type: String, default: null },
@@ -115,6 +117,8 @@ const orderSchema = new Schema(
   },
   { timestamps: true }
 );
+
+orderSchema.index({ tableId: 1, status: 1 });
 
 // 6. ServiceCall Model (indexed on status)
 const serviceCallSchema = new Schema(

@@ -14,7 +14,7 @@ import {
   X,
   RefreshCw,
 } from 'lucide-react';
-import { api } from '../api/client';
+import { api, getStoredToken } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { StorefrontNavbar } from '../components/StorefrontNavbar';
@@ -26,6 +26,7 @@ import {
   formatCurrency,
   formatOrderLocation,
   formatTimeShort,
+  getOrderSourceMeta,
   ORDER_STATUS_LABEL,
 } from '../utils/format';
 
@@ -37,6 +38,7 @@ export function HomePage() {
     cart,
     cartCount,
     total,
+    selectedTable,
     setCartOpen,
     addToCart,
     updateQty,
@@ -92,12 +94,22 @@ export function HomePage() {
     }
   }, [searchParams, setSearchParams, setCartOpen]);
 
-  // Real-time menu availability updates so sold-out dishes lock immediately
+  // Real-time menu availability & live customer/table order updates
   useEffect(() => {
+    const token = getStoredToken();
     const s = io(window.location.origin, {
-      auth: { mode: 'guest' },
+      auth: {
+        mode: token ? 'customer' : 'guest',
+        token: token || undefined,
+        tableId: selectedTable?.id || undefined,
+      },
       reconnection: true,
     });
+
+    const onConnect = () => {
+      if (token) s.emit('customer:authenticate', token);
+      if (selectedTable?.id) s.emit('guest:watchTable', selectedTable.id);
+    };
 
     const onAvailabilityChanged = (updatedItem) => {
       setMenuItems((prev) => {
@@ -111,15 +123,47 @@ export function HomePage() {
       loadMenu();
     };
 
+    const onOrderCreated = (order) => {
+      if (!user) return;
+      const oid = order.id || order.orderId;
+      setMyOrders((prev) => (prev.some((o) => o.id === oid) ? prev : [{ ...order, id: oid }, ...prev]));
+    };
+
+    const onOrderUpdated = (order) => {
+      if (!user) return;
+      const oid = order.id || order.orderId;
+      setMyOrders((prev) => {
+        const exists = prev.some((o) => o.id === oid);
+        if (!exists) return prev;
+        return prev.map((o) => (o.id === oid ? { ...o, ...order, id: oid } : o));
+      });
+    };
+
+    const onOrderCancelled = (order) => {
+      if (!user) return;
+      const oid = order.id || order.orderId;
+      setMyOrders((prev) =>
+        prev.map((o) => (o.id === oid ? { ...o, status: 'cancelled' } : o))
+      );
+    };
+
+    s.on('connect', onConnect);
     s.on('menu:itemAvailabilityChanged', onAvailabilityChanged);
     s.on('menu:updated', onMenuUpdated);
+    s.on('order:created', onOrderCreated);
+    s.on('order:updated', onOrderUpdated);
+    s.on('order:cancelled', onOrderCancelled);
 
     return () => {
+      s.off('connect', onConnect);
       s.off('menu:itemAvailabilityChanged', onAvailabilityChanged);
       s.off('menu:updated', onMenuUpdated);
+      s.off('order:created', onOrderCreated);
+      s.off('order:updated', onOrderUpdated);
+      s.off('order:cancelled', onOrderCancelled);
       s.disconnect();
     };
-  }, [loadMenu, syncMenuAvailability]);
+  }, [loadMenu, syncMenuAvailability, user, selectedTable?.id]);
 
   const loadMyOrders = useCallback(async () => {
     if (!user) return;
@@ -215,7 +259,7 @@ export function HomePage() {
                   <ArrowDown className="w-4 h-4" />
                 </a>
                 <span className="text-xs text-slate-300">
-                  Open daily · Dine-in &amp; Counter Pickup
+                  Open daily · Order straight to your dining table
                 </span>
               </div>
             </div>
@@ -583,18 +627,23 @@ export function HomePage() {
                   You have not placed any orders yet.
                 </p>
               ) : (
-                myOrders.map((order) => (
+                myOrders.map((order) => {
+                  const srcMeta = getOrderSourceMeta(order.source);
+                  return (
                   <div
                     key={order.id}
                     className="border border-slate-200 rounded-xl p-4 space-y-2"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <div>
+                      <div className="flex flex-wrap items-center gap-1.5">
                         <span className="text-sm font-mono font-bold text-slate-900">
                           {order.orderNumber}
                         </span>
-                        <span className="text-xs text-slate-500 ml-2">
+                        <span className="text-xs text-slate-500">
                           {formatOrderLocation(order)} · {formatTimeShort(order.createdAt)}
+                        </span>
+                        <span className={`px-1.5 py-0.5 rounded border text-[10px] font-semibold ${srcMeta.className}`}>
+                          {srcMeta.label}
                         </span>
                       </div>
                       <span className="text-xs font-semibold text-teal-800">
@@ -619,7 +668,8 @@ export function HomePage() {
                       <span className="font-mono tabular-nums">{formatCurrency(order.total)}</span>
                     </div>
                   </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

@@ -52,10 +52,30 @@ export const ROLE_HOME_ROUTE = {
 
 export function formatOrderLocation(order) {
   if (!order) return '';
-  if (order.tableNumber && order.tableNumber > 0) {
-    return `Table ${order.tableNumber}`;
+  const num = Number(order.tableNumberSnapshot ?? order.tableNumber ?? 0);
+  if (num > 0) {
+    return `Table ${num}`;
   }
-  return order.tableName || 'Counter Pickup';
+  return order.tableName || 'Table';
+}
+
+export function getOrderSourceMeta(source) {
+  if (source === 'qr' || source === 'guest_qr') {
+    return {
+      label: 'QR',
+      className: 'bg-teal-50 text-teal-800 border-teal-200',
+    };
+  }
+  if (source === 'home' || source === 'customer_web') {
+    return {
+      label: 'Home',
+      className: 'bg-indigo-50 text-indigo-800 border-indigo-200',
+    };
+  }
+  return {
+    label: 'Staff',
+    className: 'bg-slate-100 text-slate-700 border-slate-200',
+  };
 }
 
 export const ORDER_STATUS_LABEL = {

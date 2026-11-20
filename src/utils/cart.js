@@ -1,4 +1,5 @@
 const CART_STORAGE_KEY = 'passline_cart_v1';
+const TABLE_STORAGE_KEY = 'passline_selected_table_v1';
 
 export function roundCurrency(value) {
   return Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
@@ -125,4 +126,82 @@ export function clearStoredCart() {
   } catch {
     // ignore storage errors
   }
+}
+
+export function loadStoredTable() {
+  try {
+    if (typeof localStorage === 'undefined') return null;
+    const raw = localStorage.getItem(TABLE_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (
+      parsed &&
+      typeof parsed === 'object' &&
+      typeof parsed.id === 'string' &&
+      parsed.id.length > 0 &&
+      Number(parsed.number) > 0
+    ) {
+      return parsed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveStoredTable(table) {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    if (!table || !table.id) {
+      localStorage.removeItem(TABLE_STORAGE_KEY);
+      return;
+    }
+    localStorage.setItem(
+      TABLE_STORAGE_KEY,
+      JSON.stringify({
+        id: table.id,
+        number: Number(table.number),
+        name: table.name || `Table ${table.number}`,
+        section: table.section || '',
+        status: table.status || 'free',
+        capacity: Number(table.capacity || 0),
+      })
+    );
+  } catch {
+    // ignore storage quota errors
+  }
+}
+
+export function clearStoredTable() {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    localStorage.removeItem(TABLE_STORAGE_KEY);
+  } catch {
+    // ignore storage errors
+  }
+}
+
+export function validateSelectedTable(table) {
+  if (!table || !table.id || !(Number(table.number) > 0)) {
+    return { valid: false, error: 'Please select your table number to continue.' };
+  }
+  if (table.status === 'reserved' || table.status === 'cleaning') {
+    return { valid: false, error: 'This table is not accepting orders right now.' };
+  }
+  return { valid: true };
+}
+
+export function filterPublicTables(tables, { search = '', section = 'all' } = {}) {
+  const list = Array.isArray(tables) ? tables : [];
+  const q = String(search || '').trim().toLowerCase();
+  return list.filter((t) => {
+    if (section && section !== 'all' && t.section !== section) return false;
+    if (!q) return true;
+    return (
+      String(t.number).includes(q) ||
+      `table ${t.number}`.includes(q) ||
+      String(t.name || '').toLowerCase().includes(q) ||
+      String(t.section || '').toLowerCase().includes(q)
+    );
+  });
 }

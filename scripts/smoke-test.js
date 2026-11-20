@@ -247,6 +247,84 @@ async function run() {
   );
   assert.ok(String(csvRes.payload).startsWith('Order Number,Date,'), 'Expected CSV headers');
 
+  // 9b. Home storefront ordering flow & table status guards
+  const publicTablesRes = await apiRequest('/tables/public', { expectStatus: 200 });
+  const publicTables = publicTablesRes.payload.data;
+  assert.ok(Array.isArray(publicTables) && publicTables.length >= 1, 'Expected public tables');
+  assert.equal('qrToken' in publicTables[0], false, 'Public tables must not expose qrToken');
+
+  // Missing tableId -> 400
+  await apiRequest('/orders', {
+    method: 'POST',
+    token: tokens.customer,
+    body: { source: 'home', items: [{ menuItemId: availableDish.id, qty: 1 }] },
+    expectStatus: 400,
+  });
+
+  // Reserved / cleaning table -> 409
+  const reservedTable = publicTables.find((t) => t.status === 'reserved' || t.status === 'cleaning');
+  if (reservedTable) {
+    await apiRequest('/orders', {
+      method: 'POST',
+      token: tokens.customer,
+      body: {
+        tableId: reservedTable.id,
+        source: 'home',
+        items: [{ menuItemId: availableDish.id, qty: 1 }],
+      },
+      expectStatus: 409,
+    });
+  }
+
+  // Valid Home order on Table 3
+  const homeOrderRes = await apiRequest('/orders', {
+    method: 'POST',
+    token: tokens.customer,
+    body: {
+      tableId: table3.id,
+      source: 'home',
+      items: [{ menuItemId: availableDish.id, qty: 1, notes: 'Home order smoke test' }],
+    },
+    expectStatus: 201,
+  });
+  const homeOrder = homeOrderRes.payload.data;
+  assert.equal(homeOrder.source, 'home');
+  assert.equal(homeOrder.tableId, table3.id);
+  assert.equal(homeOrder.tableNumberSnapshot, table3.number);
+
+  // Serve & settle defaulting to cleaning
+  await apiRequest(`/orders/${homeOrder.id}/status`, {
+    method: 'PATCH',
+    token: tokens.kitchen,
+    body: { status: 'accepted' },
+    expectStatus: 200,
+  });
+  await apiRequest(`/orders/${homeOrder.id}/status`, {
+    method: 'PATCH',
+    token: tokens.kitchen,
+    body: { status: 'preparing' },
+    expectStatus: 200,
+  });
+  await apiRequest(`/orders/${homeOrder.id}/status`, {
+    method: 'PATCH',
+    token: tokens.kitchen,
+    body: { status: 'ready' },
+    expectStatus: 200,
+  });
+  await apiRequest(`/orders/${homeOrder.id}/status`, {
+    method: 'PATCH',
+    token: tokens.waiter,
+    body: { status: 'served' },
+    expectStatus: 200,
+  });
+  const settleHomeRes = await apiRequest(`/billing/table/${table3.id}/pay`, {
+    method: 'POST',
+    token: tokens.waiter,
+    body: { method: 'card', amount: homeOrder.total },
+    expectStatus: 200,
+  });
+  assert.equal(settleHomeRes.payload.data.table.status, 'cleaning');
+
   // 10. Restore clean seed state
   await apiRequest('/demo/reset', { method: 'POST', token: tokens.admin, expectStatus: 200 });
 

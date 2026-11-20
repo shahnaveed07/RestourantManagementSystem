@@ -4,7 +4,7 @@ import { Clock, Check, Flame, CheckCheck } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { api } from '../api/client';
 import { useSocket } from '../context/SocketContext';
-import { formatElapsed, formatOrderLocation } from '../utils/format';
+import { formatElapsed, formatOrderLocation, getOrderSourceMeta } from '../utils/format';
 
 export function KitchenPage() {
   const { socket, syncVersion } = useSocket();
@@ -36,7 +36,8 @@ export function KitchenPage() {
   useEffect(() => {
     if (!socket) return;
 
-    const upsert = (order) => {
+    const upsert = (raw) => {
+      const order = { ...raw, id: raw.id || raw.orderId };
       setOrders((prev) => {
         if (!['pending', 'accepted', 'preparing'].includes(order.status)) {
           return prev.filter((o) => o.id !== order.id);
@@ -47,8 +48,9 @@ export function KitchenPage() {
       });
     };
 
-    const remove = (order) => {
-      setOrders((prev) => prev.filter((o) => o.id !== order.id));
+    const remove = (raw) => {
+      const id = raw.id || raw.orderId;
+      setOrders((prev) => prev.filter((o) => o.id !== id));
     };
 
     socket.on('order:created', upsert);
@@ -148,20 +150,16 @@ export function KitchenPage() {
                   }`}
                 >
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <h2 className="text-lg font-bold text-white font-mono">
                         {formatOrderLocation(order)}
                       </h2>
+                      <span className="px-1.5 py-0.5 rounded bg-slate-950/70 border border-slate-600 text-[10px] font-semibold text-teal-300">
+                        {getOrderSourceMeta(order.source).label}
+                      </span>
                       <span className="text-xs font-mono text-slate-300">{order.orderNumber}</span>
                     </div>
-                    <p className="text-xs text-slate-400 capitalize">
-                      {order.status} ·{' '}
-                      {order.source === 'guest_qr'
-                        ? 'QR Order'
-                        : order.source === 'customer_web'
-                          ? 'Online Order'
-                          : 'Staff Order'}
-                    </p>
+                    <p className="text-xs text-slate-400 capitalize mt-0.5">{order.status}</p>
                   </div>
 
                   <div className="text-right">

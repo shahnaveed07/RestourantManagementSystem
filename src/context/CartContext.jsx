@@ -10,6 +10,9 @@ import {
   loadStoredCart,
   saveStoredCart,
   clearStoredCart,
+  loadStoredTable,
+  saveStoredTable,
+  clearStoredTable,
 } from '../utils/cart';
 
 const CartContext = createContext(null);
@@ -17,12 +20,22 @@ const CartContext = createContext(null);
 export function CartProvider({ children }) {
   const { config } = useAuth();
   const [cart, setCart] = useState(() => loadStoredCart());
+  const [selectedTable, setSelectedTable] = useState(() => loadStoredTable());
   const [cartOpen, setCartOpen] = useState(false);
 
-  // Sync cart changes to localStorage so it survives auth redirects or reloads
+  // Sync cart and selectedTable changes to localStorage so they survive auth redirects or reloads
   useEffect(() => {
     saveStoredCart(cart);
   }, [cart]);
+
+  useEffect(() => {
+    saveStoredTable(selectedTable);
+  }, [selectedTable]);
+
+  const clearSelectedTable = useCallback(() => {
+    setSelectedTable(null);
+    clearStoredTable();
+  }, []);
 
   const addToCart = useCallback((item) => {
     if (!item || !item.isAvailable) {
@@ -63,6 +76,9 @@ export function CartProvider({ children }) {
     <CartContext.Provider
       value={{
         cart,
+        selectedTable,
+        setSelectedTable,
+        clearSelectedTable,
         cartOpen,
         setCartOpen,
         addToCart,

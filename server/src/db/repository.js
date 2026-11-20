@@ -48,6 +48,8 @@ function normalizeDoc(raw) {
     const val = obj[key];
     if (val instanceof Date) {
       obj[key] = val.toISOString();
+    } else if (val instanceof mongoose.Types.ObjectId || val?._bsontype === 'ObjectId') {
+      obj[key] = String(val);
     }
   }
   return obj;
@@ -94,10 +96,30 @@ class Repository {
     if (fs.existsSync(DATA_FILE)) {
       try {
         const parsed = JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8'));
-        this.store = {
+        const nextStore = {
           ...emptyStore(),
           ...parsed,
         };
+        if (Array.isArray(nextStore.tables)) {
+          nextStore.tables = nextStore.tables.map((t) => ({
+            ...t,
+            isActive: t.isActive !== false,
+          }));
+        }
+        if (Array.isArray(nextStore.orders)) {
+          nextStore.orders = nextStore.orders.map((o) => ({
+            ...o,
+            tableNumberSnapshot: o.tableNumberSnapshot ?? o.tableNumber ?? 0,
+            source:
+              o.source === 'guest_qr'
+                ? 'qr'
+                : o.source === 'customer_web'
+                  ? 'home'
+                  : o.source || 'qr',
+            orderType: 'dine_in',
+          }));
+        }
+        this.store = nextStore;
         return;
       } catch {
         this.store = emptyStore();
@@ -225,26 +247,44 @@ class Repository {
   // ---- TABLES ----
   async listTables() {
     if (this.useMongo) {
-      const rows = await TableModel.find().sort({ number: 1 }).lean();
+      const rows = await TableModel.find({ isActive: { $ne: false } }).sort({ number: 1 }).lean();
       return rows.map((r) => normalizeDoc(r));
     }
-    return [...this.store.tables].sort((a, b) => a.number - b.number);
+    return [...this.store.tables]
+      .filter((t) => t.isActive !== false)
+      .sort((a, b) => a.number - b.number);
   }
 
   async findTableById(id) {
+    if (!id) return null;
     if (this.useMongo) {
+      if (!mongoose.isValidObjectId(id)) return null;
       const row = await TableModel.findById(id).lean();
+      return row && row.isActive !== false ? normalizeDoc(row) : null;
+    }
+    const found = this.store.tables.find((t) => t.id === id);
+    return found && found.isActive !== false ? found : null;
+  }
+
+  async findTableByNumber(number) {
+    const num = Number(number);
+    if (!Number.isInteger(num) || num < 1) return null;
+    if (this.useMongo) {
+      const row = await TableModel.findOne({ number: num, isActive: { $ne: false } }).lean();
       return row ? normalizeDoc(row) : null;
     }
-    return this.store.tables.find((t) => t.id === id) || null;
+    const found = this.store.tables.find((t) => t.number === num);
+    return found && found.isActive !== false ? found : null;
   }
 
   async findTableByQrToken(qrToken) {
+    if (!qrToken) return null;
     if (this.useMongo) {
-      const row = await TableModel.findOne({ qrToken }).lean();
+      const row = await TableModel.findOne({ qrToken, isActive: { $ne: false } }).lean();
       return row ? normalizeDoc(row) : null;
     }
-    return this.store.tables.find((t) => t.qrToken === qrToken) || null;
+    const found = this.store.tables.find((t) => t.qrToken === qrToken);
+    return found && found.isActive !== false ? found : null;
   }
 
   async createTable(data) {

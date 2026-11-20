@@ -105,6 +105,7 @@ export async function seedDatabase(forceReset = false) {
   for (const spec of tableSpecs) {
     const t = await repo.createTable({
       ...spec,
+      isActive: true,
       currentSessionId: spec.status === 'occupied' ? `sess-demo-t${spec.number}` : null,
     });
     tables.push(t);
@@ -539,6 +540,7 @@ export async function seedDatabase(forceReset = false) {
       orderNumber,
       tableId: table.id,
       tableNumber: table.number,
+      tableNumberSnapshot: table.number,
       tableName: table.name,
       sessionId: `past-sess-${orderNumber}`,
       items,
@@ -547,7 +549,8 @@ export async function seedDatabase(forceReset = false) {
       discount: 0,
       total,
       status: 'paid',
-      source: 'guest_qr',
+      source: tplIdx % 2 === 0 ? 'qr' : 'home',
+      orderType: 'dine_in',
       waiterId: waiterUser.id,
       waiterName: waiterUser.name,
       statusTimestamps: {
@@ -586,7 +589,7 @@ export async function seedDatabase(forceReset = false) {
       table: tables[0],
       minsAgo: 3,
       status: 'pending',
-      source: 'guest_qr',
+      source: 'qr',
       items: [
         { item: findItem('Burrata'), qty: 1, notes: 'Dressing on the side', status: 'pending' },
         { item: findItem('Tagliatelle'), qty: 1, notes: 'Extra parmesan', status: 'pending' },
@@ -597,7 +600,7 @@ export async function seedDatabase(forceReset = false) {
       table: tables[1],
       minsAgo: 11,
       status: 'preparing',
-      source: 'guest_qr',
+      source: 'home',
       items: [
         { item: findItem('Salmon'), qty: 2, notes: 'Medium-rare', status: 'preparing' },
         { item: findItem('Margherita'), qty: 1, notes: 'Well done crust', status: 'ready' },
@@ -635,6 +638,7 @@ export async function seedDatabase(forceReset = false) {
       orderNumber,
       tableId: spec.table.id,
       tableNumber: spec.table.number,
+      tableNumberSnapshot: spec.table.number,
       tableName: spec.table.name,
       sessionId: spec.table.currentSessionId || `sess-demo-t${spec.table.number}`,
       items,
@@ -644,6 +648,7 @@ export async function seedDatabase(forceReset = false) {
       total,
       status: spec.status,
       source: spec.source,
+      orderType: 'dine_in',
       waiterId: waiterUser.id,
       waiterName: waiterUser.name,
       statusTimestamps: {

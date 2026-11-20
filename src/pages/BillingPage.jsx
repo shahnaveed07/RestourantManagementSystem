@@ -6,7 +6,7 @@ import { Layout } from '../components/Layout';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
-import { formatCurrency, formatDateTime } from '../utils/format';
+import { formatCurrency, formatDateTime, getOrderSourceMeta } from '../utils/format';
 import { BrandLogo } from '../components/BrandLogo';
 
 export function BillingPage() {
@@ -21,7 +21,7 @@ export function BillingPage() {
   const [discountPercent, setDiscountPercent] = useState('0');
   const [flatDiscount, setFlatDiscount] = useState('0');
   const [method, setMethod] = useState('card');
-  const [nextTableStatus, setNextTableStatus] = useState('free');
+  const [nextTableStatus, setNextTableStatus] = useState('cleaning');
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
 
@@ -267,7 +267,16 @@ export function BillingPage() {
                 {activeTab.orders.map((order) => (
                   <div key={order.id} className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs text-slate-500">
-                      <span className="font-mono font-semibold">{order.orderNumber}</span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="font-mono font-semibold text-slate-700">{order.orderNumber}</span>
+                        <span
+                          className={`px-1.5 py-0.5 rounded border text-[10px] font-semibold ${
+                            getOrderSourceMeta(order.source).className
+                          }`}
+                        >
+                          {getOrderSourceMeta(order.source).label}
+                        </span>
+                      </span>
                       <span>{formatDateTime(order.createdAt)}</span>
                     </div>
                     <div className="divide-y divide-slate-100 border border-slate-100 rounded-lg">

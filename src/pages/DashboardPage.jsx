@@ -21,6 +21,7 @@ import {
   formatElapsed,
   formatOrderLocation,
   getElapsedMinutes,
+  getOrderSourceMeta,
   CALL_TYPE_LABEL,
   ORDER_STATUS_LABEL,
 } from '../utils/format';
@@ -278,41 +279,42 @@ export function DashboardPage() {
                 </div>
               ) : (
                 <div className="divide-y divide-slate-100">
-                  {liveOrders.slice(0, 6).map((order) => (
-                    <div
-                      key={order.id}
-                      className="px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3 hover:bg-slate-50"
-                    >
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
-                          <span className="font-mono font-bold text-slate-900">
-                            {formatOrderLocation(order)}
+                  {liveOrders.slice(0, 6).map((order) => {
+                    const srcMeta = getOrderSourceMeta(order.source);
+                    return (
+                      <div
+                        key={order.id}
+                        className="px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3 hover:bg-slate-50"
+                      >
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                            <span className="font-mono font-bold text-slate-900">
+                              {formatOrderLocation(order)}
+                            </span>
+                            <span
+                              className={`px-1.5 py-0.5 rounded border text-[10px] font-semibold ${srcMeta.className}`}
+                            >
+                              {srcMeta.label}
+                            </span>
+                            <span className="font-mono text-xs text-slate-500">
+                              {order.orderNumber}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-600 truncate mt-0.5">
+                            {order.items.map((i) => `${i.qty}× ${i.name}`).join(', ')}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="text-xs font-semibold text-teal-800 block">
+                            {ORDER_STATUS_LABEL[order.status]}
                           </span>
-                          <span className="text-slate-400">·</span>
-                          <span className="font-mono text-xs text-slate-500">{order.orderNumber}</span>
-                          <span className="text-slate-400">·</span>
-                          <span className="text-xs text-slate-500">
-                            {order.source === 'guest_qr'
-                              ? 'QR Guest'
-                              : order.source === 'customer_web'
-                                ? 'Online'
-                                : 'Staff'}
+                          <span className="text-xs font-mono text-slate-500 tabular-nums">
+                            {formatElapsed(order.createdAt, nowMs)} · {formatCurrency(order.total)}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-600 truncate mt-0.5">
-                          {order.items.map((i) => `${i.qty}× ${i.name}`).join(', ')}
-                        </p>
                       </div>
-                      <div className="text-right shrink-0">
-                        <span className="text-xs font-semibold text-teal-800 block">
-                          {ORDER_STATUS_LABEL[order.status]}
-                        </span>
-                        <span className="text-xs font-mono text-slate-500 tabular-nums">
-                          {formatElapsed(order.createdAt, nowMs)} · {formatCurrency(order.total)}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

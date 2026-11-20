@@ -25,6 +25,10 @@ import {
   sanitizeText,
   escapeCsvCell,
   roundCurrency,
+  validateTableForOrder,
+  resolveOrderSessionId,
+  resolveOrderSource,
+  toPublicTableSummary,
 } from '../services/orderCalculator.js';
 import {
   normalizeIdentifier,
@@ -175,7 +179,7 @@ const guestCallLimiter = rateLimit({
 
 const guestOrderLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
-  max: 25,
+  max: 10,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => {
@@ -186,7 +190,22 @@ const guestOrderLimiter = rateLimit({
   message: {
     success: false,
     data: null,
-    message: 'Rate limit reached: too many orders from this session. Please wait a moment.',
+    message: 'Rate limit reached: max 10 orders per 10 minutes per table session.',
+  },
+});
+
+const customerOrderLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => ['admin', 'manager', 'waiter'].includes(req.user?.role),
+  keyGenerator: (req) => `cust-order:${req.user?.userId || extractClientIp(req)}`,
+  validate: { forwardedHeader: false },
+  message: {
+    success: false,
+    data: null,
+    message: 'Rate limit reached: maximum 10 orders per 10 minutes per customer.',
   },
 });
 
@@ -222,6 +241,85 @@ function sanitizeAuthUser(user) {
     isDemo: Boolean(user.isDemo),
     lastLoginAt: user.lastLoginAt || null,
   };
+}
+
+class OrderValidationError extends Error {
+  constructor(message, status = 400) {
+    super(message);
+    this.status = status;
+  }
+}
+
+async function placeTableOrder({
+  table,
+  items,
+  source,
+  requestedSessionId = '',
+  customerId = null,
+  customerName = null,
+  waiterId = null,
+  waiterName = null,
+}) {
+  const tableCheck = validateTableForOrder(table);
+  if (!tableCheck.ok) {
+    throw new OrderValidationError(tableCheck.message, tableCheck.status);
+  }
+
+  const allMenu = await repo.listMenuItems(true);
+  const menuMap = new Map(allMenu.map((m) => [m.id, m]));
+
+  let totals;
+  try {
+    totals = computeAuthoritativeOrder(items, menuMap, env.taxRate);
+  } catch (err) {
+    throw new OrderValidationError(err.message, 400);
+  }
+
+  const nowIso = new Date().toISOString();
+  const orderNumber = await repo.nextOrderNumber();
+  const sessionId = resolveOrderSessionId(table, requestedSessionId, Date.now());
+
+  const order = await repo.createOrder({
+    orderNumber,
+    tableId: table.id,
+    tableNumber: table.number,
+    tableNumberSnapshot: table.number,
+    tableName: table.name,
+    sessionId,
+    items: totals.items,
+    subtotal: totals.subtotal,
+    tax: totals.tax,
+    discount: 0,
+    total: totals.total,
+    status: 'pending',
+    source,
+    orderType: 'dine_in',
+    customerId,
+    customerName,
+    waiterId,
+    waiterName,
+    statusTimestamps: {
+      pending: nowIso,
+      accepted: null,
+      preparing: null,
+      ready: null,
+      served: null,
+      paid: null,
+      cancelled: null,
+    },
+    createdAt: nowIso,
+    updatedAt: nowIso,
+  });
+
+  const updatedTable = await repo.updateTable(table.id, {
+    status: 'occupied',
+    currentSessionId: sessionId,
+  });
+
+  socketEmitter.orderCreated(order);
+  if (updatedTable) socketEmitter.tableStatusChanged(updatedTable);
+
+  return { order, updatedTable };
 }
 
 // ==========================================
@@ -769,55 +867,19 @@ router.post(
       return sendErr(res, 'Invalid table QR token.', 404);
     }
 
-    const allMenu = await repo.listMenuItems(true);
-    const menuMap = new Map(allMenu.map((m) => [m.id, m]));
-
-    let totals;
     try {
-      totals = computeAuthoritativeOrder(parsed.data.items, menuMap, env.taxRate);
+      const { order } = await placeTableOrder({
+        table,
+        items: parsed.data.items,
+        source: 'qr',
+        requestedSessionId: parsed.data.sessionId,
+        customerId: req.user?.role === 'customer' ? req.user.userId : null,
+        customerName: req.user?.role === 'customer' ? req.user.name : null,
+      });
+      return sendOk(res, order, 'Order placed successfully.', 201);
     } catch (err) {
-      return sendErr(res, err.message, 400);
+      return sendErr(res, err.message, err.status || 400);
     }
-
-    const nowIso = new Date().toISOString();
-    const orderNumber = await repo.nextOrderNumber();
-    const order = await repo.createOrder({
-      orderNumber,
-      tableId: table.id,
-      tableNumber: table.number,
-      tableName: table.name,
-      sessionId: sanitizeText(parsed.data.sessionId),
-      items: totals.items,
-      subtotal: totals.subtotal,
-      tax: totals.tax,
-      discount: 0,
-      total: totals.total,
-      status: 'pending',
-      source: 'guest_qr',
-      waiterId: null,
-      waiterName: null,
-      statusTimestamps: {
-        pending: nowIso,
-        accepted: null,
-        preparing: null,
-        ready: null,
-        served: null,
-        paid: null,
-        cancelled: null,
-      },
-      createdAt: nowIso,
-      updatedAt: nowIso,
-    });
-
-    const updatedTable = await repo.updateTable(table.id, {
-      status: 'occupied',
-      currentSessionId: sanitizeText(parsed.data.sessionId),
-    });
-
-    socketEmitter.orderCreated(order);
-    if (updatedTable) socketEmitter.tableStatusChanged(updatedTable);
-
-    return sendOk(res, order, 'Order placed successfully.', 201);
   })
 );
 
@@ -873,6 +935,29 @@ router.post(
 // TABLES & QR MANAGEMENT
 // ==========================================
 router.get(
+  '/tables/public',
+  asyncHandler(async (_req, res) => {
+    const tables = await repo.listTables();
+    return sendOk(res, tables.map(toPublicTableSummary));
+  })
+);
+
+router.get(
+  '/tables/public/lookup',
+  asyncHandler(async (req, res) => {
+    const num = Number(req.query.number);
+    if (!Number.isInteger(num) || num < 1) {
+      return sendErr(res, 'Table not found', 404);
+    }
+    const table = await repo.findTableByNumber(num);
+    if (!table) {
+      return sendErr(res, 'Table not found', 404);
+    }
+    return sendOk(res, toPublicTableSummary(table));
+  })
+);
+
+router.get(
   '/tables',
   authenticate,
   requireRole('admin', 'manager', 'waiter'),
@@ -922,6 +1007,7 @@ router.post(
         status: 'free',
         qrToken: generateQrToken(parsed.data.number),
         currentSessionId: null,
+        isActive: true,
       });
       await logAudit(req, 'CREATE_TABLE', 'Table', created.id, `Created ${created.name} (#${created.number})`);
       socketEmitter.tableStatusChanged(created);
@@ -1291,7 +1377,8 @@ router.get(
 const createOrderSchema = z.object({
   tableId: z.string().min(1).optional().nullable(),
   qrToken: z.string().min(1).optional().nullable(),
-  orderType: z.enum(['dine_in', 'pickup']).optional(),
+  sessionId: z.string().max(80).optional(),
+  source: z.enum(['qr', 'home', 'staff']).optional(),
   items: z
     .array(
       z.object({
@@ -1307,88 +1394,63 @@ router.post(
   '/orders',
   authenticate,
   requireRole('admin', 'manager', 'waiter', 'customer'),
+  customerOrderLimiter,
   asyncHandler(async (req, res) => {
     const parsed = createOrderSchema.safeParse(req.body);
-    if (!parsed.success) return sendErr(res, 'Select at least one valid menu item.', 400);
+    if (!parsed.success) {
+      return sendErr(res, 'Please select at least one valid menu item.', 400);
+    }
+
+    const rawTableId = typeof parsed.data.tableId === 'string' ? parsed.data.tableId.trim() : '';
+    const rawQrToken = typeof parsed.data.qrToken === 'string' ? parsed.data.qrToken.trim() : '';
+
+    if (!rawQrToken && (!rawTableId || rawTableId === 'pickup')) {
+      return sendErr(res, 'Please select your table number to continue.', 400);
+    }
 
     let table = null;
-    if (parsed.data.qrToken) {
-      table = await repo.findTableByQrToken(String(parsed.data.qrToken).trim());
+    if (rawQrToken) {
+      table = await repo.findTableByQrToken(rawQrToken);
       if (!table) return sendErr(res, 'Invalid table QR token.', 404);
-    } else if (parsed.data.tableId && parsed.data.tableId !== 'pickup') {
-      table = await repo.findTableById(parsed.data.tableId);
+      if (rawTableId && rawTableId !== table.id) {
+        return sendErr(res, 'Table mismatch for QR code.', 400);
+      }
+    } else {
+      table = await repo.findTableById(rawTableId);
       if (!table) return sendErr(res, 'Table not found.', 404);
-    } else if (req.user.role !== 'customer' && parsed.data.orderType !== 'pickup') {
-      return sendErr(res, 'Please select a table or pickup order.', 400);
     }
 
-    const allMenu = await repo.listMenuItems(true);
-    const menuMap = new Map(allMenu.map((m) => [m.id, m]));
-
-    let totals;
-    try {
-      totals = computeAuthoritativeOrder(parsed.data.items, menuMap, env.taxRate);
-    } catch (err) {
-      return sendErr(res, err.message, 400);
-    }
-
-    const nowIso = new Date().toISOString();
-    const orderNumber = await repo.nextOrderNumber();
-    const isStaff = ['admin', 'manager', 'waiter'].includes(req.user.role);
-    const sessionId = table
-      ? table.currentSessionId || `sess-t${table.number}-${Date.now()}`
-      : `web-sess-${req.user.userId}-${Date.now()}`;
-
-    const order = await repo.createOrder({
-      orderNumber,
-      tableId: table ? table.id : 'pickup',
-      tableNumber: table ? table.number : 0,
-      tableName: table ? table.name : 'Counter Pickup',
-      sessionId,
-      items: totals.items,
-      subtotal: totals.subtotal,
-      tax: totals.tax,
-      discount: 0,
-      total: totals.total,
-      status: 'pending',
-      source: parsed.data.qrToken ? 'guest_qr' : isStaff ? 'staff' : 'customer_web',
-      orderType: table ? 'dine_in' : 'pickup',
-      customerId: req.user.role === 'customer' ? req.user.userId : null,
-      customerName: req.user.role === 'customer' ? req.user.name : null,
-      waiterId: isStaff ? req.user.userId : null,
-      waiterName: isStaff ? req.user.name : null,
-      statusTimestamps: {
-        pending: nowIso,
-        accepted: null,
-        preparing: null,
-        ready: null,
-        served: null,
-        paid: null,
-        cancelled: null,
-      },
-      createdAt: nowIso,
-      updatedAt: nowIso,
+    const isStaffRole = ['admin', 'manager', 'waiter'].includes(req.user.role);
+    const source = resolveOrderSource({
+      qrToken: rawQrToken,
+      userRole: req.user.role,
+      requestedSource: parsed.data.source,
     });
+    const isStaffOrder = source === 'staff' && isStaffRole;
 
-    let updatedTable = null;
-    if (table) {
-      updatedTable = await repo.updateTable(table.id, {
-        status: 'occupied',
-        currentSessionId: sessionId,
+    try {
+      const { order } = await placeTableOrder({
+        table,
+        items: parsed.data.items,
+        source,
+        requestedSessionId: parsed.data.sessionId || '',
+        customerId: req.user.role === 'customer' ? req.user.userId : null,
+        customerName: req.user.role === 'customer' ? req.user.name : null,
+        waiterId: isStaffOrder ? req.user.userId : null,
+        waiterName: isStaffOrder ? req.user.name : null,
       });
+
+      await logAudit(
+        req,
+        'CREATE_ORDER',
+        'Order',
+        order.id,
+        `${source.toUpperCase()} order ${order.orderNumber} for Table #${table.number}`
+      );
+      return sendOk(res, order, 'Order placed successfully.', 201);
+    } catch (err) {
+      return sendErr(res, err.message, err.status || 400);
     }
-
-    await logAudit(
-      req,
-      'CREATE_ORDER',
-      'Order',
-      order.id,
-      `${isStaff ? 'Manual' : 'Customer'} order ${order.orderNumber} for ${table ? `Table #${table.number}` : 'Counter Pickup'}`
-    );
-    socketEmitter.orderCreated(order);
-    if (updatedTable) socketEmitter.tableStatusChanged(updatedTable);
-
-    return sendOk(res, order, 'Order placed successfully.', 201);
   })
 );
 
@@ -1614,7 +1676,7 @@ router.post(
       discountPercent: z.number().min(0).max(100).default(0),
       flatDiscount: z.number().min(0).max(10000).default(0),
       amount: z.number().nonnegative().optional(),
-      nextTableStatus: z.enum(['free', 'cleaning']).default('free'),
+      nextTableStatus: z.enum(['free', 'cleaning']).default('cleaning'),
     });
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) return sendErr(res, 'Invalid payment parameters.', 400);
@@ -1805,7 +1867,8 @@ router.get(
 
     const waiterMap = new Map();
     for (const o of nonCancelledOrders) {
-      const label = o.waiterName || 'Guest QR Self-Order';
+      const label =
+        o.waiterName || (o.source === 'home' ? 'Home Self-Order' : 'Guest QR Self-Order');
       const cur = waiterMap.get(label) || { waiter: label, orders: 0, revenue: 0 };
       cur.orders += 1;
       cur.revenue = roundCurrency(cur.revenue + o.total);
@@ -1814,15 +1877,16 @@ router.get(
 
     const tableSalesMap = new Map();
     for (const o of nonCancelledOrders) {
-      const cur = tableSalesMap.get(o.tableNumber) || {
-        tableNumber: o.tableNumber,
+      const tableNum = o.tableNumberSnapshot ?? o.tableNumber;
+      const cur = tableSalesMap.get(tableNum) || {
+        tableNumber: tableNum,
         tableName: o.tableName,
         orders: 0,
         revenue: 0,
       };
       cur.orders += 1;
       cur.revenue = roundCurrency(cur.revenue + o.total);
-      tableSalesMap.set(o.tableNumber, cur);
+      tableSalesMap.set(tableNum, cur);
     }
 
     return sendOk(res, {
@@ -1873,9 +1937,9 @@ router.get(
       [
         o.orderNumber,
         o.createdAt,
-        `Table ${o.tableNumber}`,
+        `Table ${o.tableNumberSnapshot ?? o.tableNumber}`,
         o.source,
-        o.waiterName || 'Guest QR',
+        o.waiterName || (o.source === 'home' ? 'Home Self-Order' : 'Guest QR'),
         o.status,
         o.items.map((i) => `${i.qty}x ${i.name}`).join('; '),
         o.subtotal.toFixed(2),
@@ -1992,20 +2056,26 @@ router.post(
 // ==========================================
 // DEMO TOOLS (ADMIN ONLY, GATED BY DEMO_MODE=true)
 // ==========================================
-async function createSimulatedGuestOrder(targetTableId) {
+async function createSimulatedGuestOrder(targetTableId, simulatedSource = 'qr') {
   const [tables, menuItems] = await Promise.all([repo.listTables(), repo.listMenuItems(false)]);
   const availableItems = menuItems.filter((m) => m.isAvailable);
+  const eligibleTables = tables.filter((t) => t.status === 'free' || t.status === 'occupied');
   if (tables.length === 0 || availableItems.length === 0) {
-    throw new Error('No tables or available menu items to simulate.');
+    throw new OrderValidationError('No tables or available menu items to simulate.', 400);
   }
 
-  const table = targetTableId
-    ? tables.find((t) => t.id === targetTableId) || tables[0]
-    : tables[Math.floor(Math.random() * tables.length)];
+  let table = null;
+  if (targetTableId) {
+    table = tables.find((t) => t.id === targetTableId) || null;
+  } else {
+    if (eligibleTables.length === 0) {
+      throw new OrderValidationError('No free or occupied tables available to simulate.', 409);
+    }
+    table = eligibleTables[Math.floor(Math.random() * eligibleTables.length)];
+  }
 
   const count = 1 + Math.floor(Math.random() * 3);
   const shuffled = [...availableItems].sort(() => Math.random() - 0.5).slice(0, count);
-  const menuMap = new Map(availableItems.map((m) => [m.id, m]));
   const sampleNotes = ['', '', 'No onions please', 'Extra sauce on the side', 'Allergy: tree nuts'];
   const requested = shuffled.map((item) => ({
     menuItemId: item.id,
@@ -2013,46 +2083,11 @@ async function createSimulatedGuestOrder(targetTableId) {
     notes: sampleNotes[Math.floor(Math.random() * sampleNotes.length)],
   }));
 
-  const totals = computeAuthoritativeOrder(requested, menuMap, env.taxRate);
-  const nowIso = new Date().toISOString();
-  const orderNumber = await repo.nextOrderNumber();
-  const sessionId = table.currentSessionId || `sim-sess-${table.number}-${Date.now()}`;
-
-  const order = await repo.createOrder({
-    orderNumber,
-    tableId: table.id,
-    tableNumber: table.number,
-    tableName: table.name,
-    sessionId,
-    items: totals.items,
-    subtotal: totals.subtotal,
-    tax: totals.tax,
-    discount: 0,
-    total: totals.total,
-    status: 'pending',
-    source: 'guest_qr',
-    waiterId: null,
-    waiterName: null,
-    statusTimestamps: {
-      pending: nowIso,
-      accepted: null,
-      preparing: null,
-      ready: null,
-      served: null,
-      paid: null,
-      cancelled: null,
-    },
-    createdAt: nowIso,
-    updatedAt: nowIso,
+  const { order } = await placeTableOrder({
+    table,
+    items: requested,
+    source: simulatedSource === 'home' ? 'home' : 'qr',
   });
-
-  const updatedTable = await repo.updateTable(table.id, {
-    status: 'occupied',
-    currentSessionId: sessionId,
-  });
-
-  socketEmitter.orderCreated(order);
-  if (updatedTable) socketEmitter.tableStatusChanged(updatedTable);
   return order;
 }
 
@@ -2111,9 +2146,20 @@ router.post(
   '/demo/simulate-order',
   asyncHandler(async (req, res) => {
     const tableId = typeof req.body?.tableId === 'string' && req.body.tableId ? req.body.tableId : undefined;
-    const order = await createSimulatedGuestOrder(tableId);
-    await logAudit(req, 'DEMO_SIMULATE_ORDER', 'Order', order.id, `Simulated guest order ${order.orderNumber} on Table #${order.tableNumber}`);
-    return sendOk(res, order, `Simulated QR order on Table ${order.tableNumber}.`, 201);
+    const source = req.body?.source === 'home' ? 'home' : 'qr';
+    try {
+      const order = await createSimulatedGuestOrder(tableId, source);
+      await logAudit(
+        req,
+        'DEMO_SIMULATE_ORDER',
+        'Order',
+        order.id,
+        `Simulated ${order.source.toUpperCase()} guest order ${order.orderNumber} on Table #${order.tableNumber}`
+      );
+      return sendOk(res, order, `Simulated ${order.source === 'home' ? 'Home' : 'QR'} order on Table ${order.tableNumber}.`, 201);
+    } catch (err) {
+      return sendErr(res, err.message, err.status || 400);
+    }
   })
 );
 

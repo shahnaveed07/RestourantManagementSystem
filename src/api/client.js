@@ -149,6 +149,8 @@ export const api = {
     unwrap(http.post(`/guest/table/${encodeURIComponent(qrToken)}/calls`, payload)),
 
   // Tables
+  getPublicTables: () => unwrap(http.get('/tables/public')),
+  lookupPublicTable: (number) => unwrap(http.get('/tables/public/lookup', { params: { number } })),
   listTables: () => unwrap(http.get('/tables')),
   createTable: (payload) => unwrap(http.post('/tables', payload)),
   updateTable: (id, payload) => unwrap(http.put(`/tables/${id}`, payload)),
