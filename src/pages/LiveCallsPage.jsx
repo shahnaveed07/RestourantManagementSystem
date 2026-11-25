@@ -195,7 +195,7 @@ export function LiveCallsPage() {
 
                 {call.status !== 'resolved' && (
                   <div className="flex flex-wrap items-center gap-2 shrink-0">
-                    {call.status === 'open' && (
+                    {call.status === 'open' ? (
                       <button
                         type="button"
                         disabled={busyId === call.id}
@@ -205,16 +205,17 @@ export function LiveCallsPage() {
                         <Check className="w-4 h-4" />
                         Acknowledge
                       </button>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={busyId === call.id}
+                        onClick={() => handleResolve(call.id)}
+                        className="min-h-[44px] px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 inline-flex items-center justify-center gap-1.5 whitespace-nowrap flex-1 sm:flex-initial"
+                      >
+                        <CheckCheck className="w-4 h-4" />
+                        Resolve
+                      </button>
                     )}
-                    <button
-                      type="button"
-                      disabled={busyId === call.id}
-                      onClick={() => handleResolve(call.id)}
-                      className="min-h-[44px] px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 inline-flex items-center justify-center gap-1.5 whitespace-nowrap flex-1 sm:flex-initial"
-                    >
-                      <CheckCheck className="w-4 h-4" />
-                      Resolve
-                    </button>
                   </div>
                 )}
               </article>

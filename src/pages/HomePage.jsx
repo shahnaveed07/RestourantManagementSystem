@@ -95,6 +95,7 @@ export function HomePage() {
   }, [searchParams, setSearchParams, setCartOpen]);
 
   // Real-time menu availability & live customer/table order updates
+  const hasConnectedOnceRef = useRef(false);
   useEffect(() => {
     const token = getStoredToken();
     const s = io(window.location.origin, {
@@ -109,6 +110,11 @@ export function HomePage() {
     const onConnect = () => {
       if (token) s.emit('customer:authenticate', token);
       if (selectedTable?.id) s.emit('guest:watchTable', selectedTable.id);
+      if (hasConnectedOnceRef.current) {
+        loadMenu();
+      } else {
+        hasConnectedOnceRef.current = true;
+      }
     };
 
     const onAvailabilityChanged = (updatedItem) => {

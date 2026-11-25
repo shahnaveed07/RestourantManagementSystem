@@ -1,34 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ShoppingBag, LogOut, LayoutDashboard, ClipboardList } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { ROLE_HOME_ROUTE, ROLE_LABELS, formatCurrency } from '../utils/format';
+import { useModalA11y } from '../utils/useModalA11y';
 import { BrandLogo } from './BrandLogo';
 
 export function StorefrontNavbar({ onOpenAuth, onOpenMyOrders }) {
   const { user, config, logout } = useAuth();
   const { cartCount, total, setCartOpen } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef(null);
   const location = useLocation();
 
   const isStaff = user && ['admin', 'manager', 'waiter', 'kitchen'].includes(user.role);
   const firstDemoTable = config.demoTables?.[0];
 
+  const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
+  useModalA11y(mobileMenuOpen, closeMobileMenu, mobileMenuRef);
+
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname, location.search]);
-
-  useEffect(() => {
-    if (!mobileMenuOpen) return;
-    const onKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        setMobileMenuOpen(false);
-      }
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [mobileMenuOpen]);
 
   const handleLogout = async () => {
     await logout();
@@ -115,7 +109,7 @@ export function StorefrontNavbar({ onOpenAuth, onOpenMyOrders }) {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="min-h-[40px] px-2.5 lg:px-3 py-2 rounded-lg border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1.5 whitespace-nowrap"
+                className="min-h-[44px] px-3 py-2 rounded-lg border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1.5 whitespace-nowrap"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 Sign Out
@@ -153,6 +147,7 @@ export function StorefrontNavbar({ onOpenAuth, onOpenMyOrders }) {
       {/* Mobile Hamburger Drawer */}
       {mobileMenuOpen && (
         <nav
+          ref={mobileMenuRef}
           aria-label="Mobile navigation"
           className="md:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-1.5 shadow-lg"
         >

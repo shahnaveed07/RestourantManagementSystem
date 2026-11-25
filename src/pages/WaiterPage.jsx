@@ -268,7 +268,7 @@ export function WaiterPage() {
                           </p>
                         </div>
                         <div className="flex flex-wrap items-center gap-2 shrink-0">
-                          {c.status === 'open' && (
+                          {c.status === 'open' ? (
                             <button
                               type="button"
                               disabled={busyId === c.id}
@@ -278,16 +278,17 @@ export function WaiterPage() {
                               <Check className="w-3.5 h-3.5" />
                               Acknowledge
                             </button>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled={busyId === c.id}
+                              onClick={() => handleResolveCall(c.id)}
+                              className="min-h-[44px] px-3.5 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 disabled:opacity-60 inline-flex items-center justify-center gap-1.5 flex-1 sm:flex-initial"
+                            >
+                              <CheckCheck className="w-3.5 h-3.5" />
+                              Resolve
+                            </button>
                           )}
-                          <button
-                            type="button"
-                            disabled={busyId === c.id}
-                            onClick={() => handleResolveCall(c.id)}
-                            className="min-h-[44px] px-3.5 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 disabled:opacity-60 inline-flex items-center justify-center gap-1.5 flex-1 sm:flex-initial"
-                          >
-                            <CheckCheck className="w-3.5 h-3.5" />
-                            Resolve
-                          </button>
                         </div>
                       </div>
                     );
@@ -606,7 +607,7 @@ export function WaiterPage() {
                               }))
                             }
                             placeholder="Kitchen note..."
-                            className="w-full min-h-[40px] px-2.5 py-1.5 rounded border border-slate-200 bg-white text-base sm:text-xs"
+                            className="w-full min-h-[44px] px-2.5 py-1.5 rounded border border-slate-200 bg-white text-base sm:text-xs"
                           />
                         </div>
                       ))}

@@ -289,7 +289,7 @@ export function CustomerAuthForm({ initialMode = 'login', onSuccess, resetKey = 
                   maxLength={10}
                   value={mobileInput}
                   onChange={(e) => setMobileInput(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                  placeholder={mode === 'signup' ? '9999999992' : '9999999991'}
+                  placeholder={mode === 'signup' ? '9999999993' : '9999999991'}
                   autoComplete="tel-national"
                   className="flex-1 min-w-0 min-h-[44px] px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-base sm:text-sm font-mono text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600"
                 />
@@ -308,7 +308,7 @@ export function CustomerAuthForm({ initialMode = 'login', onSuccess, resetKey = 
                 type="email"
                 value={emailInput}
                 onChange={(e) => setEmailInput(e.target.value)}
-                placeholder={mode === 'signup' ? 'guest@demo.com' : 'customer@demo.com'}
+                placeholder={mode === 'signup' ? 'newguest@demo.com' : 'customer@demo.com'}
                 autoComplete="email"
                 className="w-full min-h-[44px] px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-base sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600"
               />
@@ -372,7 +372,7 @@ export function CustomerAuthForm({ initialMode = 'login', onSuccess, resetKey = 
               <button
                 type="button"
                 onClick={() => setOtp(config.demoOtpHint || '123456')}
-                className="min-h-[36px] px-2.5 rounded-lg bg-amber-100 hover:bg-amber-200 font-semibold text-amber-950 shrink-0"
+                className="min-h-[44px] px-3 rounded-lg bg-amber-100 hover:bg-amber-200 font-semibold text-amber-950 shrink-0"
               >
                 Auto-fill
               </button>
@@ -389,7 +389,7 @@ export function CustomerAuthForm({ initialMode = 'login', onSuccess, resetKey = 
                 <button
                   type="button"
                   onClick={handleSwitchToLogin}
-                  className="min-h-[40px] px-3 py-1.5 rounded-lg bg-white border border-red-300 text-red-800 font-semibold hover:bg-red-50"
+                  className="min-h-[44px] px-3.5 py-2 rounded-lg bg-white border border-red-300 text-red-800 font-semibold hover:bg-red-50"
                 >
                   Log In Instead
                 </button>

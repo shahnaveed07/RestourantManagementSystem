@@ -15,21 +15,27 @@ export async function seedDatabase(forceReset = false) {
 
   const existingUsers = await repo.listUsers();
   if (!forceReset && existingUsers.length > 0) {
-    // Ensure demo customer account exists with mobile +919999999991 even when upgrading an existing local store
-    const demoCustomer = existingUsers.find((u) => u.email?.toLowerCase() === 'customer@demo.com');
-    if (!demoCustomer) {
-      await repo.createUser({
-        name: 'Alex Rivera',
-        email: 'customer@demo.com',
-        mobile: '+919999999991',
-        passwordHash: null,
-        role: 'customer',
-        isActive: true,
-        lastLoginAt: null,
-        isDemo: true,
-      });
-    } else if (!demoCustomer.mobile) {
-      await repo.updateUser(demoCustomer.id, { mobile: '+919999999991' });
+    // Ensure both demo customer accounts exist even when upgrading an existing local store
+    const requiredDemoCustomers = [
+      { name: 'Alex Rivera', email: 'customer@demo.com', mobile: '+919999999991' },
+      { name: 'Maya Patel', email: 'guest@demo.com', mobile: '+919999999992' },
+    ];
+    for (const spec of requiredDemoCustomers) {
+      const existing = existingUsers.find((u) => u.email?.toLowerCase() === spec.email);
+      if (!existing) {
+        await repo.createUser({
+          name: spec.name,
+          email: spec.email,
+          mobile: spec.mobile,
+          passwordHash: null,
+          role: 'customer',
+          isActive: true,
+          lastLoginAt: null,
+          isDemo: true,
+        });
+      } else if (!existing.mobile) {
+        await repo.updateUser(existing.id, { mobile: spec.mobile });
+      }
     }
 
     const tables = await repo.listTables();
@@ -42,7 +48,8 @@ export async function seedDatabase(forceReset = false) {
         { role: 'manager', email: 'manager@demo.com', password: 'Manager@123' },
         { role: 'waiter', email: 'waiter@demo.com', password: 'Waiter@123' },
         { role: 'kitchen', email: 'kitchen@demo.com', password: 'Kitchen@123' },
-        { role: 'customer', email: 'customer@demo.com', mobile: '+919999999991' },
+        { role: 'customer', email: 'customer@demo.com', mobile: '+919999999991', password: null },
+        { role: 'customer', email: 'guest@demo.com', mobile: '+919999999992', password: null },
       ],
       tables: tables.map((t) => ({
         number: t.number,
@@ -58,13 +65,14 @@ export async function seedDatabase(forceReset = false) {
 
   await repo.wipeAll();
 
-  // 1. Seed Demo Accounts (Staff + Customer)
+  // 1. Seed Demo Accounts (Staff + Customers)
   const demoAccounts = [
     { name: 'Elena Vance', email: 'admin@demo.com', mobile: null, password: 'Admin@123', role: 'admin' },
     { name: 'Marcus Chen', email: 'manager@demo.com', mobile: null, password: 'Manager@123', role: 'manager' },
     { name: 'Sofia Morales', email: 'waiter@demo.com', mobile: null, password: 'Waiter@123', role: 'waiter' },
     { name: 'Devon Brooks', email: 'kitchen@demo.com', mobile: null, password: 'Kitchen@123', role: 'kitchen' },
     { name: 'Alex Rivera', email: 'customer@demo.com', mobile: '+919999999991', password: null, role: 'customer' },
+    { name: 'Maya Patel', email: 'guest@demo.com', mobile: '+919999999992', password: null, role: 'customer' },
   ];
 
   const createdUsers = [];
@@ -702,11 +710,11 @@ export async function seedDatabase(forceReset = false) {
     action: 'SEED_DATABASE',
     entity: 'System',
     entityId: null,
-    details: 'Initialized 4 demo staff accounts, 12 tables, 4 categories, 30 menu items, and live shift data.',
+    details: 'Initialized 4 demo staff accounts, 2 demo customers, 12 tables, 4 categories, 30 menu items, and live shift data.',
   });
 
   return {
-    users: demoAccounts.map(({ role, email, password }) => ({ role, email, password })),
+    users: demoAccounts.map(({ role, email, mobile, password }) => ({ role, email, mobile, password })),
     tables: tables.map((t) => ({
       number: t.number,
       name: t.name,

@@ -221,7 +221,7 @@ export function TablesPage() {
               key={st}
               type="button"
               onClick={() => setStatusFilter(st)}
-              className={`min-h-[38px] px-2.5 py-1.5 text-xs font-medium rounded-md capitalize whitespace-nowrap transition-colors ${
+              className={`min-h-[44px] px-3 py-2 text-xs font-medium rounded-md capitalize whitespace-nowrap transition-colors ${
                 statusFilter === st ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
               }`}
             >

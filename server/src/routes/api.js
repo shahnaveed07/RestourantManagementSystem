@@ -1621,6 +1621,9 @@ router.patch(
     if (call.status === 'resolved') {
       return sendErr(res, 'Service call is already resolved.', 400);
     }
+    if (call.status !== 'acknowledged') {
+      return sendErr(res, 'Service call must be acknowledged before resolving.', 400);
+    }
 
     const updated = await repo.updateCall(call.id, {
       status: 'resolved',
@@ -2275,6 +2278,11 @@ router.post(
     return sendOk(res, summary, 'Demo database reset and reseeded.');
   })
 );
+
+// Explicit JSON 404 for unmatched /api/* endpoints (never fall through to SPA HTML)
+router.use((_req, res) => {
+  sendErr(res, 'API endpoint not found.', 404);
+});
 
 // Centralized API Error Handler
 router.use((err, _req, res, _next) => {

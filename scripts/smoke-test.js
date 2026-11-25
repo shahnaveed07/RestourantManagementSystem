@@ -42,6 +42,10 @@ async function run() {
   const health = await apiRequest('/health', { expectStatus: 200 });
   assert.equal(health.payload.data.status, 'ok');
 
+  // Unmatched /api/* returns JSON 404 (not SPA HTML)
+  const missingApi = await apiRequest('/does-not-exist', { expectStatus: 404 });
+  assert.equal(missingApi.payload.success, false);
+
   const config = await apiRequest('/config', { expectStatus: 200 });
   assert.ok(config.payload.data.restaurantName);
 
@@ -199,6 +203,12 @@ async function run() {
     expectStatus: 201,
   });
   const callId = callRes.payload.data.id;
+  // Cannot resolve an open call without acknowledging first
+  await apiRequest(`/calls/${callId}/resolve`, {
+    method: 'PATCH',
+    token: tokens.waiter,
+    expectStatus: 400,
+  });
   await apiRequest(`/calls/${callId}/acknowledge`, {
     method: 'PATCH',
     token: tokens.waiter,
@@ -325,10 +335,24 @@ async function run() {
   });
   assert.equal(settleHomeRes.payload.data.table.status, 'cleaning');
 
+  // 9c. Verify second seeded demo customer (9999999992 / guest@demo.com) OTP login in DEMO_MODE
+  await apiRequest('/auth/otp/request', {
+    method: 'POST',
+    body: { channel: 'email', identifier: 'guest@demo.com', purpose: 'login' },
+    expectStatus: 200,
+  });
+  const guestOtpRes = await apiRequest('/auth/otp/verify', {
+    method: 'POST',
+    body: { channel: 'email', identifier: 'guest@demo.com', purpose: 'login', otp: '123456' },
+    expectStatus: 200,
+  });
+  assert.equal(guestOtpRes.payload.data.user.email, 'guest@demo.com');
+  assert.equal(guestOtpRes.payload.data.user.mobile, '+919999999992');
+
   // 10. Restore clean seed state
   await apiRequest('/demo/reset', { method: 'POST', token: tokens.admin, expectStatus: 200 });
 
-  console.log('[smoke-test] All API, RBAC, state-machine, and billing assertions passed!');
+  console.log('[smoke-test] All API, RBAC, state-machine, OTP, and billing assertions passed!');
 }
 
 run().catch((err) => {

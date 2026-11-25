@@ -124,9 +124,13 @@ export function AuthModal({
               </button>
 
               <p className="text-[11px] text-slate-500 leading-relaxed">
-                Testing new signup? Switch to <strong>Sign Up</strong> and use mobile{' '}
-                <strong className="font-mono text-slate-700">9999999992</strong> or{' '}
-                <strong className="text-slate-700">guest@demo.com</strong>.
+                Seeded OTP logins:{' '}
+                <strong className="font-mono text-slate-700">9999999991</strong> /{' '}
+                <strong className="text-slate-700">customer@demo.com</strong> and{' '}
+                <strong className="font-mono text-slate-700">9999999992</strong> /{' '}
+                <strong className="text-slate-700">guest@demo.com</strong>. Test new{' '}
+                <strong>Sign Up</strong> with any fresh number or email (e.g.{' '}
+                <strong className="font-mono text-slate-700">9999999993</strong>).
               </p>
 
               <div className="grid grid-cols-2 gap-2 pt-1">

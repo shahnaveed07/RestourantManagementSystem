@@ -74,6 +74,7 @@ http.interceptors.response.use(
       } catch {
         setStoredToken(null);
         unauthorizedHandler?.();
+        return Promise.reject(error);
       }
       setStoredToken(null);
       unauthorizedHandler?.();

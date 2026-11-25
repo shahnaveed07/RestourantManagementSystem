@@ -151,12 +151,15 @@ export function DemoToolsPage() {
                   onChange={(e) => setSelectedTableId(e.target.value)}
                   className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-slate-300 text-base sm:text-sm bg-white"
                 >
-                  <option value="">Random Table</option>
-                  {tables.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      Table {t.number} — {t.name}
-                    </option>
-                  ))}
+                  <option value="">Random Available Table</option>
+                  {tables.map((t) => {
+                    const unavailable = t.status === 'reserved' || t.status === 'cleaning';
+                    return (
+                      <option key={t.id} value={t.id} disabled={unavailable}>
+                        Table {t.number} — {t.name} ({unavailable ? `${t.status}, unavailable` : t.status})
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
               <div>

@@ -154,7 +154,7 @@ export function CartDrawer({ onRequireAuth, onOrderPlaced }) {
       {/* Bottom sheet on mobile, side drawer on desktop (widens cleanly for 4/6-col table grid) */}
       <div
         ref={drawerRef}
-        className={`w-full max-w-full bg-white rounded-t-2xl md:rounded-none md:rounded-l-2xl max-h-[90dvh] md:max-h-dvh md:h-dvh flex flex-col shadow-2xl border-t md:border-t-0 md:border-l border-slate-200 transition-[width] ${
+        className={`w-full max-w-full bg-white rounded-t-2xl md:rounded-none md:rounded-l-2xl max-h-[85dvh] md:max-h-dvh md:h-dvh flex flex-col shadow-2xl border-t md:border-t-0 md:border-l border-slate-200 transition-[width] ${
           isTableStep ? 'md:w-[700px] lg:w-[920px]' : 'md:w-[420px]'
         }`}
       >
@@ -168,7 +168,7 @@ export function CartDrawer({ onRequireAuth, onOrderPlaced }) {
                   setStep('review');
                 }}
                 aria-label="Back to cart review"
-                className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 shrink-0"
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 shrink-0"
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
@@ -393,9 +393,9 @@ export function CartDrawer({ onRequireAuth, onOrderPlaced }) {
                       setTableError(null);
                       setStep('table');
                     }}
-                    className="min-h-[36px] px-3 rounded-lg border border-slate-200 text-xs font-semibold text-teal-800 hover:bg-teal-50 shrink-0"
+                    className="min-h-[44px] px-3 rounded-lg border border-slate-200 text-xs font-semibold text-teal-800 hover:bg-teal-50 shrink-0"
                   >
-                    {selectedTable ? 'Change' : 'Select Table'}
+                    {selectedTable ? 'Change table' : 'Select Table'}
                   </button>
                 </div>
                 {selectedTable?.status === 'occupied' && (

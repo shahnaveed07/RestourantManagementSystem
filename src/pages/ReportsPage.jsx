@@ -248,7 +248,7 @@ export function ReportsPage() {
                   <div key={t.tableNumber} className="px-4 py-3 flex items-center justify-between gap-2 text-sm">
                     <div className="min-w-0">
                       <p className="font-medium text-slate-900 truncate">
-                        {t.tableNumber > 0 ? `Table ${t.tableNumber}` : 'Counter Pickup'} ·{' '}
+                        {t.tableNumber > 0 ? `Table ${t.tableNumber}` : t.tableName || 'Table'} ·{' '}
                         <span className="text-xs text-slate-500 font-normal">{t.tableName}</span>
                       </p>
                       <p className="text-xs text-slate-500 font-mono">{t.orders} orders</p>
@@ -272,7 +272,7 @@ export function ReportsPage() {
                     {summary.salesByTable.map((t) => (
                       <tr key={t.tableNumber}>
                         <td className="py-2.5 px-4 font-medium text-slate-900">
-                          {t.tableNumber > 0 ? `Table ${t.tableNumber}` : 'Counter Pickup'}{' '}
+                          {t.tableNumber > 0 ? `Table ${t.tableNumber}` : t.tableName || 'Table'}{' '}
                           <span className="text-xs text-slate-500 font-normal">· {t.tableName}</span>
                         </td>
                         <td className="py-2.5 px-4 text-right font-mono tabular-nums text-slate-600">

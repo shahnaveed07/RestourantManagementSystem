@@ -318,10 +318,13 @@ export function LoginPage({ initialMode = 'login' }) {
                 </button>
 
                 <p className="text-xs text-slate-500 px-1">
-                  To test the new signup OTP flow, select <strong>Sign Up</strong> above with{' '}
-                  <strong className="font-mono text-slate-700">9999999992</strong> or{' '}
+                  Seeded OTP logins:{' '}
+                  <strong className="font-mono text-slate-700">9999999991</strong> /{' '}
+                  <strong className="text-slate-700">customer@demo.com</strong> and{' '}
+                  <strong className="font-mono text-slate-700">9999999992</strong> /{' '}
                   <strong className="text-slate-700">guest@demo.com</strong> (OTP{' '}
-                  <strong className="font-mono text-slate-700">{config.demoOtpHint || '123456'}</strong>).
+                  <strong className="font-mono text-slate-700">{config.demoOtpHint || '123456'}</strong>). Use any fresh number or email (e.g.{' '}
+                  <strong className="font-mono text-slate-700">9999999993</strong>) to test <strong>Sign Up</strong>.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">

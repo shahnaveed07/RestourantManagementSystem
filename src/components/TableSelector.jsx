@@ -112,7 +112,7 @@ export function TableSelector({
           <button
             type="button"
             onClick={loadTables}
-            className="min-h-[36px] px-2.5 rounded-lg border border-amber-300 bg-white text-xs font-semibold text-amber-900 hover:bg-amber-100 inline-flex items-center gap-1 shrink-0"
+            className="min-h-[44px] px-3 rounded-lg border border-amber-300 bg-white text-xs font-semibold text-amber-900 hover:bg-amber-100 inline-flex items-center gap-1 shrink-0"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             Retry
@@ -175,7 +175,7 @@ export function TableSelector({
               <button
                 type="button"
                 onClick={() => setSectionFilter('all')}
-                className={`min-h-[36px] px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap ${
+                className={`min-h-[44px] px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap ${
                   sectionFilter === 'all'
                     ? 'bg-slate-900 text-white'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -188,7 +188,7 @@ export function TableSelector({
                   key={sec}
                   type="button"
                   onClick={() => setSectionFilter(sec)}
-                  className={`min-h-[36px] px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap ${
+                  className={`min-h-[44px] px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap ${
                     sectionFilter === sec
                       ? 'bg-slate-900 text-white'
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -246,7 +246,10 @@ export function TableSelector({
                   )}
                 </div>
 
-                <div className="mt-1.5 space-y-0.5">
+                <div className="mt-1.5 space-y-0.5 w-full min-w-0">
+                  {t.section && (
+                    <p className="text-[10px] text-slate-500 truncate">{t.section}</p>
+                  )}
                   <div className="flex items-center gap-1 text-[11px] text-slate-500">
                     <Users className="w-3 h-3 shrink-0" />
                     <span>{t.capacity}</span>
