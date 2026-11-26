@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { io } from 'socket.io-client';
 import toast from 'react-hot-toast';
 import {
   Search,
@@ -19,6 +18,7 @@ import {
   ChevronUp,
 } from 'lucide-react';
 import { api } from '../api/client';
+import { createRealtimeSocket } from '../utils/realtimeSocket';
 import { useAuth } from '../context/AuthContext';
 import { DishImage } from '../components/DishImage';
 import { BrandLogo } from '../components/BrandLogo';
@@ -154,17 +154,16 @@ export function GuestMenuPage() {
     loadData();
   }, [loadData]);
 
-  // Real-time Socket.IO connection strictly scoped to this table's qrToken
+  // Real-time WebSocket connection strictly scoped to this table's qrToken
   useEffect(() => {
     if (!qrToken) return;
-    const s = io(window.location.origin, {
-      auth: { qrToken, mode: 'guest' },
-      reconnection: true,
+    const s = createRealtimeSocket({
+      mode: 'guest',
+      qrToken,
     });
 
     const onConnect = () => {
       setSocketLive(true);
-      s.emit('guest:joinTable', qrToken);
       loadData();
     };
 

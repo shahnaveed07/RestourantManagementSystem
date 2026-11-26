@@ -1,0 +1,20 @@
+# Local Cloudflare Worker secrets (NEVER commit .dev.vars; set production values via `wrangler secret put`)
+# Copy this file to .dev.vars for local development with `wrangler dev`.
+
+JWT_SECRET=replace-with-a-random-64-char-secret
+OTP_HASH_SECRET=replace-with-a-different-random-64-char-secret
+
+# Production SMS OTP provider (Twilio or MSG91 — HTTP fetch only)
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_FROM_NUMBER=
+
+MSG91_AUTH_KEY=
+MSG91_TEMPLATE_ID=
+MSG91_SENDER_ID=
+
+# Production Email OTP provider (Resend REST API — HTTP fetch only)
+EMAIL_API_KEY=
+
+# Optional CAPTCHA verification (Cloudflare Turnstile or hCaptcha)
+CAPTCHA_SECRET=

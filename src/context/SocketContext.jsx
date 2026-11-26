@@ -1,14 +1,14 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
-import { io } from 'socket.io-client';
 import toast from 'react-hot-toast';
 import { useAuth } from './AuthContext';
 import { api } from '../api/client';
+import { createRealtimeSocket } from '../utils/realtimeSocket';
 import { playAlertChime, CALL_TYPE_LABEL } from '../utils/format';
 
 const SocketContext = createContext(null);
 
 export function SocketProvider({ children }) {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const socketRef = useRef(null);
   const [socket, setSocket] = useState(null);
   const [connectionState, setConnectionState] = useState('offline');
@@ -51,13 +51,15 @@ export function SocketProvider({ children }) {
 
     refreshBadges();
 
-    const s = io(window.location.origin, {
-      withCredentials: true,
-      auth: { token: token || undefined, mode: 'staff' },
-      reconnection: true,
-      reconnectionAttempts: Infinity,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
+    const s = createRealtimeSocket({
+      mode: 'staff',
+      onBeforeReconnect: async () => {
+        try {
+          await api.refreshSession();
+        } catch {
+          // ignore if refresh fails; AuthContext handles session expiry
+        }
+      },
     });
 
     socketRef.current = s;
@@ -65,9 +67,6 @@ export function SocketProvider({ children }) {
 
     const handleConnect = () => {
       setConnectionState('live');
-      if (token) {
-        s.emit('staff:authenticate', token);
-      }
       setSyncVersion((v) => v + 1);
       refreshBadges();
     };
@@ -110,7 +109,7 @@ export function SocketProvider({ children }) {
 
     s.on('connect', handleConnect);
     s.on('disconnect', handleDisconnect);
-    s.io.on('reconnect_attempt', handleReconnectAttempt);
+    s.on('reconnect_attempt', handleReconnectAttempt);
     s.on('order:created', handleOrderCreated);
     s.on('order:updated', handleOrderChange);
     s.on('order:cancelled', handleOrderChange);
@@ -121,7 +120,7 @@ export function SocketProvider({ children }) {
     return () => {
       s.off('connect', handleConnect);
       s.off('disconnect', handleDisconnect);
-      s.io.off('reconnect_attempt', handleReconnectAttempt);
+      s.off('reconnect_attempt', handleReconnectAttempt);
       s.off('order:created', handleOrderCreated);
       s.off('order:updated', handleOrderChange);
       s.off('order:cancelled', handleOrderChange);
@@ -132,7 +131,7 @@ export function SocketProvider({ children }) {
       socketRef.current = null;
       setSocket(null);
     };
-  }, [user, token, refreshBadges]);
+  }, [user, refreshBadges]);
 
   return (
     <SocketContext.Provider

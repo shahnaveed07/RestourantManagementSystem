@@ -1,0 +1,51 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "passline-restaurant",
+  "main": "worker/src/index.js",
+  "compatibility_date": "2026-11-26",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/ws", "/ws/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "restaurant-db",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "HUB",
+        "class_name": "Hub"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["Hub"]
+    }
+  ],
+  "triggers": {
+    "crons": ["0 * * * *"]
+  },
+  "vars": {
+    "ENVIRONMENT": "development",
+    "DEMO_MODE": "true",
+    "DEMO_OTP": "123456",
+    "OTP_EXPIRY_MINUTES": "5",
+    "OTP_MAX_ATTEMPTS": "5",
+    "RESTAURANT_NAME": "PassLine Restaurant",
+    "TAX_RATE": "0.08",
+    "APP_ORIGIN": "http://localhost:3000",
+    "OTP_SMS_PROVIDER": "twilio",
+    "EMAIL_PROVIDER": "resend",
+    "EMAIL_FROM": "no-reply@passlinerestaurant.local",
+    "CAPTCHA_PROVIDER": "turnstile"
+  }
+}

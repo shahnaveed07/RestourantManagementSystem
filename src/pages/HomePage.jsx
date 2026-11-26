@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { io } from 'socket.io-client';
 import toast from 'react-hot-toast';
 import {
   Search,
@@ -14,7 +13,8 @@ import {
   X,
   RefreshCw,
 } from 'lucide-react';
-import { api, getStoredToken } from '../api/client';
+import { api } from '../api/client';
+import { createRealtimeSocket } from '../utils/realtimeSocket';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { StorefrontNavbar } from '../components/StorefrontNavbar';
@@ -97,18 +97,12 @@ export function HomePage() {
   // Real-time menu availability & live customer/table order updates
   const hasConnectedOnceRef = useRef(false);
   useEffect(() => {
-    const token = getStoredToken();
-    const s = io(window.location.origin, {
-      auth: {
-        mode: token ? 'customer' : 'guest',
-        token: token || undefined,
-        tableId: selectedTable?.id || undefined,
-      },
-      reconnection: true,
+    const s = createRealtimeSocket({
+      mode: user ? 'customer' : 'guest',
+      tableId: selectedTable?.id || '',
     });
 
     const onConnect = () => {
-      if (token) s.emit('customer:authenticate', token);
       if (selectedTable?.id) s.emit('guest:watchTable', selectedTable.id);
       if (hasConnectedOnceRef.current) {
         loadMenu();
