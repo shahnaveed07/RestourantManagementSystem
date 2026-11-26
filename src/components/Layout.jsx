@@ -107,7 +107,7 @@ export function Layout({ title, subtitle, actions, darkMode = false, children })
           <div className="min-w-0">
             <span className="text-sm font-bold tracking-tight block truncate">{config.restaurantName}</span>
             <span className={`text-xs block truncate ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-              Passline Operations
+              Operations Portal
             </span>
           </div>
         </Link>

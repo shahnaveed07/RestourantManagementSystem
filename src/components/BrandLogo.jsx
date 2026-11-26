@@ -16,7 +16,7 @@ export function BrandLogo({ size = 'md', className = '' }) {
     >
       <img
         src="/assets/aistudio/passline_3e2e00e8.svg"
-        alt="Passline Restaurant logo"
+        alt="PassLine Restaurant logo"
         className="w-full h-full object-cover object-center scale-[1.22]"
       />
     </span>

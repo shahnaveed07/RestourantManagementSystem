@@ -130,7 +130,7 @@ export function LoginPage({ initialMode = 'login' }) {
         <div className="hidden lg:flex lg:col-span-6 relative bg-slate-900 overflow-hidden">
           <img
             src={HERO_IMAGE}
-            alt="Linden & Rye dining room and open kitchen pass"
+            alt="PassLine Restaurant dining room and open kitchen pass"
             referrerPolicy="no-referrer"
             className="w-full h-full object-cover"
           />
@@ -142,8 +142,8 @@ export function LoginPage({ initialMode = 'login' }) {
             >
               <BrandLogo size="lg" />
               <div>
-                <span className="text-base font-bold tracking-tight text-white block">Passline</span>
-                <span className="text-xs text-teal-300">Restaurant Operations</span>
+                <span className="text-base font-bold tracking-tight text-white block">PassLine Restaurant</span>
+                <span className="text-xs text-teal-300">Operations Portal</span>
               </div>
             </Link>
             <div className="max-w-md">
@@ -187,7 +187,7 @@ export function LoginPage({ initialMode = 'login' }) {
               </Link>
               <div>
                 <span className="text-xs font-semibold text-teal-700 lg:hidden block mb-0.5">
-                  Passline · {config.restaurantName}
+                  {config.restaurantName}
                 </span>
                 <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
                   {accountType === 'customer' ? 'Customer Sign In' : 'Staff Sign In'}

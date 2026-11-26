@@ -80,7 +80,7 @@ export function GuestMenuPage() {
   const [sessionId, setSessionId] = useState(() => getOrCreateGuestSession(qrToken));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [restaurantName, setRestaurantName] = useState('Linden & Rye');
+  const [restaurantName, setRestaurantName] = useState('PassLine Restaurant');
   const [taxRate, setTaxRate] = useState(0.08);
   const [table, setTable] = useState(null);
   const [categories, setCategories] = useState([]);

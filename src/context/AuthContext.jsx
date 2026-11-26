@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { api, getStoredToken, setStoredToken, setUnauthorizedHandler } from '../api/client';
 
 const DEFAULT_CONFIG = {
-  restaurantName: 'Linden & Rye',
+  restaurantName: 'PassLine Restaurant',
   demoMode: true,
   demoOtpHint: '123456',
   otpExpiryMinutes: 5,

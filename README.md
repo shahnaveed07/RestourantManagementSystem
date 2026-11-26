@@ -1,4 +1,4 @@
-# Passline — Restaurant Management System
+# PassLine Restaurant — Restaurant Management System
 
 Full-stack restaurant operations platform built with Express.js, Mongoose (MongoDB), Socket.IO, React, Vite, Tailwind CSS, Recharts, and `qrcode.react`.
 
@@ -74,11 +74,11 @@ Every order in the system is linked to a dining table (`tableId`, `tableNumberSn
 | `SMTP_PORT` | SMTP port | `587` |
 | `SMTP_USER` | SMTP username | `""` |
 | `SMTP_PASS` | SMTP password | `""` |
-| `SMTP_FROM` | Sender address for OTP emails | `no-reply@lindenandrye.local` |
+| `SMTP_FROM` | Sender address for OTP emails | `no-reply@passlinerestaurant.local` |
 | `CAPTCHA_PROVIDER` | Optional CAPTCHA provider (`turnstile` or `hcaptcha`) | `turnstile` |
 | `CAPTCHA_SITE_KEY` | Optional CAPTCHA site key | `""` |
 | `CAPTCHA_SECRET` | Optional CAPTCHA verification secret (enabled when set) | `""` |
-| `RESTAURANT_NAME` | Restaurant name shown across dashboards, QR sheets, and receipts | `Linden & Rye` |
+| `RESTAURANT_NAME` | Restaurant name shown across dashboards, QR sheets, and receipts | `PassLine Restaurant` |
 | `TAX_RATE` | Decimal tax rate applied server-side to orders and bills | `0.08` |
 | `CORS_ORIGIN` | Optional comma-separated CORS allow-list | same-origin |
 | `APP_URL` | Public URL used for self-referential QR links | `http://localhost:3000` |
