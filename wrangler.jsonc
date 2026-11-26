@@ -13,7 +13,7 @@
     {
       "binding": "DB",
       "database_name": "restaurant-db",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "6057b1d4-7a87-4a07-a44a-2261a31a4d4b",
       "migrations_dir": "migrations"
     }
   ],
@@ -35,14 +35,14 @@
     "crons": ["0 * * * *"]
   },
   "vars": {
-    "ENVIRONMENT": "development",
+    "ENVIRONMENT": "staging",
     "DEMO_MODE": "true",
     "DEMO_OTP": "123456",
     "OTP_EXPIRY_MINUTES": "5",
     "OTP_MAX_ATTEMPTS": "5",
     "RESTAURANT_NAME": "PassLine Restaurant",
     "TAX_RATE": "0.08",
-    "APP_ORIGIN": "http://localhost:3000",
+    "APP_ORIGIN": "https://passline-restaurant.starlegend3n.workers.dev",
     "OTP_SMS_PROVIDER": "twilio",
     "EMAIL_PROVIDER": "resend",
     "EMAIL_FROM": "no-reply@passlinerestaurant.local",
