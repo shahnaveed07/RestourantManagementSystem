@@ -115,8 +115,8 @@ export function setAuthCookies(c, accessToken, refreshToken) {
 
 export function clearAuthCookies(c) {
   const secure = isSecureCookieRequest(c);
-  deleteCookie(c, ACCESS_COOKIE, { path: '/', secure, sameSite: 'Lax' });
-  deleteCookie(c, REFRESH_COOKIE, { path: '/', secure, sameSite: 'Lax' });
+  deleteCookie(c, ACCESS_COOKIE, { path: '/', httpOnly: true, secure, sameSite: 'Lax' });
+  deleteCookie(c, REFRESH_COOKIE, { path: '/', httpOnly: true, secure, sameSite: 'Lax' });
 }
 
 export async function issueAuthSession(c, user, repo, cfg) {

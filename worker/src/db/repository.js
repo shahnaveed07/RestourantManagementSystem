@@ -203,19 +203,24 @@ export function createRepository(db) {
   async function attachItemsToOrders(orderRows) {
     if (!orderRows || orderRows.length === 0) return [];
     const orderIds = orderRows.map((o) => o.id);
-    const placeholders = orderIds.map(() => '?').join(', ');
-    const itemsRes = await db
-      .prepare(
-        `SELECT * FROM order_items WHERE order_id IN (${placeholders}) ORDER BY order_id ASC, item_index ASC`
-      )
-      .bind(...orderIds)
-      .all();
-
     const byOrderId = new Map();
-    for (const row of itemsRes.results || []) {
-      const list = byOrderId.get(row.order_id) || [];
-      list.push(mapOrderItem(row));
-      byOrderId.set(row.order_id, list);
+    // Chunk IN(...) queries below D1's bound-variable limit (100 params max per statement)
+    const CHUNK_SIZE = 80;
+    for (let i = 0; i < orderIds.length; i += CHUNK_SIZE) {
+      const chunk = orderIds.slice(i, i + CHUNK_SIZE);
+      const placeholders = chunk.map(() => '?').join(', ');
+      const itemsRes = await db
+        .prepare(
+          `SELECT * FROM order_items WHERE order_id IN (${placeholders}) ORDER BY order_id ASC, item_index ASC`
+        )
+        .bind(...chunk)
+        .all();
+
+      for (const row of itemsRes.results || []) {
+        const list = byOrderId.get(row.order_id) || [];
+        list.push(mapOrderItem(row));
+        byOrderId.set(row.order_id, list);
+      }
     }
 
     return orderRows.map((row) => mapOrder(row, byOrderId.get(row.id) || []));
@@ -1278,7 +1283,8 @@ export function createRepository(db) {
     // ==========================================
     async cleanupExpiredAuthRecords(nowIso = new Date().toISOString()) {
       const cutoffConsumed = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const [otpRes, refreshRes] = await db.batch([
+      const cutoffAuditLogs = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const [otpRes, refreshRes, auditRes] = await db.batch([
         db
           .prepare(
             'DELETE FROM otp_requests WHERE expires_at < ? OR (consumed_at IS NOT NULL AND consumed_at < ?)'
@@ -1289,10 +1295,14 @@ export function createRepository(db) {
             'DELETE FROM refresh_tokens WHERE expires_at < ? OR (revoked_at IS NOT NULL AND revoked_at < ?)'
           )
           .bind(nowIso, cutoffConsumed),
+        db
+          .prepare('DELETE FROM audit_logs WHERE created_at < ?')
+          .bind(cutoffAuditLogs),
       ]);
       return {
         deletedOtps: otpRes.meta?.changes || 0,
         deletedRefreshTokens: refreshRes.meta?.changes || 0,
+        deletedAuditLogs: auditRes.meta?.changes || 0,
       };
     },
   };

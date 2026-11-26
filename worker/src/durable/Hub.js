@@ -7,6 +7,8 @@ import { createSimulatedGuestOrder, createSimulatedCall } from '../services/orde
 export class Hub extends DurableObject {
   constructor(ctx, env) {
     super(ctx, env);
+    this.lastRatePruneAt = 0;
+    this.lastIpPruneAt = 0;
     this.ctx.blockConcurrencyWhile(async () => {
       this.ctx.storage.sql.exec(`
         CREATE TABLE IF NOT EXISTS rate_limits (
@@ -14,11 +16,13 @@ export class Hub extends DurableObject {
           count INTEGER NOT NULL,
           reset_at INTEGER NOT NULL
         );
+        CREATE INDEX IF NOT EXISTS idx_rate_limits_reset ON rate_limits(reset_at);
         CREATE TABLE IF NOT EXISTS ip_failures (
           ip TEXT PRIMARY KEY,
           count INTEGER NOT NULL,
           updated_at INTEGER NOT NULL
         );
+        CREATE INDEX IF NOT EXISTS idx_ip_failures_updated ON ip_failures(updated_at);
         CREATE TABLE IF NOT EXISTS autoplay_state (
           id INTEGER PRIMARY KEY CHECK (id = 1),
           enabled INTEGER NOT NULL DEFAULT 0,
@@ -211,8 +215,11 @@ export class Hub extends DurableObject {
     const safeMax = Math.max(1, Number(max) || 10);
     const safeWindowMs = Math.max(1000, Number(windowMs) || 60000);
 
-    // Opportunistic prune of expired rate-limit entries
-    this.ctx.storage.sql.exec('DELETE FROM rate_limits WHERE reset_at <= ?', now);
+    // Prune expired rate-limit entries at most once per minute to minimize SQLite writes
+    if (now - this.lastRatePruneAt >= 60_000) {
+      this.lastRatePruneAt = now;
+      this.ctx.storage.sql.exec('DELETE FROM rate_limits WHERE reset_at <= ?', now);
+    }
 
     const rows = this.ctx.storage.sql
       .exec('SELECT count, reset_at FROM rate_limits WHERE key = ?', safeKey)
@@ -233,8 +240,23 @@ export class Hub extends DurableObject {
       });
     }
 
+    const resetAt = Number(rows[0].reset_at || 0);
+    if (resetAt <= now) {
+      const nextResetAt = now + safeWindowMs;
+      this.ctx.storage.sql.exec(
+        'UPDATE rate_limits SET count = 1, reset_at = ? WHERE key = ?',
+        nextResetAt,
+        safeKey
+      );
+      return Response.json({
+        allowed: true,
+        count: 1,
+        remaining: Math.max(0, safeMax - 1),
+        retryAfterSeconds: 0,
+      });
+    }
+
     const currentCount = Number(rows[0].count || 0);
-    const resetAt = Number(rows[0].reset_at || now + safeWindowMs);
     if (currentCount >= safeMax) {
       const retryAfterSeconds = Math.max(1, Math.ceil((resetAt - now) / 1000));
       return Response.json({
@@ -261,7 +283,10 @@ export class Hub extends DurableObject {
     const now = Date.now();
     const expiryCutoff = now - 60 * 60 * 1000;
 
-    this.ctx.storage.sql.exec('DELETE FROM ip_failures WHERE updated_at < ?', expiryCutoff);
+    if (now - this.lastIpPruneAt >= 60_000) {
+      this.lastIpPruneAt = now;
+      this.ctx.storage.sql.exec('DELETE FROM ip_failures WHERE updated_at < ?', expiryCutoff);
+    }
 
     if (action === 'clear') {
       this.ctx.storage.sql.exec('DELETE FROM ip_failures WHERE ip = ?', safeIp);
@@ -269,9 +294,10 @@ export class Hub extends DurableObject {
     }
 
     const rows = this.ctx.storage.sql
-      .exec('SELECT count FROM ip_failures WHERE ip = ?', safeIp)
+      .exec('SELECT count, updated_at FROM ip_failures WHERE ip = ?', safeIp)
       .toArray();
-    const current = rows.length > 0 ? Number(rows[0].count || 0) : 0;
+    const isFresh = rows.length > 0 && Number(rows[0].updated_at || 0) >= expiryCutoff;
+    const current = isFresh ? Number(rows[0].count || 0) : 0;
 
     if (action === 'get') {
       return Response.json({ count: current });

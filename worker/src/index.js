@@ -59,6 +59,7 @@ apiApp.use('*', async (c, next) => {
 
   // Baseline security headers
   c.header('X-Content-Type-Options', 'nosniff');
+  c.header('X-Frame-Options', 'SAMEORIGIN');
   c.header('Referrer-Policy', 'strict-origin-when-cross-origin');
   return next();
 });
@@ -254,7 +255,20 @@ export default {
 
     // Static SPA Assets (handled by Cloudflare Workers Static Assets binding)
     if (env.ASSETS) {
-      return env.ASSETS.fetch(request);
+      const assetRes = await env.ASSETS.fetch(request);
+      const contentType = assetRes.headers.get('content-type') || '';
+      if (contentType.includes('text/html')) {
+        const headers = new Headers(assetRes.headers);
+        headers.set('X-Content-Type-Options', 'nosniff');
+        headers.set('X-Frame-Options', 'SAMEORIGIN');
+        headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+        return new Response(assetRes.status === 304 || assetRes.status === 204 ? null : assetRes.body, {
+          status: assetRes.status,
+          statusText: assetRes.statusText,
+          headers,
+        });
+      }
+      return assetRes;
     }
 
     return new Response('Not found', { status: 404 });
@@ -268,7 +282,7 @@ export default {
           const repo = createRepository(env.DB);
           const result = await repo.cleanupExpiredAuthRecords();
           console.info(
-            `[Cron Cleanup] Deleted ${result.deletedOtps} expired OTPs and ${result.deletedRefreshTokens} expired refresh tokens.`
+            `[Cron Cleanup] Deleted ${result.deletedOtps} expired OTPs, ${result.deletedRefreshTokens} expired refresh tokens, and ${result.deletedAuditLogs} old audit logs.`
           );
         } catch (err) {
           console.error('[Cron Cleanup Error]', err);

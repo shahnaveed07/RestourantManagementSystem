@@ -9,11 +9,15 @@ const IMG_DESSERT = '/src/assets/images/dish_tiramisu_dessert_1795178823665.jpg'
 const IMG_DRINK = '/src/assets/images/dish_craft_beverage_1795178823569.jpg';
 
 let seedInFlight = null;
+let demoSeededVerified = false;
 
 export async function ensureDemoSeeded(repo, cfg) {
-  if (!cfg.demoMode) return;
+  if (!cfg.demoMode || demoSeededVerified) return;
   const count = await repo.countUsers();
-  if (count > 0) return;
+  if (count > 0) {
+    demoSeededVerified = true;
+    return;
+  }
 
   if (!seedInFlight) {
     seedInFlight = seedDatabase(repo, cfg, false).finally(() => {
@@ -21,11 +25,16 @@ export async function ensureDemoSeeded(repo, cfg) {
     });
   }
   await seedInFlight;
+  demoSeededVerified = true;
 }
 
 export async function seedDatabase(repo, cfg, forceReset = false) {
+  if (forceReset) {
+    demoSeededVerified = false;
+  }
   const existingUsers = await repo.listUsers();
   if (!forceReset && existingUsers.length > 0) {
+    demoSeededVerified = true;
     const requiredDemoCustomers = [
       { name: 'Alex Rivera', email: 'customer@demo.com', mobile: '+919999999991' },
       { name: 'Maya Patel', email: 'guest@demo.com', mobile: '+919999999992' },
@@ -724,6 +733,8 @@ export async function seedDatabase(repo, cfg, forceReset = false) {
     entityId: null,
     details: 'Initialized 4 demo staff accounts, 2 demo customers, 12 tables, 4 categories, 30 menu items, and live shift data.',
   });
+
+  demoSeededVerified = true;
 
   return {
     users: demoAccounts.map(({ role, email, mobile, password }) => ({ role, email, mobile, password })),
