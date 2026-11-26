@@ -208,7 +208,7 @@ export function TableSelector({
         </div>
       ) : (
         <div
-          className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5"
+          className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-2.5"
           role="radiogroup"
           aria-label="Select dining table"
         >
@@ -225,7 +225,7 @@ export function TableSelector({
                 aria-checked={isSelected}
                 disabled={unavailable}
                 onClick={() => onSelect(t)}
-                className={`relative min-h-[88px] p-2.5 rounded-xl border text-left flex flex-col justify-between transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 ${
+                className={`relative min-h-[72px] sm:min-h-[88px] p-2 sm:p-2.5 rounded-xl border text-left flex flex-col justify-between transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 ${
                   unavailable
                     ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed opacity-75'
                     : isSelected
@@ -236,7 +236,7 @@ export function TableSelector({
                 }`}
               >
                 <div className="flex items-start justify-between gap-1 w-full">
-                  <span className="text-sm font-bold font-mono leading-none">
+                  <span className="text-xs sm:text-sm font-bold font-mono leading-none">
                     Table {t.number}
                   </span>
                   {isSelected && (
@@ -246,7 +246,7 @@ export function TableSelector({
                   )}
                 </div>
 
-                <div className="mt-1.5 space-y-0.5 w-full min-w-0">
+                <div className="mt-1 sm:mt-1.5 space-y-0.5 w-full min-w-0">
                   {t.section && (
                     <p className="text-[10px] text-slate-500 truncate">{t.section}</p>
                   )}

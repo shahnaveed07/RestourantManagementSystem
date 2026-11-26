@@ -514,22 +514,22 @@ export function GuestMenuPage() {
   );
 
   return (
-    <div className="min-h-dvh bg-slate-50 pb-28 lg:pb-12">
+    <div className="min-h-dvh bg-slate-50 pb-24 lg:pb-12">
       {/* Compact Sticky Top Bar */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-xs border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 h-14 flex items-center justify-between gap-3">
+      <header className="sticky compact-sticky top-0 z-30 bg-white/95 backdrop-blur-xs border-b border-slate-200">
+        <div className="compact-nav-inner max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-13 sm:h-14 flex items-center justify-between gap-2 sm:gap-3">
           <Link
             to="/"
             aria-label="Go to home"
-            className="flex items-center gap-2.5 min-w-0 min-h-[44px] px-1 -ml-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 hover:opacity-90 transition-opacity"
+            className="flex items-center gap-2 sm:gap-2.5 min-w-0 min-h-[44px] px-1 -ml-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 hover:opacity-90 transition-opacity"
           >
             <BrandLogo size="sm" />
-            <span className="text-base font-bold text-slate-900 truncate block">
+            <span className="text-sm sm:text-base font-bold text-slate-900 truncate block">
               {restaurantName}
             </span>
           </Link>
 
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <span className="text-xs font-mono font-semibold text-slate-700 whitespace-nowrap">
               Table {table.number}
             </span>
@@ -544,27 +544,28 @@ export function GuestMenuPage() {
             <button
               type="button"
               onClick={() => setCallDrawerOpen(true)}
-              className="min-h-[44px] px-3.5 py-2 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 inline-flex items-center gap-1.5 whitespace-nowrap"
+              className="min-h-[44px] px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 inline-flex items-center gap-1.5 whitespace-nowrap"
             >
               <BellRing className="w-3.5 h-3.5" />
-              Call Waiter
+              <span className="sm:hidden">Waiter</span>
+              <span className="hidden sm:inline">Call Waiter</span>
             </button>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 lg:px-8 pt-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 pt-3 sm:pt-6 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 items-start">
         {/* Main Menu + Live Trackers */}
-        <div className="lg:col-span-8 space-y-6">
+        <div className="lg:col-span-8 space-y-4 sm:space-y-6">
           {/* Quick Service Call Chips */}
-          <section className="bg-white border border-slate-200 rounded-xl p-4 sm:p-5">
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-              <div>
-                <h1 className="text-lg font-bold text-slate-900">
+          <section className="bg-white border border-slate-200 rounded-xl p-3 sm:p-5">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2 sm:mb-3">
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-lg font-bold text-slate-900 leading-tight">
                   Welcome to {table.name}
                 </h1>
-                <p className="text-xs text-slate-500">
-                  {table.section} · Orders are added to your open table tab automatically
+                <p className="text-[11px] sm:text-xs text-slate-500">
+                  {table.section} · Orders added to your open tab
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -572,7 +573,7 @@ export function GuestMenuPage() {
                   to="/"
                   className="text-xs text-slate-500 hover:text-slate-900 underline underline-offset-2"
                 >
-                  Full Storefront
+                  Storefront
                 </Link>
                 <Link
                   to="/login"
@@ -583,15 +584,17 @@ export function GuestMenuPage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
-              <span className="text-xs font-medium text-slate-500 mr-1">Quick request:</span>
+            <div className="flex flex-nowrap sm:flex-wrap items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pt-2 border-t border-slate-100">
+              <span className="hidden sm:inline text-xs font-medium text-slate-500 mr-1 shrink-0">
+                Quick request:
+              </span>
               {['water', 'napkins', 'bill', 'waiter'].map((type) => (
                 <button
                   key={type}
                   type="button"
                   disabled={sendingCall}
                   onClick={() => handleServiceCall(type)}
-                  className="min-h-[44px] px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-teal-50 hover:border-teal-600 text-xs font-medium text-slate-700 hover:text-teal-900 transition-colors whitespace-nowrap"
+                  className="min-h-[44px] px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-teal-50 hover:border-teal-600 text-xs font-medium text-slate-700 hover:text-teal-900 transition-colors whitespace-nowrap shrink-0"
                 >
                   {type === 'water'
                     ? 'Water'
@@ -605,7 +608,7 @@ export function GuestMenuPage() {
               <button
                 type="button"
                 onClick={() => setCallDrawerOpen(true)}
-                className="min-h-[44px] px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-xs font-medium text-slate-700 whitespace-nowrap"
+                className="min-h-[44px] px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-xs font-medium text-slate-700 whitespace-nowrap shrink-0"
               >
                 Other...
               </button>
@@ -715,51 +718,54 @@ export function GuestMenuPage() {
           )}
 
           {/* Search & Category Tabs */}
-          <div className="space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
-              <div className="relative w-full sm:max-w-md">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <div className="space-y-2 sm:space-y-3">
+            <div className="flex flex-row items-center sm:justify-between gap-2 sm:gap-2.5">
+              <div className="relative flex-1 min-w-0 sm:max-w-md">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search dishes, ingredients..."
+                  placeholder="Search dishes..."
                   aria-label="Search menu"
-                  className="w-full min-h-[44px] pl-10 pr-4 rounded-xl border border-slate-200 bg-white text-base sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600"
+                  className="w-full min-h-[44px] pl-9 pr-3 rounded-xl border border-slate-200 bg-white text-base sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600"
                 />
               </div>
               <button
                 type="button"
                 onClick={() => setVegOnly((v) => !v)}
-                className={`min-h-[44px] px-4 rounded-xl border text-xs font-semibold inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-colors shrink-0 ${
+                aria-pressed={vegOnly}
+                aria-label="Vegetarian only filter"
+                className={`min-h-[44px] px-3 sm:px-4 rounded-xl border text-xs font-semibold inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-colors shrink-0 ${
                   vegOnly
                     ? 'bg-emerald-700 border-emerald-700 text-white'
                     : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
                 }`}
               >
                 <Leaf className="w-3.5 h-3.5" />
-                Vegetarian Only
+                <span className="sm:hidden">Veg</span>
+                <span className="hidden sm:inline">Vegetarian Only</span>
               </button>
             </div>
 
-            <div className="flex flex-nowrap lg:flex-wrap items-center gap-1.5 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-1">
+            <div className="flex flex-nowrap lg:flex-wrap items-center gap-1.5 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-0.5 sm:pb-1">
               <button
                 type="button"
                 onClick={() => setSelectedCategory('all')}
-                className={`snap-start min-h-[44px] px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
+                className={`snap-start min-h-[44px] px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
                   selectedCategory === 'all'
                     ? 'bg-slate-900 text-white'
                     : 'bg-white border border-slate-200 text-slate-600 hover:text-slate-900'
                 }`}
               >
-                All Menu ({menuItems.length})
+                All ({menuItems.length})
               </button>
               {categories.map((cat) => (
                 <button
                   key={cat.id}
                   type="button"
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`snap-start min-h-[44px] px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
+                  className={`snap-start min-h-[44px] px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
                     selectedCategory === cat.id
                       ? 'bg-slate-900 text-white'
                       : 'bg-white border border-slate-200 text-slate-600 hover:text-slate-900'
@@ -773,61 +779,61 @@ export function GuestMenuPage() {
 
           {/* Menu Sections Grouped by Category */}
           {groupedByCategory.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-sm text-slate-500">
+            <div className="bg-white border border-slate-200 rounded-xl p-8 sm:p-10 text-center text-sm text-slate-500">
               No dishes match your current filter.
             </div>
           ) : (
             groupedByCategory.map(({ category, items }) => (
-              <section key={category.id} className="space-y-3">
-                <div className="flex items-baseline justify-between border-b border-slate-200 pb-2">
-                  <h2 className="text-lg font-bold text-slate-900">{category.name}</h2>
-                  <span className="text-xs text-slate-500">{items.length} dishes</span>
+              <section key={category.id} className="space-y-2.5 sm:space-y-3">
+                <div className="flex items-baseline justify-between border-b border-slate-200 pb-1.5 sm:pb-2">
+                  <h2 className="text-base sm:text-lg font-bold text-slate-900">{category.name}</h2>
+                  <span className="text-[11px] sm:text-xs text-slate-500">{items.length} dishes</span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4">
                   {items.map((item) => {
                     const inCart = cart[item.id];
                     return (
                       <article
                         key={item.id}
-                        className={`bg-white border rounded-xl overflow-hidden flex flex-col transition-colors ${
+                        className={`bg-white border rounded-xl overflow-hidden flex flex-row sm:flex-col transition-colors ${
                           item.isAvailable
                             ? 'border-slate-200 hover:border-slate-300'
                             : 'border-slate-200 opacity-70'
                         }`}
                       >
-                        <div className="relative overflow-hidden">
+                        <div className="relative overflow-hidden w-20 h-20 sm:w-full sm:h-auto shrink-0 self-center m-2.5 sm:m-0 rounded-lg sm:rounded-none">
                           <DishImage
                             src={item.imageUrl}
                             alt={item.name}
-                            className={`w-full aspect-[4/3] ${!item.isAvailable ? 'grayscale' : ''}`}
+                            className={`w-full h-full sm:aspect-[4/3] ${!item.isAvailable ? 'grayscale' : ''}`}
                           />
                           {!item.isAvailable && (
                             <div className="absolute inset-0 bg-slate-950/55 flex items-center justify-center">
-                              <span className="px-3 py-1 rounded bg-slate-950 text-white text-xs font-semibold tracking-wide">
+                              <span className="px-2 py-0.5 sm:px-3 sm:py-1 rounded bg-slate-950 text-white text-[10px] sm:text-xs font-semibold tracking-wide">
                                 Unavailable
                               </span>
                             </div>
                           )}
                         </div>
 
-                        <div className="p-4 flex-1 flex flex-col justify-between gap-3">
-                          <div>
+                        <div className="py-2 pr-2.5 pl-0 sm:p-4 flex-1 min-w-0 flex flex-col justify-between gap-1 sm:gap-3">
+                          <div className="min-w-0">
                             <div className="flex items-start justify-between gap-2">
-                              <h3 className="text-sm font-bold text-slate-900 leading-snug">
+                              <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-1 sm:line-clamp-none">
                                 {item.name}
                               </h3>
-                              <span className="text-sm font-mono font-bold text-slate-900 tabular-nums shrink-0">
+                              <span className="text-xs sm:text-sm font-mono font-bold text-slate-900 tabular-nums shrink-0">
                                 {formatCurrency(item.price)}
                               </span>
                             </div>
 
-                            <p className="mt-1.5 text-xs text-slate-600 leading-relaxed line-clamp-2">
+                            <p className="mt-0.5 sm:mt-1.5 text-xs text-slate-600 leading-snug sm:leading-relaxed line-clamp-1 sm:line-clamp-2">
                               {item.description}
                             </p>
 
-                            {/* Clean unboxed inline metadata with typographic separators */}
-                            <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-500">
+                            {/* Clean unboxed inline metadata (sm+) */}
+                            <div className="hidden sm:flex mt-2.5 flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-500">
                               <span
                                 className={`inline-flex items-center gap-1 font-medium ${
                                   item.isVeg ? 'text-emerald-700' : 'text-rose-700'
@@ -866,17 +872,40 @@ export function GuestMenuPage() {
                             </div>
                           </div>
 
-                          <div className="pt-2 border-t border-slate-100 flex items-center justify-end">
+                          <div className="pt-1 sm:pt-2 sm:border-t sm:border-slate-100 flex items-center justify-between sm:justify-end gap-2">
+                            <div className="flex sm:hidden items-center gap-1.5 text-[11px] text-slate-500 min-w-0 truncate">
+                              <span
+                                className={`inline-flex items-center gap-1 font-medium shrink-0 ${
+                                  item.isVeg ? 'text-emerald-700' : 'text-rose-700'
+                                }`}
+                              >
+                                <span
+                                  className={`w-2 h-2 rounded-xs border ${
+                                    item.isVeg
+                                      ? 'border-emerald-700 bg-emerald-600'
+                                      : 'border-rose-700 bg-rose-600'
+                                  }`}
+                                  aria-hidden="true"
+                                />
+                                {item.isVeg ? 'Veg' : 'Non-Veg'}
+                              </span>
+                              <span aria-hidden="true">·</span>
+                              <span className="inline-flex items-center gap-0.5 shrink-0">
+                                <Clock className="w-3 h-3" />
+                                {item.prepTimeMinutes}m
+                              </span>
+                            </div>
+
                             {!item.isAvailable ? (
                               <button
                                 type="button"
                                 disabled
-                                className="w-full sm:w-auto min-h-[44px] px-4 py-2 rounded-lg bg-slate-100 text-slate-400 text-xs font-semibold cursor-not-allowed"
+                                className="min-h-[44px] px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-slate-100 text-slate-400 text-xs font-semibold cursor-not-allowed shrink-0"
                               >
                                 Unavailable
                               </button>
                             ) : inCart ? (
-                              <div className="inline-flex items-center border border-teal-700 rounded-lg overflow-hidden">
+                              <div className="inline-flex items-center border border-teal-700 rounded-lg overflow-hidden shrink-0">
                                 <button
                                   type="button"
                                   onClick={() => updateCartQty(item.id, -1)}
@@ -885,7 +914,7 @@ export function GuestMenuPage() {
                                 >
                                   <Minus className="w-4 h-4" />
                                 </button>
-                                <span className="w-9 text-center text-xs font-mono font-bold text-slate-900 tabular-nums">
+                                <span className="w-8 sm:w-9 text-center text-xs font-mono font-bold text-slate-900 tabular-nums">
                                   {inCart.qty}
                                 </span>
                                 <button
@@ -902,10 +931,11 @@ export function GuestMenuPage() {
                                 type="button"
                                 onClick={() => addToCart(item)}
                                 aria-label={`Add ${item.name} to order`}
-                                className="w-full sm:w-auto min-h-[44px] px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 inline-flex items-center justify-center gap-1.5 transition-colors"
+                                className="min-h-[44px] px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 inline-flex items-center justify-center gap-1 sm:gap-1.5 transition-colors shrink-0"
                               >
-                                <Plus className="w-4 h-4" />
-                                Add to Order
+                                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                <span className="sm:hidden">Add</span>
+                                <span className="hidden sm:inline">Add to Order</span>
                               </button>
                             )}
                           </div>
@@ -927,11 +957,11 @@ export function GuestMenuPage() {
 
       {/* Mobile Compact Bottom Cart Bar */}
       {cartCount > 0 && (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 px-4 pt-2.5 safe-bottom-bar bg-white/95 backdrop-blur-xs border-t border-slate-200">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 px-3 pt-2 safe-bottom-bar bg-white/95 backdrop-blur-xs border-t border-slate-200">
           <button
             type="button"
             onClick={() => setCartOpen(true)}
-            className="w-full min-h-[48px] px-4 py-3 rounded-xl bg-teal-700 text-white text-sm font-semibold flex items-center justify-between shadow-lg"
+            className="w-full min-h-[44px] px-4 py-2 rounded-xl bg-teal-700 text-white text-xs sm:text-sm font-semibold flex items-center justify-between shadow-lg"
           >
             <span className="inline-flex items-center gap-2">
               <ShoppingBag className="w-4 h-4" />
@@ -955,7 +985,7 @@ export function GuestMenuPage() {
         >
           <div
             ref={mobileCartRef}
-            className="w-full bg-white rounded-t-2xl p-5 safe-bottom-bar max-h-[85dvh] overflow-y-auto"
+            className="w-full bg-white rounded-t-2xl p-3.5 sm:p-5 safe-bottom-bar max-h-[82dvh] overflow-y-auto"
           >
             {cartPanelContent}
           </div>

@@ -219,23 +219,23 @@ export function Layout({ title, subtitle, actions, darkMode = false, children })
       {/* Main Content */}
       <div className="flex-1 min-w-0 flex flex-col">
         {config.demoMode && (
-          <div className="bg-amber-50 border-b border-amber-200 px-4 lg:px-6 py-1.5 flex items-center justify-between gap-3 text-xs text-amber-900 no-print">
-            <span>
-              <strong className="font-semibold">DEMO MODE</strong> — Seeded restaurant environment active with live simulation tools.
+          <div className="bg-amber-50 border-b border-amber-200 px-3 lg:px-6 py-1 sm:py-1.5 flex items-center justify-between gap-2 sm:gap-3 text-[11px] sm:text-xs text-amber-900 no-print">
+            <span className="truncate">
+              <strong className="font-semibold">DEMO MODE</strong> — Seeded environment active
             </span>
             {user.role === 'admin' && (
               <NavLink
                 to="/demo-tools"
                 className="font-semibold underline underline-offset-2 hover:text-amber-950 whitespace-nowrap shrink-0"
               >
-                Open Demo Tools
+                Demo Tools
               </NavLink>
             )}
           </div>
         )}
 
         <header
-          className={`sticky top-0 z-30 px-4 lg:px-8 py-3 border-b flex flex-wrap items-center justify-between gap-2 sm:gap-4 no-print ${
+          className={`sticky compact-sticky top-0 z-30 px-3 lg:px-8 py-1.5 sm:py-3 border-b flex flex-wrap items-center justify-between gap-2 sm:gap-4 no-print ${
             callFlashActive ? 'animate-call-flash' : ''
           } ${
             darkMode
@@ -315,7 +315,7 @@ export function Layout({ title, subtitle, actions, darkMode = false, children })
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-7xl w-full mx-auto">{children}</main>
+        <main className="flex-1 p-3 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">{children}</main>
       </div>
     </div>
   );
